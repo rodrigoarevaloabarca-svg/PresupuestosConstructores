@@ -1,0 +1,17 @@
+Estimado/a {{ client_name }},
+
+Adjunto encontrará el presupuesto solicitado:
+
+PRESUPUESTO #{{ budget_number }}
+{{ budget_title }}
+
+Total: ${{ budget_total }} {{ iva_note }}
+Válido hasta: {{ valid_until }}
+
+{% if public_url %}Ver presupuesto online: {{ public_url }}{% endif %}
+
+Condiciones de pago: {{ payment_terms }}
+
+Atentamente,
+{{ company_name }}
+{% if company_phone %}Tel: {{ company_phone }}{% endif %}

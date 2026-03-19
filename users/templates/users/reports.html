@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load budget_filters %}
+{% block title %}Reportes — Constructor Express{% endblock %}
+{% block page_title %}Reportes y Analíticas{% endblock %}
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+{% if not is_pro %}
+<div class="mb-6 p-5 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl text-white flex items-center justify-between">
+  <div>
+    <p class="font-bold text-lg">⚡ Reportes Avanzados — Plan Pro</p>
+    <p class="text-blue-200 text-sm mt-0.5">Estás viendo una vista previa. Actualiza a Pro para acceso completo.</p>
+  </div>
+  <a href="#" class="flex-shrink-0 bg-white text-blue-700 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors">Actualizar a Pro →</a>
+</div>
+{% endif %}
+
+<!-- KPI Cards -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="card">
+    <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Ingresos Confirmados</p>
+    <p class="text-2xl font-black text-green-600 mt-2 font-mono">{{ total_revenue|clp }}</p>
+    <p class="text-xs text-slate-400 mt-1">Presupuestos aceptados</p>
+  </div>
+  <div class="card">
+    <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Ingresos Pendientes</p>
+    <p class="text-2xl font-black text-amber-500 mt-2 font-mono">{{ pending_revenue|clp }}</p>
+    <p class="text-xs text-slate-400 mt-1">Enviados sin respuesta</p>
+  </div>
+  <div class="card">
+    <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Tasa de Aceptación</p>
+    <p class="text-2xl font-black text-blue-600 mt-2">{{ conversion_rate }}%</p>
+    <p class="text-xs text-slate-400 mt-1">{{ accepted_count }} de {{ total_count }} presupuestos</p>
+  </div>
+  <div class="card">
+    <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Presupuestos Totales</p>
+    <p class="text-2xl font-black text-slate-800 mt-2">{{ total_count }}</p>
+    <p class="text-xs text-slate-400 mt-1">Desde el inicio</p>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <!-- Line chart: activity -->
+  <div class="lg:col-span-2 card">
+    <h3 class="font-bold text-slate-800 mb-1">Actividad Últimos 6 Meses</h3>
+    <p class="text-xs text-slate-400 mb-4">Presupuestos creados vs aceptados</p>
+    <div style="height: 240px; position: relative;">
+      <canvas id="activityChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Donut: status breakdown -->
+  <div class="card">
+    <h3 class="font-bold text-slate-800 mb-1">Estado de Presupuestos</h3>
+    <p class="text-xs text-slate-400 mb-4">Distribución actual</p>
+    <div style="height: 180px; position:relative;">
+      <canvas id="statusChart"></canvas>
+    </div>
+    <div class="mt-4 space-y-2">
+      {% if accepted_count %}<div class="flex items-center justify-between text-xs"><span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>Aceptados</span><span class="font-bold text-slate-700">{{ accepted_count }}</span></div>{% endif %}
+      {% if sent_count %}<div class="flex items-center justify-between text-xs"><span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block"></span>Enviados</span><span class="font-bold text-slate-700">{{ sent_count }}</span></div>{% endif %}
+      {% if draft_count %}<div class="flex items-center justify-between text-xs"><span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block"></span>Borradores</span><span class="font-bold text-slate-700">{{ draft_count }}</span></div>{% endif %}
+      {% if rejected_count %}<div class="flex items-center justify-between text-xs"><span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>Rechazados</span><span class="font-bold text-slate-700">{{ rejected_count }}</span></div>{% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Bar chart: revenue + top clients -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="card">
+    <h3 class="font-bold text-slate-800 mb-1">Ingresos por Mes</h3>
+    <p class="text-xs text-slate-400 mb-4">Presupuestos aceptados (CLP)</p>
+    <div style="height: 220px; position: relative;">
+      <canvas id="revenueChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="font-bold text-slate-800 mb-4">Top Clientes por Facturación</h3>
+    {% if client_stats %}
+    <div class="space-y-3">
+      {% for c in client_stats %}
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-semibold text-slate-700 truncate max-w-[60%]">{{ c.name }}</span>
+          <span class="text-sm font-mono font-bold text-slate-800">{{ c.total_revenue|clp }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="flex-1 bg-slate-100 rounded-full h-2">
+            {% if client_stats.0.total_revenue > 0 %}
+            <div class="bg-blue-500 h-2 rounded-full" style="width: {% widthratio c.total_revenue client_stats.0.total_revenue 100 %}%"></div>
+            {% endif %}
+          </div>
+          <span class="text-xs text-slate-400">{{ c.accepted }}/{{ c.budget_count }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-slate-400 text-center py-8">Sin datos de clientes aún</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const labels   = {{ months_labels|safe }};
+const created  = {{ months_created|safe }};
+const accepted = {{ months_accepted|safe }};
+const revenue  = {{ months_revenue|safe }};
+
+const baseOpts = {
+  responsive: true, maintainAspectRatio: false,
+  plugins: { legend: { display: false } },
+};
+
+// Activity line chart
+new Chart(document.getElementById('activityChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'Creados', data: created,
+        borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.08)',
+        borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#3b82f6', tension: 0.4, fill: true,
+      },
+      {
+        label: 'Aceptados', data: accepted,
+        borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.06)',
+        borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#22c55e', tension: 0.4, fill: true,
+      }
+    ]
+  },
+  options: {
+    ...baseOpts,
+    plugins: {
+      legend: { display: true, position: 'top', align: 'end',
+        labels: { boxWidth: 10, boxHeight: 10, borderRadius: 5, useBorderRadius: true, font: { size: 11 } }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      y: { grid: { color: '#f1f5f9' }, ticks: { stepSize: 1, font: { size: 11 } } }
+    }
+  }
+});
+
+// Status donut
+new Chart(document.getElementById('statusChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Aceptados', 'Enviados', 'Borradores', 'Rechazados'],
+    datasets: [{
+      data: [{{ accepted_count }}, {{ sent_count }}, {{ draft_count }}, {{ rejected_count }}],
+      backgroundColor: ['#22c55e', '#f59e0b', '#60a5fa', '#f87171'],
+      borderWidth: 0, hoverOffset: 4,
+    }]
+  },
+  options: {
+    ...baseOpts,
+    cutout: '72%',
+    plugins: { legend: { display: false } }
+  }
+});
+
+// Revenue bar chart
+new Chart(document.getElementById('revenueChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [{
+      label: 'Ingresos', data: revenue,
+      backgroundColor: 'rgba(59,130,246,0.15)',
+      borderColor: '#3b82f6', borderWidth: 2,
+      borderRadius: 8, borderSkipped: false,
+    }]
+  },
+  options: {
+    ...baseOpts,
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+      y: {
+        grid: { color: '#f1f5f9' },
+        ticks: {
+          font: { size: 10 },
+          callback: v => '$' + (v/1000000 >= 1 ? (v/1000000).toFixed(1) + 'M' : v >= 1000 ? (v/1000).toFixed(0) + 'K' : v)
+        }
+      }
+    }
+  }
+});
+</script>
+{% endblock %}

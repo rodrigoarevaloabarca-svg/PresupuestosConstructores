@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Producto{% endblock %}
+{% block page_title %}{{ action }} Producto{% endblock %}
+{% block content %}
+<div class="max-w-2xl">
+  <div class="card">
+    {% if form.errors %}
+    <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+      {% for field in form %}{% for error in field.errors %}<p class="text-red-600 text-sm">· {{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}
+    </div>
+    {% endif %}
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2">
+          <label class="form-label">Nombre del producto *</label>
+          <input type="text" name="name" value="{{ form.name.value|default:'' }}" class="form-input" required placeholder="Ej: Cemento Sol 25kg">
+        </div>
+        <div>
+          <label class="form-label">Categoría</label>
+          <select name="category" class="form-input">
+            {% for val, label in form.category.field.choices %}<option value="{{ val }}" {% if form.category.value == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Unidad de medida</label>
+          <select name="unit" class="form-input">
+            {% for val, label in form.unit.field.choices %}<option value="{{ val }}" {% if form.unit.value == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Precio Costo ($)</label>
+          <input type="number" name="cost_price" value="{{ form.cost_price.value|default:0 }}" class="form-input" min="0" step="1">
+        </div>
+        <div>
+          <label class="form-label">Precio Venta ($)</label>
+          <input type="number" name="sale_price" value="{{ form.sale_price.value|default:0 }}" class="form-input" min="0" step="1" id="sale_price">
+        </div>
+        <div>
+          <label class="form-label">SKU / Código</label>
+          <input type="text" name="sku" value="{{ form.sku.value|default:'' }}" class="form-input" placeholder="Opcional">
+        </div>
+        <div class="col-span-2">
+          <label class="form-label">Descripción</label>
+          <textarea name="description" rows="2" class="form-input">{{ form.description.value|default:'' }}</textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+        <a href="{% url 'product_list' %}" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="btn-primary">{{ action }} Producto</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

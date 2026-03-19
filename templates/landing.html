@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Constructor Express — Presupuestos para Contratistas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .gradient-text { background: linear-gradient(135deg, #3b82f6, #1d4ed8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .feature-card:hover { transform: translateY(-4px); }
+    .feature-card { transition: all 0.3s ease; }
+  </style>
+</head>
+<body class="bg-white">
+
+  <!-- Nav -->
+  <nav class="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur border-b border-slate-100">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-md">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        </div>
+        <span class="font-bold text-slate-900">Constructor <span class="text-blue-600">Express</span></span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="{% url 'login' %}" class="text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors">Ingresar</a>
+        <a href="{% url 'register' %}" class="text-sm font-bold bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-sm">Empezar gratis</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="pt-32 pb-20 px-6 text-center bg-gradient-to-b from-blue-50 to-white">
+    <div class="max-w-4xl mx-auto">
+      <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-bold px-4 py-2 rounded-full mb-6">
+        🇨🇱 Hecho para contratistas chilenos
+      </div>
+      <h1 class="text-5xl sm:text-6xl font-black text-slate-900 leading-tight mb-6">
+        Presupuestos profesionales<br><span class="gradient-text">en minutos</span>
+      </h1>
+      <p class="text-xl text-slate-500 mb-10 max-w-2xl mx-auto leading-relaxed">
+        Crea, envía y gestiona presupuestos con PDF profesional. Diseñado para gasfiteros, electricistas, constructores y más.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="{% url 'register' %}" class="inline-flex items-center justify-center gap-2 bg-blue-600 text-white font-bold text-lg px-8 py-4 rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/30">
+          Crear cuenta gratis →
+        </a>
+        <a href="{% url 'login' %}" class="inline-flex items-center justify-center gap-2 bg-white text-slate-700 font-bold text-lg px-8 py-4 rounded-2xl border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all">
+          Ver demo
+        </a>
+      </div>
+      <p class="text-sm text-slate-400 mt-5">Sin tarjeta de crédito · Plan gratuito disponible</p>
+    </div>
+  </section>
+
+  <!-- Preview mockup -->
+  <section class="py-16 px-6 bg-white">
+    <div class="max-w-5xl mx-auto">
+      <div class="bg-slate-900 rounded-3xl p-2 shadow-2xl shadow-slate-900/30">
+        <div class="bg-slate-800 rounded-2xl overflow-hidden">
+          <!-- Fake browser bar -->
+          <div class="flex items-center gap-2 px-4 py-3 bg-slate-700 border-b border-slate-600">
+            <div class="w-3 h-3 rounded-full bg-red-400"></div>
+            <div class="w-3 h-3 rounded-full bg-amber-400"></div>
+            <div class="w-3 h-3 rounded-full bg-green-400"></div>
+            <div class="flex-1 bg-slate-600 rounded-lg h-5 mx-6 flex items-center px-3">
+              <span class="text-slate-400 text-xs">constructor-express.cl/presupuestos</span>
+            </div>
+          </div>
+          <!-- Fake app UI -->
+          <div class="flex" style="min-height:340px">
+            <!-- Sidebar -->
+            <div class="w-48 bg-slate-900 p-3 flex-shrink-0">
+              <div class="px-2 py-3 mb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 bg-blue-600 rounded-lg"></div>
+                  <div class="h-3 bg-slate-700 rounded w-20"></div>
+                </div>
+              </div>
+              {%  for i in "12345" %}
+              <div class="flex items-center gap-2 px-3 py-2 rounded-lg mb-1 {% if forloop.first %}bg-blue-600{% else %}hover:bg-slate-800{% endif %}">
+                <div class="w-4 h-4 rounded bg-{% if forloop.first %}blue-400{% else %}slate-700{% endif %}"></div>
+                <div class="h-2.5 rounded {% if forloop.first %}bg-white/80{% else %}bg-slate-700{% endif %} w-16"></div>
+              </div>
+              {% endfor %}
+            </div>
+            <!-- Content -->
+            <div class="flex-1 bg-slate-50 p-5">
+              <div class="flex justify-between items-center mb-4">
+                <div class="h-5 bg-slate-300 rounded w-36"></div>
+                <div class="h-8 bg-blue-600 rounded-xl w-32"></div>
+              </div>
+              <!-- Fake table -->
+              <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div class="grid grid-cols-5 gap-3 px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+                  <div class="h-2 bg-slate-300 rounded w-20"></div>
+              <div class="h-2 bg-slate-300 rounded w-28"></div>
+              <div class="h-2 bg-slate-300 rounded w-20"></div>
+              <div class="h-2 bg-slate-300 rounded w-20"></div>
+              <div class="h-2 bg-slate-300 rounded w-16"></div>
+                </div>
+                {% for i in "1234" %}
+                <div class="grid grid-cols-5 gap-3 px-4 py-3 border-b border-slate-50 {% if forloop.last %}border-b-0{% endif %} items-center">
+                  <div class="h-2.5 bg-slate-200 rounded w-10"></div>
+                  <div class="h-2.5 bg-slate-200 rounded w-24"></div>
+                  <div class="h-2.5 bg-slate-200 rounded w-16"></div>
+                  <div class="h-2.5 bg-slate-200 rounded w-14"></div>
+                  <div class="h-5 rounded-lg w-16 {% if forloop.first %}bg-green-100{% elif forloop.counter == 2 %}bg-amber-100{% else %}bg-slate-100{% endif %}"></div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="py-20 px-6 bg-white">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-14">
+        <h2 class="text-3xl font-black text-slate-900 mb-3">Todo lo que necesitas para presupuestar</h2>
+        <p class="text-slate-500">Sin complicaciones. Sin Excel. Sin Word.</p>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for feat in features %}
+        <div class="feature-card bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-lg hover:border-blue-100">
+          <div class="text-3xl mb-4">{{ feat.icon }}</div>
+          <h3 class="font-bold text-slate-800 mb-2">{{ feat.title }}</h3>
+          <p class="text-slate-500 text-sm leading-relaxed">{{ feat.desc }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="py-20 px-6 bg-slate-50">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-3xl font-black text-slate-900 mb-3">Precios simples y honestos</h2>
+      <p class="text-slate-500 mb-12">Empieza gratis, escala cuando lo necesites.</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <!-- Free -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-8 text-left shadow-sm">
+          <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Plan Básico</p>
+          <p class="text-4xl font-black text-slate-900 mb-1">Gratis</p>
+          <p class="text-slate-400 text-sm mb-6">Para comenzar a crecer</p>
+          <ul class="space-y-3 mb-8">
+            {% for item in free_features %}
+            <li class="flex items-center gap-2 text-sm text-slate-600">
+              <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              {{ item }}
+            </li>
+            {% endfor %}
+          </ul>
+          <a href="{% url 'register' %}" class="block text-center bg-slate-100 text-slate-700 font-bold py-3 rounded-xl hover:bg-slate-200 transition-colors">Empezar gratis</a>
+        </div>
+        <!-- Pro -->
+        <div class="bg-blue-600 rounded-2xl p-8 text-left shadow-xl shadow-blue-600/30 relative overflow-hidden">
+          <div class="absolute top-4 right-4 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full">Popular</div>
+          <p class="text-xs font-bold text-blue-200 uppercase tracking-wide mb-2">Plan Pro</p>
+          <p class="text-4xl font-black text-white mb-1">$9.990<span class="text-lg font-normal text-blue-300">/mes</span></p>
+          <p class="text-blue-300 text-sm mb-6">CLP + IVA</p>
+          <ul class="space-y-3 mb-8">
+            {% for item in pro_features %}
+            <li class="flex items-center gap-2 text-sm text-blue-100">
+              <svg class="w-4 h-4 text-blue-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+              {{ item }}
+            </li>
+            {% endfor %}
+          </ul>
+          <a href="{% url 'register' %}" class="block text-center bg-white text-blue-700 font-bold py-3 rounded-xl hover:bg-blue-50 transition-colors">Comenzar 7 días gratis</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Footer -->
+  <section class="py-20 px-6 bg-slate-900 text-center">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-3xl font-black text-white mb-4">Listo para profesionalizar tu negocio?</h2>
+      <p class="text-slate-400 mb-8">Únete a cientos de contratistas chilenos que ya usan Constructor Express.</p>
+      <a href="{% url 'register' %}" class="inline-flex items-center gap-2 bg-blue-600 text-white font-bold text-lg px-8 py-4 rounded-2xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/30">
+        Crear cuenta gratis →
+      </a>
+    </div>
+  </section>
+
+  <footer class="bg-slate-900 border-t border-white/5 py-8 px-6 text-center">
+    <p class="text-slate-500 text-sm">© 2024 Constructor Express — Hecho con ❤️ en Chile 🇨🇱</p>
+  </footer>
+
+</body>
+</html>

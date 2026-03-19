@@ -1,0 +1,28 @@
+# ─── Entorno virtual ──────────────────────────────
+.venv/
+venv/
+env/
+
+# ─── Variables de entorno (NUNCA subir al repo) ───
+.env
+*.env
+
+# ─── Base de datos local ──────────────────────────
+db.sqlite3
+
+# ─── Django ───────────────────────────────────────
+staticfiles/
+/media/
+*.log
+
+# ─── IDEs ─────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+
+# ─── Sistema operativo ────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+dockerfile
+docker-compose.yml

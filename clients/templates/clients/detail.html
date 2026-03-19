@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}{{ client.name }} — Constructor Express{% endblock %}
+{% block page_title %}{{ client.name }}{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'client_edit' client.pk %}" class="btn-secondary">Editar</a>
+  <a href="{% url 'budget_create' %}?client={{ client.pk }}" class="btn-primary">+ Presupuesto</a>
+{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="card">
+    <h3 class="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wide">Información del Cliente</h3>
+    <dl class="space-y-3">
+      {% if client.rut %}<div><dt class="text-xs text-slate-400">RUT</dt><dd class="text-sm font-semibold text-slate-700">{{ client.rut }}</dd></div>{% endif %}
+      {% if client.phone %}<div><dt class="text-xs text-slate-400">Teléfono</dt><dd class="text-sm font-semibold text-slate-700">{{ client.phone }}</dd></div>{% endif %}
+      {% if client.email %}<div><dt class="text-xs text-slate-400">Email</dt><dd class="text-sm font-semibold text-slate-700">{{ client.email }}</dd></div>{% endif %}
+      {% if client.address %}<div><dt class="text-xs text-slate-400">Dirección</dt><dd class="text-sm font-semibold text-slate-700">{{ client.address }}</dd></div>{% endif %}
+      {% if client.city %}<div><dt class="text-xs text-slate-400">Ciudad</dt><dd class="text-sm font-semibold text-slate-700">{{ client.city }}</dd></div>{% endif %}
+      {% if client.notes %}<div><dt class="text-xs text-slate-400">Notas</dt><dd class="text-sm text-slate-600">{{ client.notes }}</dd></div>{% endif %}
+    </dl>
+  </div>
+  <div class="lg:col-span-2 card">
+    <h3 class="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wide">Presupuestos ({{ budgets.count }})</h3>
+    {% if budgets %}
+    <div class="space-y-2">
+      {% for b in budgets %}
+      <a href="{% url 'budget_detail' b.pk %}" class="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors">
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-mono font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-lg">#{{ b.number }}</span>
+          <div>
+            <p class="text-sm font-semibold text-slate-800">{{ b.title }}</p>
+            <p class="text-xs text-slate-400">{{ b.created_at|date:"d/m/Y" }}</p>
+          </div>
+        </div>
+        <span class="badge {% if b.status == 'aceptado' %}bg-green-100 text-green-700{% elif b.status == 'enviado' %}bg-amber-100 text-amber-700{% elif b.status == 'rechazado' %}bg-red-100 text-red-700{% else %}bg-slate-100 text-slate-600{% endif %}">{{ b.get_status_display }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-sm text-slate-400 text-center py-8">No hay presupuestos para este cliente.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

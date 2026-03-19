@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Mi Perfil — Constructor Express{% endblock %}
+{% block page_title %}Mi Perfil de Empresa{% endblock %}
+{% block content %}
+<div class="max-w-3xl">
+  <div class="card">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+      <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2 sm:col-span-1">
+          <label class="form-label">Nombre de la empresa *</label>
+          <input type="text" name="company_name" value="{{ form.company_name.value|default:'' }}" class="form-input" required>
+        </div>
+        <div>
+          <label class="form-label">RUT *</label>
+          <input type="text" name="rut" value="{{ form.rut.value|default:'' }}" class="form-input" placeholder="12345678-9">
+        </div>
+        <div>
+          <label class="form-label">Rubro</label>
+          <select name="rubro" class="form-input">
+            {% for val, label in form.rubro.field.choices %}<option value="{{ val }}" {% if form.rubro.value == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Teléfono</label>
+          <input type="text" name="phone" value="{{ form.phone.value|default:'' }}" class="form-input">
+        </div>
+        <div>
+          <label class="form-label">Ciudad</label>
+          <input type="text" name="city" value="{{ form.city.value|default:'' }}" class="form-input">
+        </div>
+        <div class="col-span-2">
+          <label class="form-label">Dirección</label>
+          <input type="text" name="address" value="{{ form.address.value|default:'' }}" class="form-input">
+        </div>
+        <div>
+          <label class="form-label">Sitio web</label>
+          <input type="url" name="website" value="{{ form.website.value|default:'' }}" class="form-input" placeholder="https://...">
+        </div>
+        <div>
+          <label class="form-label">Color de marca</label>
+          <div class="flex gap-3 items-center">
+            <input type="color" name="brand_color" value="{{ form.brand_color.value|default:'#1e40af' }}" class="h-11 w-16 cursor-pointer rounded-lg border border-slate-200">
+            <span class="text-sm text-slate-500">Color en tu PDF</span>
+          </div>
+        </div>
+        <div class="col-span-2">
+          <label class="form-label">Logo de la empresa</label>
+          {% if profile.logo %}
+            <div class="flex items-center gap-4 mb-2">
+              <img src="{{ profile.logo.url }}" class="h-16 w-auto rounded-lg border border-slate-200 object-contain">
+              <span class="text-sm text-slate-500">Logo actual</span>
+            </div>
+          {% endif %}
+          <input type="file" name="logo" accept="image/*" class="form-input py-2">
+        </div>
+        <div>
+          <label class="form-label">Validez del presupuesto (días)</label>
+          <input type="number" name="budget_validity_days" value="{{ form.budget_validity_days.value|default:15 }}" class="form-input" min="1" max="365">
+        </div>
+        <div class="col-span-2">
+          <label class="form-label">Condiciones de pago por defecto</label>
+          <textarea name="payment_terms" rows="3" class="form-input">{{ form.payment_terms.value|default:'' }}</textarea>
+        </div>
+        <div class="col-span-2">
+          <label class="form-label">Notas por defecto en presupuesto</label>
+          <textarea name="notes_template" rows="2" class="form-input">{{ form.notes_template.value|default:'' }}</textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+        <a href="{% url 'dashboard' %}" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="btn-primary">Guardar cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

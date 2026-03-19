@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presupuesto #{{ budget.number }} — {{ profile.company_name|default:"Constructor Express" }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    :root { --brand: {{ profile.brand_color|default:"#1e40af" }}; }
+    .brand-bg { background: var(--brand); }
+    .brand-text { color: var(--brand); }
+    .brand-border { border-color: var(--brand); }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+  <!-- Header -->
+  <div class="brand-bg text-white py-6 px-6 shadow-lg">
+    <div class="max-w-3xl mx-auto flex items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        {% if profile and profile.logo %}
+          <img src="{{ profile.logo.url }}" class="h-12 w-auto object-contain bg-white rounded-lg p-1" alt="Logo">
+        {% else %}
+          <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-xl font-black">
+            {{ profile.company_name|first|default:"C" }}
+          </div>
+        {% endif %}
+        <div>
+          <h1 class="font-bold text-lg leading-tight">{{ profile.company_name|default:"Constructor Express" }}</h1>
+          {% if profile.rubro %}<p class="text-white/70 text-sm">{{ profile.get_rubro_display }}</p>{% endif %}
+        </div>
+      </div>
+      <div class="text-right hidden sm:block">
+        {% if profile.phone %}<p class="text-white/90 text-sm">📞 {{ profile.phone }}</p>{% endif %}
+        {% if profile.city %}<p class="text-white/70 text-xs">{{ profile.city }}</p>{% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+
+    <!-- Budget header card -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between p-6 gap-4">
+        <div>
+          <div class="flex items-center gap-3 mb-2">
+            <span class="font-mono text-xs font-bold bg-slate-100 text-slate-500 px-2.5 py-1 rounded-lg">#{{ budget.number }}</span>
+            <span class="text-xs font-bold px-2.5 py-1 rounded-lg
+              {% if budget.status == 'enviado' %}bg-amber-100 text-amber-700
+              {% elif budget.status == 'aceptado' %}bg-green-100 text-green-700
+              {% else %}bg-slate-100 text-slate-600{% endif %}">
+              {{ budget.get_status_display }}
+            </span>
+          </div>
+          <h2 class="text-xl font-bold text-slate-800">{{ budget.title }}</h2>
+          <p class="text-sm text-slate-500 mt-1">Emitido el {{ budget.created_at|date:"d \d\e F \d\e Y" }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-3xl font-black brand-text">${{ budget.total|floatformat:0 }}</p>
+          <p class="text-xs text-slate-400 mt-1">Total presupuesto (IVA {% if budget.tax_percent > 0 %}{{ budget.tax_percent }}% incl.{% else %}no incl.{% endif %})</p>
+        </div>
+      </div>
+      <div class="px-6 pb-5 border-t border-slate-50 pt-4">
+        <div class="flex flex-wrap gap-4 text-sm">
+          <div><span class="text-slate-400">Cliente:</span> <strong class="text-slate-700">{{ budget.client.name }}</strong></div>
+          {% if budget.client.rut %}<div><span class="text-slate-400">RUT:</span> <strong class="text-slate-700">{{ budget.client.rut }}</strong></div>{% endif %}
+          <div><span class="text-slate-400">Válido hasta:</span> <strong class="text-slate-700">{{ budget.valid_until|date:"d/m/Y" }}</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items -->
+    {% if budget.material_items.all %}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-50">
+        <h3 class="font-bold text-slate-700 flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm brand-bg text-white">📦</span>
+          Materiales y Suministros
+        </h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-slate-50/70 text-xs">
+              <th class="text-left py-3 px-6 font-semibold text-slate-400 uppercase tracking-wide">Descripción</th>
+              <th class="text-center py-3 px-4 font-semibold text-slate-400 uppercase tracking-wide hidden sm:table-cell">Cant.</th>
+              <th class="text-center py-3 px-4 font-semibold text-slate-400 uppercase tracking-wide hidden sm:table-cell">Unid.</th>
+              <th class="text-right py-3 px-4 font-semibold text-slate-400 uppercase tracking-wide hidden md:table-cell">P. Unit.</th>
+              <th class="text-right py-3 px-6 font-semibold text-slate-400 uppercase tracking-wide">Total</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            {% for item in budget.material_items.all %}
+            <tr>
+              <td class="py-3 px-6 font-medium text-slate-700">{{ item.name }}</td>
+              <td class="py-3 px-4 text-center text-slate-500 hidden sm:table-cell">{{ item.quantity }}</td>
+              <td class="py-3 px-4 text-center text-slate-500 hidden sm:table-cell">{{ item.get_unit_display }}</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-500 hidden md:table-cell">${{ item.unit_price|floatformat:0 }}</td>
+              <td class="py-3 px-6 text-right font-mono font-bold text-slate-800">${{ item.total|floatformat:0 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr class="bg-slate-50">
+              <td colspan="4" class="py-3 px-6 text-right text-xs font-bold text-slate-400 uppercase hidden sm:table-cell">Subtotal materiales</td>
+              <td colspan="2" class="py-3 px-6 text-right font-mono font-bold brand-text sm:hidden">Subtotal: ${{ budget.subtotal_materials|floatformat:0 }}</td>
+              <td class="py-3 px-6 text-right font-mono font-bold brand-text hidden sm:table-cell">${{ budget.subtotal_materials|floatformat:0 }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if budget.labor_items.all %}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-50">
+        <h3 class="font-bold text-slate-700 flex items-center gap-2">
+          <span class="w-7 h-7 rounded-lg flex items-center justify-center text-sm brand-bg text-white">🔨</span>
+          Mano de Obra
+        </h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-slate-50/70 text-xs">
+              <th class="text-left py-3 px-6 font-semibold text-slate-400 uppercase tracking-wide">Descripción</th>
+              <th class="text-center py-3 px-4 font-semibold text-slate-400 uppercase tracking-wide hidden sm:table-cell">Cant.</th>
+              <th class="text-center py-3 px-4 font-semibold text-slate-400 uppercase tracking-wide hidden sm:table-cell">Unid.</th>
+              <th class="text-right py-3 px-4 font-semibold text-slate-400 uppercase tracking-wide hidden md:table-cell">P. Unit.</th>
+              <th class="text-right py-3 px-6 font-semibold text-slate-400 uppercase tracking-wide">Total</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-50">
+            {% for item in budget.labor_items.all %}
+            <tr>
+              <td class="py-3 px-6 font-medium text-slate-700">{{ item.name }}</td>
+              <td class="py-3 px-4 text-center text-slate-500 hidden sm:table-cell">{{ item.quantity }}</td>
+              <td class="py-3 px-4 text-center text-slate-500 hidden sm:table-cell">{{ item.get_unit_display }}</td>
+              <td class="py-3 px-4 text-right font-mono text-slate-500 hidden md:table-cell">${{ item.unit_price|floatformat:0 }}</td>
+              <td class="py-3 px-6 text-right font-mono font-bold text-slate-800">${{ item.total|floatformat:0 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr class="bg-slate-50">
+              <td colspan="4" class="py-3 px-6 text-right text-xs font-bold text-slate-400 uppercase hidden sm:table-cell">Subtotal mano de obra</td>
+              <td colspan="2" class="py-3 px-6 text-right font-mono font-bold brand-text sm:hidden">Subtotal: ${{ budget.subtotal_labor|floatformat:0 }}</td>
+              <td class="py-3 px-6 text-right font-mono font-bold brand-text hidden sm:table-cell">${{ budget.subtotal_labor|floatformat:0 }}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Total final -->
+    <div class="bg-slate-900 rounded-2xl p-6 text-white">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="space-y-2 text-sm text-slate-400">
+          <div class="flex justify-between gap-8"><span>Subtotal Materiales</span><span class="font-mono text-slate-200">${{ budget.subtotal_materials|floatformat:0 }}</span></div>
+          <div class="flex justify-between gap-8"><span>Subtotal Mano de Obra</span><span class="font-mono text-slate-200">${{ budget.subtotal_labor|floatformat:0 }}</span></div>
+          {% if budget.tax_percent > 0 %}<div class="flex justify-between gap-8"><span>IVA ({{ budget.tax_percent }}%)</span><span class="font-mono text-slate-200">${{ budget.tax_amount|floatformat:0 }}</span></div>{% endif %}
+        </div>
+        <div class="text-right pt-4 sm:pt-0 border-t border-slate-700 sm:border-0">
+          <p class="text-slate-400 text-xs uppercase tracking-wide mb-1">TOTAL DEL PRESUPUESTO</p>
+          <p class="text-4xl font-black" style="color: {{ profile.brand_color|default:'#60a5fa' }}">${{ budget.total|floatformat:0 }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conditions -->
+    {% if budget.payment_terms or budget.notes %}
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+      {% if budget.payment_terms %}
+      <div>
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Condiciones de Pago</h4>
+        <p class="text-sm text-slate-600">{{ budget.payment_terms }}</p>
+      </div>
+      {% endif %}
+      {% if budget.notes %}
+      <div>
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Notas</h4>
+        <p class="text-sm text-slate-600">{{ budget.notes }}</p>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Validity warning -->
+    <div class="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+      <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div>
+        <strong>Presupuesto válido por {{ budget.validity_days }} días</strong> — hasta el {{ budget.valid_until|date:"d \d\e F \d\e Y" }}.
+        Los precios pueden variar fuera de este período.
+      </div>
+    </div>
+
+    <!-- Contact footer -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 text-center">
+      <p class="text-slate-500 text-sm mb-2">¿Tienes preguntas sobre este presupuesto?</p>
+      {% if profile %}
+      <div class="flex flex-wrap justify-center gap-4 text-sm font-semibold">
+        {% if profile.phone %}<a href="tel:{{ profile.phone }}" class="brand-text hover:opacity-70 transition-opacity">📞 {{ profile.phone }}</a>{% endif %}
+        {% if profile.website %}<a href="{{ profile.website }}" target="_blank" class="brand-text hover:opacity-70 transition-opacity">🌐 Sitio web</a>{% endif %}
+      </div>
+      {% endif %}
+      <p class="text-xs text-slate-300 mt-6">Presupuesto generado con Constructor Express 🇨🇱</p>
+    </div>
+
+  </div>
+</body>
+</html>

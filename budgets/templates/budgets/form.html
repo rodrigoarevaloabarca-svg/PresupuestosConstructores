@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Presupuesto — Constructor Express{% endblock %}
+{% block page_title %}{{ action }} Presupuesto{% endblock %}
+{% block extra_head %}
+<style>
+  .item-row { @apply grid gap-2 items-start; }
+  input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+</style>
+{% endblock %}
+{% block content %}
+<form method="post" id="budget-form">
+  {% csrf_token %}
+  <div class="space-y-6">
+
+    <!-- Header Info -->
+    <div class="card">
+      <h2 class="text-base font-bold text-slate-700 mb-4">Información General</h2>
+      {% if form.errors %}
+      <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+        {% for field in form %}{% for e in field.errors %}<p class="text-red-600 text-xs">· {{ field.label }}: {{ e }}</p>{% endfor %}{% endfor %}
+      </div>
+      {% endif %}
+      <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2">
+          <label class="form-label">Título de la Obra / Trabajo *</label>
+          <input type="text" name="title" value="{{ form.title.value|default:'' }}" class="form-input" required placeholder="Ej: Reparación de baño principal - Casa Las Rosas">
+        </div>
+        <div>
+          <label class="form-label">Cliente *</label>
+          <select name="client" class="form-input" required>
+            <option value="">— Seleccionar cliente —</option>
+            {% for c in clients %}<option value="{{ c.pk }}" {% if form.client.value == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+          </select>
+          <a href="{% url 'client_create' %}" class="text-xs text-blue-600 hover:underline mt-1 inline-block">+ Crear nuevo cliente</a>
+        </div>
+        <div>
+          <label class="form-label">IVA (%)</label>
+          <input type="number" name="tax_percent" value="{{ form.tax_percent.value|default:0 }}" class="form-input" min="0" max="100" step="0.5" placeholder="0 = sin IVA">
+        </div>
+        <div>
+          <label class="form-label">Validez (días)</label>
+          <input type="number" name="validity_days" value="{{ form.validity_days.value|default:15 }}" class="form-input" min="1">
+        </div>
+        <div class="col-span-2">
+          <label class="form-label">Condiciones de Pago</label>
+          <textarea name="payment_terms" rows="2" class="form-input">{{ form.payment_terms.value|default:'' }}</textarea>
+        </div>
+        <div class="col-span-2">
+          <label class="form-label">Notas adicionales</label>
+          <textarea name="notes" rows="2" class="form-input">{{ form.notes.value|default:'' }}</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Materiales -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-bold text-slate-700">📦 Materiales</h2>
+        <button type="button" onclick="addMaterialRow()" class="btn-secondary text-xs py-2 px-3">+ Agregar material</button>
+      </div>
+
+      <!-- Search -->
+      <div class="relative mb-4">
+        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="product-search" placeholder="Buscar en catálogo y agregar..." class="form-input pl-9 text-sm" autocomplete="off">
+        <div id="search-results" class="absolute z-20 w-full bg-white border border-slate-200 rounded-xl shadow-lg mt-1 hidden max-h-48 overflow-y-auto"></div>
+      </div>
+
+      <div class="hidden sm:grid grid-cols-12 gap-2 mb-2 px-1">
+        <div class="col-span-5 text-xs font-semibold text-slate-500">Descripción</div>
+        <div class="col-span-2 text-xs font-semibold text-slate-500">Unidad</div>
+        <div class="col-span-2 text-xs font-semibold text-slate-500">Cantidad</div>
+        <div class="col-span-2 text-xs font-semibold text-slate-500">P. Unit ($)</div>
+        <div class="col-span-1 text-xs font-semibold text-slate-500 text-right">Total</div>
+      </div>
+
+      <div id="material-rows" class="space-y-2">
+        {% if budget %}
+          {% for item in budget.material_items.all %}
+          <div class="material-row grid grid-cols-12 gap-2 items-center bg-slate-50 rounded-xl p-2">
+            <input type="text" name="mat_name[]" value="{{ item.name }}" class="form-input col-span-12 sm:col-span-5 text-sm" placeholder="Descripción" required>
+<select name="mat_unit[]" class="form-input col-span-6 sm:col-span-2 text-sm">
+              <option value="un" {% if item.unit == 'un' %}selected{% endif %}>Unidad</option>
+              <option value="m2" {% if item.unit == 'm2' %}selected{% endif %}>m²</option>
+              <option value="m3" {% if item.unit == 'm3' %}selected{% endif %}>m³</option>
+              <option value="ml" {% if item.unit == 'ml' %}selected{% endif %}>Metro lineal</option>
+              <option value="kg" {% if item.unit == 'kg' %}selected{% endif %}>Kilogramo</option>
+              <option value="lt" {% if item.unit == 'lt' %}selected{% endif %}>Litro</option>
+              <option value="hr" {% if item.unit == 'hr' %}selected{% endif %}>Hora</option>
+              <option value="gl" {% if item.unit == 'gl' %}selected{% endif %}>Global</option>
+              <option value="bls" {% if item.unit == 'bls' %}selected{% endif %}>Bolsa</option>
+              <option value="pk" {% if item.unit == 'pk' %}selected{% endif %}>Pack</option>
+            </select>
+            <input type="number" name="mat_qty[]" value="{{ item.quantity }}" class="form-input col-span-3 sm:col-span-2 text-sm mat-qty" min="0" step="0.01" required>
+            <input type="number" name="mat_price[]" value="{{ item.unit_price }}" class="form-input col-span-3 sm:col-span-2 text-sm mat-price" min="0" step="1" required>
+            <div class="col-span-10 sm:col-span-1 text-right">
+              <span class="font-mono text-xs font-bold text-slate-700 row-total">$0</span>
+            </div>
+            <div class="col-span-2 sm:col-span-0 flex justify-end">
+              <button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+      <div class="flex justify-end mt-3 pt-3 border-t border-slate-100">
+        <span class="text-sm font-semibold text-slate-600">Subtotal Materiales: <span id="mat-subtotal" class="font-mono text-slate-800 ml-2">$0</span></span>
+      </div>
+    </div>
+
+    <!-- Mano de Obra -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-bold text-slate-700">🔨 Mano de Obra</h2>
+        <button type="button" onclick="addLaborRow()" class="btn-secondary text-xs py-2 px-3">+ Agregar partida</button>
+      </div>
+      <div class="hidden sm:grid grid-cols-12 gap-2 mb-2 px-1">
+        <div class="col-span-5 text-xs font-semibold text-slate-500">Descripción del trabajo</div>
+        <div class="col-span-2 text-xs font-semibold text-slate-500">Unidad</div>
+        <div class="col-span-2 text-xs font-semibold text-slate-500">Cantidad</div>
+        <div class="col-span-2 text-xs font-semibold text-slate-500">Precio ($)</div>
+        <div class="col-span-1 text-xs font-semibold text-slate-500 text-right">Total</div>
+      </div>
+      <div id="labor-rows" class="space-y-2">
+        {% if budget %}
+          {% for item in budget.labor_items.all %}
+          <div class="labor-row grid grid-cols-12 gap-2 items-center bg-amber-50 rounded-xl p-2">
+            <input type="text" name="lab_name[]" value="{{ item.name }}" class="form-input col-span-12 sm:col-span-5 text-sm" placeholder="Ej: Instalación de grifería" required>
+            <select name="lab_unit[]" class="form-input col-span-6 sm:col-span-2 text-sm">
+              <option value="gl" {% if item.unit == 'gl' %}selected{% endif %}>Global</option>
+              <option value="hr" {% if item.unit == 'hr' %}selected{% endif %}>Hora</option>
+              <option value="un" {% if item.unit == 'un' %}selected{% endif %}>Unidad</option>
+              <option value="m2" {% if item.unit == 'm2' %}selected{% endif %}>m²</option>
+              <option value="ml" {% if item.unit == 'ml' %}selected{% endif %}>Metro lineal</option>
+            </select>
+            <input type="number" name="lab_qty[]" value="{{ item.quantity }}" class="form-input col-span-3 sm:col-span-2 text-sm lab-qty" min="0" step="0.5">
+            <input type="number" name="lab_price[]" value="{{ item.unit_price }}" class="form-input col-span-3 sm:col-span-2 text-sm lab-price" min="0" step="1">
+            <div class="col-span-10 sm:col-span-1 text-right">
+              <span class="font-mono text-xs font-bold text-amber-700 row-total">$0</span>
+            </div>
+            <div class="col-span-2 flex justify-end">
+              <button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+            </div>
+          </div>
+          {% endfor %}
+        {% endif %}
+      </div>
+      <div class="flex justify-end mt-3 pt-3 border-t border-slate-100">
+        <span class="text-sm font-semibold text-slate-600">Subtotal M. de Obra: <span id="lab-subtotal" class="font-mono text-slate-800 ml-2">$0</span></span>
+      </div>
+    </div>
+
+    <!-- Totals -->
+    <div class="card bg-slate-900">
+      <div class="space-y-2 text-sm max-w-sm ml-auto">
+        <div class="flex justify-between text-slate-300">
+          <span>Subtotal Materiales</span><span class="font-mono" id="t-mat">$0</span>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>Subtotal Mano de Obra</span><span class="font-mono" id="t-lab">$0</span>
+        </div>
+        <div class="flex justify-between text-slate-400 text-xs">
+          <span>IVA (<span id="iva-label">0</span>%)</span><span class="font-mono" id="t-iva">$0</span>
+        </div>
+        <div class="flex justify-between text-white font-bold text-lg pt-2 border-t border-slate-700">
+          <span>TOTAL</span><span class="font-mono" id="t-total">$0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3">
+      <a href="{% url 'budget_list' %}" class="btn-secondary">Cancelar</a>
+      <button type="submit" class="btn-primary text-base px-8 py-3">💾 Guardar Presupuesto</button>
+    </div>
+  </div>
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+const UNIT_OPTIONS = `<option value="un">Unidad</option><option value="m2">m²</option><option value="m3">m³</option><option value="ml">Metro lineal</option><option value="kg">Kilogramo</option><option value="lt">Litro</option><option value="hr">Hora</option><option value="gl">Global</option><option value="bls">Bolsa</option><option value="pk">Pack</option>`;
+const LABOR_UNITS = `<option value="gl">Global</option><option value="hr">Hora</option><option value="un">Unidad</option><option value="m2">m²</option><option value="ml">Metro lineal</option>`;
+
+function fmt(n){ return '$' + Math.round(n).toLocaleString('es-CL'); }
+
+function addMaterialRow(name='', unit='un', qty=1, price=0){
+  const row = document.createElement('div');
+  row.className = 'material-row grid grid-cols-12 gap-2 items-center bg-slate-50 rounded-xl p-2';
+  row.innerHTML = `
+    <input type="text" name="mat_name[]" value="${name}" class="form-input col-span-12 sm:col-span-5 text-sm" placeholder="Descripción" required>
+    <select name="mat_unit[]" class="form-input col-span-6 sm:col-span-2 text-sm">${UNIT_OPTIONS}</select>
+    <input type="number" name="mat_qty[]" value="${qty}" class="form-input col-span-3 sm:col-span-2 text-sm mat-qty" min="0" step="0.01">
+    <input type="number" name="mat_price[]" value="${price}" class="form-input col-span-3 sm:col-span-2 text-sm mat-price" min="0" step="1">
+    <div class="col-span-10 sm:col-span-1 text-right"><span class="font-mono text-xs font-bold text-slate-700 row-total">$0</span></div>
+    <div class="col-span-2 flex justify-end">
+      <button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>`;
+  document.getElementById('material-rows').appendChild(row);
+  if(unit){ row.querySelector('select').value = unit; }
+  row.querySelectorAll('input[type=number]').forEach(i => i.addEventListener('input', recalc));
+  recalc();
+}
+
+function addLaborRow(){
+  const row = document.createElement('div');
+  row.className = 'labor-row grid grid-cols-12 gap-2 items-center bg-amber-50 rounded-xl p-2';
+  row.innerHTML = `
+    <input type="text" name="lab_name[]" value="" class="form-input col-span-12 sm:col-span-5 text-sm" placeholder="Ej: Instalación eléctrica" required>
+    <select name="lab_unit[]" class="form-input col-span-6 sm:col-span-2 text-sm">${LABOR_UNITS}</select>
+    <input type="number" name="lab_qty[]" value="1" class="form-input col-span-3 sm:col-span-2 text-sm lab-qty" min="0" step="0.5">
+    <input type="number" name="lab_price[]" value="0" class="form-input col-span-3 sm:col-span-2 text-sm lab-price" min="0" step="1">
+    <div class="col-span-10 sm:col-span-1 text-right"><span class="font-mono text-xs font-bold text-amber-700 row-total">$0</span></div>
+    <div class="col-span-2 flex justify-end">
+      <button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>`;
+  document.getElementById('labor-rows').appendChild(row);
+  row.querySelectorAll('input[type=number]').forEach(i => i.addEventListener('input', recalc));
+  recalc();
+}
+
+function removeRow(btn){ btn.closest('[class*="-row"]').remove(); recalc(); }
+
+function recalc(){
+  let matTotal = 0, labTotal = 0;
+  document.querySelectorAll('.material-row').forEach(row => {
+    const qty = parseFloat(row.querySelector('.mat-qty')?.value || 0);
+    const price = parseFloat(row.querySelector('.mat-price')?.value || 0);
+    const t = qty * price;
+    matTotal += t;
+    const span = row.querySelector('.row-total');
+    if(span) span.textContent = fmt(t);
+  });
+  document.querySelectorAll('.labor-row').forEach(row => {
+    const qty = parseFloat(row.querySelector('.lab-qty')?.value || 0);
+    const price = parseFloat(row.querySelector('.lab-price')?.value || 0);
+    const t = qty * price;
+    labTotal += t;
+    const span = row.querySelector('.row-total');
+    if(span) span.textContent = fmt(t);
+  });
+  const iva = parseFloat(document.querySelector('[name=tax_percent]')?.value || 0);
+  const ivaAmt = (matTotal + labTotal) * iva / 100;
+  const total = matTotal + labTotal + ivaAmt;
+  document.getElementById('mat-subtotal').textContent = fmt(matTotal);
+  document.getElementById('lab-subtotal').textContent = fmt(labTotal);
+  document.getElementById('t-mat').textContent = fmt(matTotal);
+  document.getElementById('t-lab').textContent = fmt(labTotal);
+  document.getElementById('t-iva').textContent = fmt(ivaAmt);
+  document.getElementById('t-total').textContent = fmt(total);
+  document.getElementById('iva-label').textContent = iva;
+}
+
+// Product search
+let searchTimeout;
+document.getElementById('product-search').addEventListener('input', function(){
+  clearTimeout(searchTimeout);
+  const q = this.value.trim();
+  if(q.length < 2){ document.getElementById('search-results').classList.add('hidden'); return; }
+  searchTimeout = setTimeout(async () => {
+    const res = await fetch(`/catalogo/api/buscar/?q=${encodeURIComponent(q)}`);
+    const data = await res.json();
+    const div = document.getElementById('search-results');
+    if(data.results.length === 0){ div.classList.add('hidden'); return; }
+    div.innerHTML = data.results.map(p => `
+      <div class="flex items-center justify-between px-4 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors"
+           onclick="addFromCatalog('${p.name.replace(/'/g,"\\'")}','${p.unit}',1,${p.sale_price})">
+        <span class="text-sm font-medium text-slate-800">${p.name}</span>
+        <span class="text-xs text-slate-500 font-mono">$${parseInt(p.sale_price).toLocaleString('es-CL')} / ${p.unit}</span>
+      </div>`).join('');
+    div.classList.remove('hidden');
+  }, 300);
+});
+
+function addFromCatalog(name, unit, qty, price){
+  addMaterialRow(name, unit, qty, price);
+  document.getElementById('product-search').value = '';
+  document.getElementById('search-results').classList.add('hidden');
+}
+
+document.addEventListener('click', e => {
+  if(!e.target.closest('#product-search') && !e.target.closest('#search-results'))
+    document.getElementById('search-results').classList.add('hidden');
+});
+
+document.querySelector('[name=tax_percent]')?.addEventListener('input', recalc);
+
+// Init existing rows
+document.querySelectorAll('.material-row, .labor-row').forEach(row => {
+  row.querySelectorAll('input[type=number]').forEach(i => i.addEventListener('input', recalc));
+});
+recalc();
+</script>
+{% endblock %}

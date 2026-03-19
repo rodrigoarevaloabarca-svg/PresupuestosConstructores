@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Importar Productos{% endblock %}
+{% block page_title %}Importar Productos desde CSV{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'product_export_csv' %}" class="btn-secondary">⬇ Descargar plantilla CSV</a>
+  <a href="{% url 'product_list' %}" class="btn-secondary">← Volver</a>
+{% endblock %}
+{% block content %}
+<div class="max-w-2xl space-y-6">
+  <div class="card">
+    <h2 class="font-bold text-slate-800 mb-4">Instrucciones</h2>
+    <ol class="space-y-2 text-sm text-slate-600 list-decimal list-inside">
+      <li>Descarga la plantilla CSV con el botón de arriba (usa tu catálogo actual como base).</li>
+      <li>Abre el archivo en Excel o Google Sheets.</li>
+      <li>Completa los campos: <strong>Nombre</strong>, Descripción, Categoría, Unidad, Precio Costo, Precio Venta, SKU.</li>
+      <li>Guarda como CSV (UTF-8) y súbelo aquí.</li>
+    </ol>
+    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+      <p class="text-xs font-bold text-blue-700 mb-2">Categorías válidas:</p>
+      <p class="text-xs text-blue-600">materiales, herramientas, electricidad, gasfiteria, ceramica, pintura, madera, otro</p>
+      <p class="text-xs font-bold text-blue-700 mb-2 mt-3">Unidades válidas:</p>
+      <p class="text-xs text-blue-600">un, m2, m3, ml, kg, lt, hr, gl, bls, pk</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 class="font-bold text-slate-800 mb-4">Subir archivo CSV</h2>
+    <form method="post" enctype="multipart/form-data" class="space-y-4">
+      {% csrf_token %}
+      <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-blue-300 transition-colors" id="drop-zone">
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        </div>
+        <p class="text-sm font-semibold text-slate-600 mb-1">Arrastra tu CSV aquí o</p>
+        <label class="cursor-pointer text-blue-600 hover:text-blue-700 font-semibold text-sm underline">
+          selecciona un archivo
+          <input type="file" name="csv_file" accept=".csv" class="hidden" id="csv-input" onchange="updateLabel(this)">
+        </label>
+        <p class="text-xs text-slate-400 mt-2" id="file-label">Solo archivos .CSV</p>
+      </div>
+      <div class="flex justify-end gap-3">
+        <a href="{% url 'product_list' %}" class="btn-secondary">Cancelar</a>
+        <button type="submit" class="btn-primary">⬆ Importar productos</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function updateLabel(input) {
+  const label = document.getElementById('file-label');
+  if (input.files && input.files[0]) {
+    label.textContent = '📄 ' + input.files[0].name;
+    label.className = 'text-xs text-green-600 font-semibold mt-2';
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load budget_filters %}
+{% block title %}Presupuesto #{{ budget.number }} — Constructor Express
+  <!-- Public link card -->
+  {% if budget.public_token %}
+  <div class="card bg-gradient-to-r from-slate-800 to-slate-900 border-0 text-white mt-5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <p class="font-bold mb-1 flex items-center gap-2">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+          Link público generado
+        </p>
+        <p class="text-slate-400 text-xs mb-3">Comparte este link con tu cliente. No requiere cuenta.</p>
+        <div class="flex items-center gap-2">
+          <code id="public-url" class="text-xs bg-slate-700 text-blue-300 px-3 py-1.5 rounded-lg font-mono break-all">{{ request.scheme }}://{{ request.get_host }}{% url 'budget_public' budget.public_token.token %}</code>
+        </div>
+        <p class="text-slate-500 text-xs mt-2">Visto {{ budget.public_token.views }} vez{% if budget.public_token.views != 1 %}ces{% endif %} por el cliente</p>
+      </div>
+      <div class="flex-shrink-0 flex flex-col gap-2">
+        <button onclick="copyLink()" class="btn-primary text-xs py-2">📋 Copiar link</button>
+        <a href="{% url 'budget_generate_link' budget.pk %}?regenerate=1" class="btn-ghost text-xs py-2 text-slate-400">🔄 Regenerar</a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="mt-5 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
+    <div>
+      <p class="text-sm font-semibold text-slate-700">Compartir presupuesto con cliente</p>
+      <p class="text-xs text-slate-400">Genera un link público para que tu cliente pueda ver el presupuesto.</p>
+    </div>
+    <a href="{% url 'budget_generate_link' budget.pk %}" class="btn-secondary text-xs flex-shrink-0">
+      🔗 Generar link
+    </a>
+  </div>
+  {% endif %}
+{% endblock %}
+{% block page_title %}Presupuesto #{{ budget.number }} — {{ budget.title|truncatechars:40 }}{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'budget_pdf' budget.pk %}" target="_blank" class="btn-secondary">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+    Exportar PDF
+  </a>
+  <a href="{% url 'budget_generate_link' budget.pk %}" class="btn-ghost" title="Generar link para cliente">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+    Compartir
+  </a>
+  <a href="{% url 'budget_edit' budget.pk %}" class="btn-primary">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+    Editar
+  </a>
+{% endblock %}
+{% block content %}
+<div class="space-y-5">
+  <!-- Status Bar -->
+  <div class="card flex flex-wrap gap-4 items-center justify-between py-4">
+    <div class="flex items-center gap-3">
+      <span class="badge text-sm px-4 py-2
+        {% if budget.status == 'aceptado' %}bg-green-100 text-green-700
+        {% elif budget.status == 'enviado' %}bg-amber-100 text-amber-700
+        {% elif budget.status == 'rechazado' %}bg-red-100 text-red-700
+        {% elif budget.status == 'vencido' %}bg-slate-100 text-slate-500
+        {% else %}bg-blue-50 text-blue-700{% endif %}">
+        {{ budget.get_status_display }}
+      </span>
+      <span class="text-sm text-slate-500">Válido hasta <strong>{{ budget.valid_until|date:"d/m/Y" }}</strong></span>
+      {% if budget.is_expired and budget.status != 'aceptado' %}
+        <span class="badge bg-red-100 text-red-600">⚠ Vencido</span>
+      {% endif %}
+    </div>
+    <form method="post" action="{% url 'budget_update_status' budget.pk %}" class="flex items-center gap-2">
+      {% csrf_token %}
+      <select name="status" class="form-input text-sm w-auto">
+        <option value="borrador" {% if budget.status == 'borrador' %}selected{% endif %}>Borrador</option>
+        <option value="enviado" {% if budget.status == 'enviado' %}selected{% endif %}>Enviado al Cliente</option>
+        <option value="aceptado" {% if budget.status == 'aceptado' %}selected{% endif %}>Aceptado</option>
+        <option value="rechazado" {% if budget.status == 'rechazado' %}selected{% endif %}>Rechazado</option>
+        <option value="vencido" {% if budget.status == 'vencido' %}selected{% endif %}>Vencido</option>
+      </select>
+      <button type="submit" class="btn-secondary text-sm">Actualizar estado</button>
+    </form>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+    <!-- Left -->
+    <div class="space-y-4">
+      <div class="card">
+        <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Cliente</h3>
+        <p class="font-bold text-slate-800 text-base">{{ budget.client.name }}</p>
+        {% if budget.client.rut %}<p class="text-sm text-slate-500 mt-1">RUT: {{ budget.client.rut }}</p>{% endif %}
+        {% if budget.client.phone %}<p class="text-sm text-slate-500">📞 {{ budget.client.phone }}</p>{% endif %}
+        {% if budget.client.email %}<p class="text-sm text-slate-500">✉ {{ budget.client.email }}</p>{% endif %}
+        {% if budget.client.address %}<p class="text-sm text-slate-500">📍 {{ budget.client.address }}{% if budget.client.city %}, {{ budget.client.city }}{% endif %}</p>{% endif %}
+        <div class="mt-3 pt-3 border-t border-slate-100">
+          <a href="{% url 'client_detail' budget.client.pk %}" class="text-xs text-blue-600 hover:underline">Ver ficha del cliente →</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Fechas</h3>
+        <dl class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <dt class="text-slate-400">Creado</dt>
+            <dd class="font-semibold text-slate-700">{{ budget.created_at|date:"d/m/Y" }}</dd>
+          </div>
+          <div class="flex justify-between">
+            <dt class="text-slate-400">Válido hasta</dt>
+            <dd class="font-semibold text-slate-700">{{ budget.valid_until|date:"d/m/Y" }}</dd>
+          </div>
+          {% if budget.sent_at %}
+          <div class="flex justify-between">
+            <dt class="text-slate-400">Enviado</dt>
+            <dd class="font-semibold text-slate-700">{{ budget.sent_at|date:"d/m/Y" }}</dd>
+          </div>
+          {% endif %}
+        </dl>
+      </div>
+
+      <!-- Totals Card -->
+      <div class="card bg-slate-900 text-white">
+        <h3 class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-4">Resumen Económico</h3>
+        <div class="space-y-2.5">
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Materiales</span>
+            <span class="font-mono font-semibold">{{ budget.subtotal_materials|clp }}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">Mano de obra</span>
+            <span class="font-mono font-semibold">{{ budget.subtotal_labor|clp }}</span>
+          </div>
+          {% if budget.tax_percent > 0 %}
+          <div class="flex justify-between text-sm">
+            <span class="text-slate-400">IVA ({{ budget.tax_percent }}%)</span>
+            <span class="font-mono font-semibold">{{ budget.tax_amount|clp }}</span>
+          </div>
+          {% endif %}
+          <div class="flex justify-between font-bold text-xl pt-3 border-t border-slate-700 mt-3">
+            <span>TOTAL</span>
+            <span class="font-mono text-blue-400">{{ budget.total|clp }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right -->
+    <div class="lg:col-span-2 space-y-4">
+      <div class="card">
+        <h2 class="font-bold text-slate-800 text-lg mb-1">{{ budget.title }}</h2>
+        {% if budget.notes %}
+          <p class="text-sm text-slate-500 bg-slate-50 rounded-xl px-4 py-3 mb-4 italic">{{ budget.notes }}</p>
+        {% endif %}
+
+        {% if budget.material_items.all %}
+        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 mt-5 flex items-center gap-2">
+          <span class="w-5 h-5 bg-blue-100 rounded flex items-center justify-center text-xs">📦</span>
+          Materiales y Suministros
+        </h4>
+        <div class="overflow-x-auto rounded-xl border border-slate-100">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-slate-50 text-xs">
+                <th class="text-left py-2.5 px-3 font-semibold text-slate-500">Descripción</th>
+                <th class="text-center py-2.5 px-3 font-semibold text-slate-500">Cant.</th>
+                <th class="text-center py-2.5 px-3 font-semibold text-slate-500">Unid.</th>
+                <th class="text-right py-2.5 px-3 font-semibold text-slate-500">P.Unit.</th>
+                <th class="text-right py-2.5 px-3 font-semibold text-slate-500">Total</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              {% for item in budget.material_items.all %}
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-2.5 px-3 font-medium text-slate-700">{{ item.name }}</td>
+                <td class="py-2.5 px-3 text-center text-slate-500">{{ item.quantity }}</td>
+                <td class="py-2.5 px-3 text-center text-slate-500">{{ item.get_unit_display }}</td>
+                <td class="py-2.5 px-3 text-right font-mono text-slate-600">{{ item.unit_price|clp }}</td>
+                <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-800">{{ item.total|clp }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr class="bg-blue-50/50">
+                <td colspan="4" class="py-2.5 px-3 text-right text-xs font-bold text-slate-500 uppercase">Subtotal materiales</td>
+                <td class="py-2.5 px-3 text-right font-mono font-bold text-blue-700">{{ budget.subtotal_materials|clp }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        {% endif %}
+
+        {% if budget.labor_items.all %}
+        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 mt-6 flex items-center gap-2">
+          <span class="w-5 h-5 bg-amber-100 rounded flex items-center justify-center text-xs">🔨</span>
+          Mano de Obra
+        </h4>
+        <div class="overflow-x-auto rounded-xl border border-slate-100">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-slate-50 text-xs">
+                <th class="text-left py-2.5 px-3 font-semibold text-slate-500">Descripción del Trabajo</th>
+                <th class="text-center py-2.5 px-3 font-semibold text-slate-500">Cant.</th>
+                <th class="text-center py-2.5 px-3 font-semibold text-slate-500">Unid.</th>
+                <th class="text-right py-2.5 px-3 font-semibold text-slate-500">P.Unit.</th>
+                <th class="text-right py-2.5 px-3 font-semibold text-slate-500">Total</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-50">
+              {% for item in budget.labor_items.all %}
+              <tr class="hover:bg-slate-50/50">
+                <td class="py-2.5 px-3 font-medium text-slate-700">{{ item.name }}</td>
+                <td class="py-2.5 px-3 text-center text-slate-500">{{ item.quantity }}</td>
+                <td class="py-2.5 px-3 text-center text-slate-500">{{ item.get_unit_display }}</td>
+                <td class="py-2.5 px-3 text-right font-mono text-slate-600">{{ item.unit_price|clp }}</td>
+                <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-800">{{ item.total|clp }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr class="bg-amber-50/50">
+                <td colspan="4" class="py-2.5 px-3 text-right text-xs font-bold text-slate-500 uppercase">Subtotal mano de obra</td>
+                <td class="py-2.5 px-3 text-right font-mono font-bold text-amber-700">{{ budget.subtotal_labor|clp }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        {% endif %}
+
+        {% if budget.payment_terms %}
+        <div class="mt-5 pt-4 border-t border-slate-100">
+          <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1.5">Condiciones de Pago</p>
+          <p class="text-sm text-slate-600 bg-slate-50 rounded-xl px-4 py-3">{{ budget.payment_terms }}</p>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Actions footer -->
+      <div class="flex flex-wrap gap-3">
+        <a href="{% url 'budget_pdf' budget.pk %}" target="_blank" class="btn-primary">
+          🖨️ Exportar PDF
+        </a>
+        <a href="{% url 'budget_edit' budget.pk %}" class="btn-secondary">
+          ✏️ Editar presupuesto
+        </a>
+        <button onclick="openEmailModal()" class="btn-secondary">
+          📧 Enviar por email
+        </button>
+        <a href="{% url 'budget_delete' budget.pk %}" class="btn-danger">
+          🗑️ Eliminar
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+function openEmailModal() {
+  document.getElementById('email-modal').classList.remove('hidden');
+  document.getElementById('email-modal').classList.add('flex');
+}
+function closeEmailModal() {
+  document.getElementById('email-modal').classList.add('hidden');
+  document.getElementById('email-modal').classList.remove('flex');
+}
+document.getElementById('email-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeEmailModal();
+});
+function copyLink() {
+  const url = document.getElementById('public-url')?.textContent?.trim();
+  if (url) {
+    navigator.clipboard.writeText(url).then(() => {
+      const btn = event.target;
+      const orig = btn.textContent;
+      btn.textContent = '✅ Copiado!';
+      setTimeout(() => btn.textContent = orig, 2000);
+    });
+  }
+}
+</script>
+
+  <!-- Email Modal -->
+  <div id="email-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.5)">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-slate-800 text-lg">📧 Enviar por Email</h3>
+        <button onclick="closeEmailModal()" class="text-slate-400 hover:text-slate-600 p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <p class="text-sm text-slate-500 mb-4">
+        Se enviará el presupuesto <strong>#{{ budget.number }}</strong> al siguiente correo:
+      </p>
+      <form method="post" action="{% url 'budget_send_email' budget.pk %}">
+        {% csrf_token %}
+        <div class="mb-4">
+          <label class="form-label">Email del cliente</label>
+          <input type="email" name="email" value="{{ budget.client.email }}"
+                 class="form-input" placeholder="cliente@ejemplo.cl" required>
+          <p class="text-xs text-slate-400 mt-1">Pre-cargado desde la ficha del cliente.</p>
+        </div>
+        <div class="flex gap-3 justify-end">
+          <button type="button" onclick="closeEmailModal()" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">📤 Enviar ahora</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+{% endblock %}

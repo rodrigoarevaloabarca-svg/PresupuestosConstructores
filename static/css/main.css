@@ -1,0 +1,30 @@
+/* Constructor Express — Estilos globales */
+/* La mayoría del estilo viene de Tailwind CDN en desarrollo */
+/* En producción: ejecutar tailwind build para generar este archivo */
+
+/* Variables CSS */
+:root {
+  --color-brand: #2563eb;
+  --color-brand-dark: #1d4ed8;
+  --color-brand-light: #3b82f6;
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* Fuentes */
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Print styles para PDF */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white; }
+}

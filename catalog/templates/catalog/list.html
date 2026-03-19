@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Catálogo — Constructor Express{% endblock %}
+{% block page_title %}Catálogo de Productos{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'product_export_csv' %}" class="btn-ghost" title="Exportar a CSV">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+    Exportar CSV
+  </a>
+  <a href="{% url 'product_import_csv' %}" class="btn-secondary">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l4-4m0 0l4 4m-4-4v12"/></svg>
+    Importar CSV
+  </a>
+  <a href="{% url 'product_create' %}" class="btn-primary">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+    Nuevo Producto
+  </a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  <form method="get" class="flex flex-wrap gap-3 mb-5">
+    <div class="relative flex-1 min-w-48">
+      <svg class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" name="q" value="{{ q }}" placeholder="Buscar producto..." class="form-input pl-9">
+    </div>
+    <select name="cat" class="form-input w-auto">
+      <option value="">Todas las categorías</option>
+      {% for val, label in categories %}<option value="{{ val }}" {% if cat == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+    <button type="submit" class="btn-secondary">Filtrar</button>
+    {% if q or cat %}<a href="{% url 'product_list' %}" class="btn-ghost">✕ Limpiar</a>{% endif %}
+  </form>
+
+  {% if products %}
+  <div class="overflow-x-auto -mx-1">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-slate-100">
+          <th class="text-left py-2.5 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Nombre</th>
+          <th class="text-left py-2.5 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide hidden sm:table-cell">Categoría</th>
+          <th class="text-center py-2.5 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">Unid.</th>
+          <th class="text-right py-2.5 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">P.Costo</th>
+          <th class="text-right py-2.5 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide">P.Venta</th>
+          <th class="text-right py-2.5 px-3 text-xs font-semibold text-slate-400 uppercase tracking-wide hidden md:table-cell">Margen</th>
+          <th class="py-2.5 px-3 w-20"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-50">
+        {% for p in products %}
+        <tr class="hover:bg-slate-50/70 transition-colors group">
+          <td class="py-3 px-3">
+            <p class="font-semibold text-slate-800">{{ p.name }}</p>
+            {% if p.sku %}<p class="text-xs text-slate-400 font-mono">{{ p.sku }}</p>{% endif %}
+          </td>
+          <td class="py-3 px-3 hidden sm:table-cell">
+            <span class="badge bg-slate-100 text-slate-600">{{ p.get_category_display }}</span>
+          </td>
+          <td class="py-3 px-3 text-center text-slate-500 text-xs">{{ p.get_unit_display }}</td>
+          <td class="py-3 px-3 text-right font-mono text-slate-500 text-xs">${{ p.cost_price|floatformat:0 }}</td>
+          <td class="py-3 px-3 text-right font-mono font-bold text-slate-800">${{ p.sale_price|floatformat:0 }}</td>
+          <td class="py-3 px-3 text-right hidden md:table-cell">
+            <span class="badge {% if p.margin >= 20 %}bg-green-100 text-green-700{% elif p.margin >= 10 %}bg-amber-100 text-amber-700{% else %}bg-red-100 text-red-600{% endif %}">
+              {{ p.margin }}%
+            </span>
+          </td>
+          <td class="py-3 px-3">
+            <div class="flex items-center gap-1 justify-end opacity-60 group-hover:opacity-100 transition-opacity">
+              <a href="{% url 'product_edit' p.pk %}" class="btn-ghost py-1.5 px-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              </a>
+              <a href="{% url 'product_delete' p.pk %}" class="btn-ghost py-1.5 px-2 hover:text-red-500">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-16">
+    <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+    </div>
+    <p class="text-slate-500 font-semibold">{% if q %}Sin resultados para "{{ q }}"{% else %}El catálogo está vacío{% endif %}</p>
+    <p class="text-slate-400 text-sm mt-1 mb-5">{% if not q %}Agrega productos o importa desde un CSV{% endif %}</p>
+    {% if not q %}
+    <div class="flex gap-3 justify-center">
+      <a href="{% url 'product_create' %}" class="btn-primary">+ Nuevo Producto</a>
+      <a href="{% url 'product_import_csv' %}" class="btn-secondary">Importar CSV</a>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

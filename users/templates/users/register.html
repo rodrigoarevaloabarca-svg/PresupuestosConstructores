@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro — Constructor Express</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body{font-family:'Plus Jakarta Sans',sans-serif;} .fi{@apply w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500;}</style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+  <div class="w-full max-w-lg">
+    <div class="text-center mb-6">
+      <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl mx-auto mb-4">
+        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+      </div>
+      <h1 class="text-2xl font-bold text-white">Crear cuenta gratis</h1>
+      <p class="text-slate-400 mt-1 text-sm">Comienza a generar presupuestos profesionales hoy</p>
+    </div>
+    <div class="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8 shadow-2xl">
+      {% if form.errors %}
+      <div class="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+        <p class="text-red-400 text-sm font-semibold mb-1">Hay errores en el formulario:</p>
+        {% for field in form %}{% for error in field.errors %}<p class="text-red-300 text-xs">· {{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}
+        {% for error in form.non_field_errors %}<p class="text-red-300 text-xs">· {{ error }}</p>{% endfor %}
+      </div>
+      {% endif %}
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Nombre de la empresa *</label>
+            <input type="text" name="company_name" required value="{{ form.company_name.value|default:'' }}" class="fi" placeholder="Ej: Gasfiter González">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-300 mb-1.5">RUT empresa *</label>
+            <input type="text" name="rut" required value="{{ form.rut.value|default:'' }}" class="fi" placeholder="12345678-9">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Rubro *</label>
+            <select name="rubro" class="fi bg-slate-800 text-white">
+              {% for val, label in form.rubro.field.choices %}<option value="{{ val }}" {% if form.rubro.value == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Teléfono *</label>
+            <input type="text" name="phone" required value="{{ form.phone.value|default:'' }}" class="fi" placeholder="+56 9 1234 5678">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Correo electrónico *</label>
+            <input type="email" name="email" required value="{{ form.email.value|default:'' }}" class="fi" placeholder="tu@email.com">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Usuario *</label>
+            <input type="text" name="username" required value="{{ form.username.value|default:'' }}" class="fi" placeholder="tu_usuario">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Contraseña *</label>
+            <input type="password" name="password1" required class="fi" placeholder="••••••••">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Confirmar contraseña *</label>
+            <input type="password" name="password2" required class="fi" placeholder="••••••••">
+          </div>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/30 mt-2">
+          Crear cuenta gratis →
+        </button>
+      </form>
+      <p class="text-center text-slate-400 text-sm mt-5">¿Ya tienes cuenta? <a href="{% url 'login' %}" class="text-blue-400 hover:text-blue-300 font-semibold">Inicia sesión</a></p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# ─── Core Framework ───────────────────────────────────────────────
+Django>=4.2,<5.0
+djangorestframework>=3.14
+
+# ─── Base de datos ────────────────────────────────────────────────
+psycopg2-binary>=2.9         # PostgreSQL
+dj-database-url>=2.1         # URL-based DB config
+
+# ─── Archivos estáticos y media ──────────────────────────────────
+whitenoise>=6.6
+Pillow>=10.0
+
+# ─── Generación de PDF ───────────────────────────────────────────
+weasyprint>=60.0
+
+# ─── Config y utilidades ─────────────────────────────────────────
+python-decouple>=3.8
+
+# ─── Producción (servidor) ───────────────────────────────────────
+gunicorn>=21.0
+
+# ─── Desarrollo ──────────────────────────────────────────────────
+# django-debug-toolbar>=4.0  # Descomentar en desarrollo

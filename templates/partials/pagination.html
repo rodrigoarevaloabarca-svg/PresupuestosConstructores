@@ -1,0 +1,22 @@
+{% if page_obj.has_other_pages %}
+<div class="flex items-center justify-between mt-5 pt-5 border-t border-slate-100">
+  <p class="text-sm text-slate-500">
+    Mostrando {{ page_obj.start_index }}–{{ page_obj.end_index }} de {{ page_obj.paginator.count }} resultados
+  </p>
+  <div class="flex items-center gap-1">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn-ghost py-2 px-3">← Anterior</a>
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <span class="w-9 h-9 flex items-center justify-center rounded-lg bg-blue-600 text-white text-sm font-bold">{{ num }}</span>
+      {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+        <a href="?page={{ num }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 text-sm text-slate-600 transition-colors">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn-ghost py-2 px-3">Siguiente →</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
