@@ -1,6 +1,15 @@
 from pathlib import Path
 import os
 
+env_path = Path(__file__).resolve().parent.parent / '.env'
+if env_path.exists():
+    with open(env_path) as f:
+        for line in f:
+            line = line.strip()
+            if line and not line.startswith('#') and '=' in line:
+                key, val = line.split('=', 1)
+                os.environ.setdefault(key.strip(), val.strip())
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-CHANGE-ME-in-production-xxxxxxxxxxxxxxx')
@@ -57,10 +66,19 @@ TEMPLATES = [
     },
 ]
 
-DATABASE_URL = os.environ.get('DATABASE_URL', '')
-if DATABASE_URL and DATABASE_URL.startswith('postgres'):
-    import dj_database_url
-    DATABASES = {'default': dj_database_url.parse(DATABASE_URL)}
+# Si existen las variables de BD → usar PostgreSQL (producción)
+# Si no existen → usar SQLite (desarrollo local)
+if os.environ.get('DB_NAME'):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME'),
+            'USER': os.environ.get('DB_USER'),
+            'PASSWORD': os.environ.get('DB_PASS'),
+            'HOST': os.environ.get('DB_HOST'),
+            'PORT': '5432',
+        }
+    }
 else:
     DATABASES = {
         'default': {
@@ -89,7 +107,8 @@ USE_TZ = True
 USE_THOUSAND_SEPARATOR = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+# Solo incluir STATICFILES_DIRS si la carpeta existe
+STATICFILES_DIRS = [BASE_DIR / 'static'] if (BASE_DIR / 'static').exists() else []
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
@@ -120,7 +139,7 @@ REST_FRAMEWORK = {
 
 if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
-    SECURE_SSL_REDIRECT = True
+    SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
