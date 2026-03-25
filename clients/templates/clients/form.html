@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{{ action }} Cliente — Constructor Express{% endblock %}
 {% block page_title %}{{ action }} Cliente{% endblock %}
+{% block extra_head %}<style>.form-field-icon { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; color: #94a3b8; pointer-events: none; } .form-field-wrapper { position: relative; } .form-field-wrapper input { padding-left: 2.5rem; }</style>{% endblock %}
 {% block content %}
 <div class="max-w-2xl">
   <div class="card">
@@ -13,31 +14,31 @@
       {% csrf_token %}
       <div class="grid grid-cols-2 gap-4">
         <div class="col-span-2">
-          <label class="form-label">Nombre / Razón Social *</label>
+          <label class="form-label flex items-center gap-2"><i data-lucide="user" class="w-4 h-4"></i>Nombre / Razón Social *</label>
           <input type="text" name="name" value="{{ form.name.value|default:'' }}" class="form-input" required>
         </div>
         <div>
-          <label class="form-label">RUT</label>
+          <label class="form-label flex items-center gap-2"><i data-lucide="id-card" class="w-4 h-4"></i>RUT</label>
           <input type="text" name="rut" value="{{ form.rut.value|default:'' }}" class="form-input" placeholder="12345678-9">
         </div>
         <div>
-          <label class="form-label">Teléfono</label>
+          <label class="form-label flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i>Teléfono</label>
           <input type="text" name="phone" value="{{ form.phone.value|default:'' }}" class="form-input" placeholder="+56 9...">
         </div>
         <div class="col-span-2">
-          <label class="form-label">Email</label>
+          <label class="form-label flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4"></i>Email</label>
           <input type="email" name="email" value="{{ form.email.value|default:'' }}" class="form-input">
         </div>
         <div class="col-span-2">
-          <label class="form-label">Dirección del Proyecto</label>
+          <label class="form-label flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i>Dirección del Proyecto</label>
           <input type="text" name="address" value="{{ form.address.value|default:'' }}" class="form-input">
         </div>
         <div>
-          <label class="form-label">Ciudad</label>
+          <label class="form-label flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i>Ciudad</label>
           <input type="text" name="city" value="{{ form.city.value|default:'' }}" class="form-input">
         </div>
         <div class="col-span-2">
-          <label class="form-label">Notas</label>
+          <label class="form-label flex items-center gap-2"><i data-lucide="sticky-note" class="w-4 h-4"></i>Notas</label>
           <textarea name="notes" rows="3" class="form-input">{{ form.notes.value|default:'' }}</textarea>
         </div>
       </div>

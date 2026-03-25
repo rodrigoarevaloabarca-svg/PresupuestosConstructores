@@ -23,6 +23,25 @@ body {
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
+/* Card enhancements */
+.card {
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Lucide icon sizing fix */
+[data-lucide] {
+  display: inline-block;
+}
+
+/* Better focus styles for form inputs */
+.form-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
 /* Print styles para PDF */
 @media print {
   .no-print { display: none !important; }
