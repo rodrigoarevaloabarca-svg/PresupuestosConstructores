@@ -105,12 +105,16 @@
 </div>
 {% endblock %}
 
+{{ months_labels|json_script:"chart-labels" }}
+{{ months_created|json_script:"chart-created" }}
+{{ months_accepted|json_script:"chart-accepted" }}
+{{ months_revenue|json_script:"chart-revenue" }}
 {% block extra_js %}
 <script>
-const labels   = {{ months_labels|safe }};
-const created  = {{ months_created|safe }};
-const accepted = {{ months_accepted|safe }};
-const revenue  = {{ months_revenue|safe }};
+const labels   = JSON.parse(document.getElementById('chart-labels').textContent);
+const created  = JSON.parse(document.getElementById('chart-created').textContent);
+const accepted = JSON.parse(document.getElementById('chart-accepted').textContent);
+const revenue  = JSON.parse(document.getElementById('chart-revenue').textContent);
 
 const baseOpts = {
   responsive: true, maintainAspectRatio: false,

@@ -1,4 +1,5 @@
-from django.db import models
+from django.core.validators import MinValueValidator
+from django.db import models, transaction
 from django.utils import timezone
 from datetime import timedelta
 from users.models import User
@@ -67,8 +68,14 @@ class Budget(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.number:
-            last = Budget.objects.filter(contractor=self.contractor).order_by('-number').first()
-            self.number = (last.number + 1) if last else 1
+            with transaction.atomic():
+                last = (
+                    Budget.objects.select_for_update()
+                    .filter(contractor=self.contractor)
+                    .order_by('-number')
+                    .first()
+                )
+                self.number = (last.number + 1) if last else 1
         if not self.payment_terms:
             try:
                 self.payment_terms = self.contractor.profile.payment_terms
@@ -82,8 +89,8 @@ class BudgetItemMaterial(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, blank=True)
     name = models.CharField('Descripción', max_length=300)
     unit = models.CharField('Unidad', max_length=10, choices=UNIT_CHOICES, default='un')
-    quantity = models.DecimalField('Cantidad', max_digits=10, decimal_places=2)
-    unit_price = models.DecimalField('Precio Unitario', max_digits=12, decimal_places=0)
+    quantity = models.DecimalField('Cantidad', max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
+    unit_price = models.DecimalField('Precio Unitario', max_digits=12, decimal_places=0, validators=[MinValueValidator(0)])
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -101,8 +108,8 @@ class BudgetItemLabor(models.Model):
     budget = models.ForeignKey(Budget, on_delete=models.CASCADE, related_name='labor_items')
     name = models.CharField('Descripción del Trabajo', max_length=300)
     unit = models.CharField('Unidad', max_length=10, choices=UNIT_CHOICES, default='gl')
-    quantity = models.DecimalField('Cantidad / Horas', max_digits=10, decimal_places=2, default=1)
-    unit_price = models.DecimalField('Precio Unitario', max_digits=12, decimal_places=0)
+    quantity = models.DecimalField('Cantidad / Horas', max_digits=10, decimal_places=2, default=1, validators=[MinValueValidator(0)])
+    unit_price = models.DecimalField('Precio Unitario', max_digits=12, decimal_places=0, validators=[MinValueValidator(0)])
     order = models.PositiveIntegerField(default=0)
 
     class Meta:

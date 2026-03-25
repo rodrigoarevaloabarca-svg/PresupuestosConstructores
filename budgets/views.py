@@ -1,6 +1,8 @@
+from decimal import Decimal, InvalidOperation
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db import transaction
 from django.http import HttpResponse
 from django.utils import timezone
 from django.conf import settings
@@ -57,10 +59,20 @@ def budget_create(request):
     if request.method == 'POST':
         form = BudgetForm(request.POST, user=request.user)
         if form.is_valid():
-            budget = form.save(commit=False)
-            budget.contractor = request.user
-            budget.save()
-            _save_items(request, budget)
+            with transaction.atomic():
+                # Re-check limit inside transaction to prevent race condition
+                if not request.user.is_pro():
+                    month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0)
+                    count = Budget.objects.select_for_update().filter(
+                        contractor=request.user, created_at__gte=month_start
+                    ).count()
+                    if count >= settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH:
+                        messages.warning(request, f'Límite mensual alcanzado.')
+                        return redirect('budget_list')
+                budget = form.save(commit=False)
+                budget.contractor = request.user
+                budget.save()
+                _save_items(request, budget)
             messages.success(request, f'✅ Presupuesto #{budget.number} creado exitosamente.')
             return redirect('budget_detail', pk=budget.pk)
     else:
@@ -100,6 +112,15 @@ def budget_edit(request, pk):
     return render(request, 'budgets/form.html', {'form': form, 'clients': clients, 'budget': budget, 'action': 'Editar'})
 
 
+def _parse_decimal(value, default='0'):
+    """Parse string to Decimal safely, clamped to >= 0."""
+    try:
+        d = Decimal(str(value).replace(',', '.'))
+        return max(Decimal('0'), d)
+    except (InvalidOperation, ValueError):
+        return Decimal(default)
+
+
 def _save_items(request, budget):
     mat_names  = request.POST.getlist('mat_name[]')
     mat_units  = request.POST.getlist('mat_unit[]')
@@ -111,8 +132,8 @@ def _save_items(request, budget):
                 BudgetItemMaterial.objects.create(
                     budget=budget, name=name.strip(),
                     unit=mat_units[i] if i < len(mat_units) else 'un',
-                    quantity=max(0, float(mat_qtys[i])) if i < len(mat_qtys) and mat_qtys[i] else 1,
-                    unit_price=max(0, float(mat_prices[i])) if i < len(mat_prices) and mat_prices[i] else 0,
+                    quantity=_parse_decimal(mat_qtys[i], '1') if i < len(mat_qtys) and mat_qtys[i] else Decimal('1'),
+                    unit_price=_parse_decimal(mat_prices[i]) if i < len(mat_prices) and mat_prices[i] else Decimal('0'),
                     order=i,
                 )
             except (ValueError, IndexError):
@@ -128,8 +149,8 @@ def _save_items(request, budget):
                 BudgetItemLabor.objects.create(
                     budget=budget, name=name.strip(),
                     unit=lab_units[i] if i < len(lab_units) else 'gl',
-                    quantity=max(0, float(lab_qtys[i])) if i < len(lab_qtys) and lab_qtys[i] else 1,
-                    unit_price=max(0, float(lab_prices[i])) if i < len(lab_prices) and lab_prices[i] else 0,
+                    quantity=_parse_decimal(lab_qtys[i], '1') if i < len(lab_qtys) and lab_qtys[i] else Decimal('1'),
+                    unit_price=_parse_decimal(lab_prices[i]) if i < len(lab_prices) and lab_prices[i] else Decimal('0'),
                     order=i,
                 )
             except (ValueError, IndexError):
@@ -182,7 +203,9 @@ def budget_pdf(request, pk):
         css = CSS(string='@page { size: A4; margin: 0; }')
         pdf_bytes = html.write_pdf(stylesheets=[css])
 
-        filename = f'presupuesto-{budget.number}-{budget.client.name[:20].replace(" ","-")}.pdf'
+        import re
+        safe_name = re.sub(r'[^\w\s-]', '', budget.client.name[:20]).strip().replace(' ', '-')
+        filename = f'presupuesto-{budget.number}-{safe_name}.pdf'
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="{filename}"'
         return response
@@ -198,33 +221,37 @@ def budget_pdf(request, pk):
 @login_required
 def budget_duplicate(request, pk):
     original = get_object_or_404(Budget, pk=pk, contractor=request.user)
-    if not request.user.is_pro():
-        month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0)
-        count = Budget.objects.filter(contractor=request.user, created_at__gte=month_start).count()
-        if count >= settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH:
-            messages.warning(request, f'Límite mensual de presupuestos alcanzado.')
-            return redirect('budget_list')
 
-    new_budget = Budget.objects.create(
-        contractor=request.user,
-        client=original.client,
-        title=f"COPIA — {original.title}",
-        status='borrador',
-        validity_days=original.validity_days,
-        payment_terms=original.payment_terms,
-        notes=original.notes,
-        tax_percent=original.tax_percent,
-    )
-    for item in original.material_items.all():
-        BudgetItemMaterial.objects.create(
-            budget=new_budget, name=item.name, unit=item.unit,
-            quantity=item.quantity, unit_price=item.unit_price, order=item.order,
+    with transaction.atomic():
+        if not request.user.is_pro():
+            month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0)
+            count = Budget.objects.select_for_update().filter(
+                contractor=request.user, created_at__gte=month_start
+            ).count()
+            if count >= settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH:
+                messages.warning(request, f'Límite mensual de presupuestos alcanzado.')
+                return redirect('budget_list')
+
+        new_budget = Budget.objects.create(
+            contractor=request.user,
+            client=original.client,
+            title=f"COPIA — {original.title}",
+            status='borrador',
+            validity_days=original.validity_days,
+            payment_terms=original.payment_terms,
+            notes=original.notes,
+            tax_percent=original.tax_percent,
         )
-    for item in original.labor_items.all():
-        BudgetItemLabor.objects.create(
-            budget=new_budget, name=item.name, unit=item.unit,
-            quantity=item.quantity, unit_price=item.unit_price, order=item.order,
-        )
+        for item in original.material_items.all():
+            BudgetItemMaterial.objects.create(
+                budget=new_budget, name=item.name, unit=item.unit,
+                quantity=item.quantity, unit_price=item.unit_price, order=item.order,
+            )
+        for item in original.labor_items.all():
+            BudgetItemLabor.objects.create(
+                budget=new_budget, name=item.name, unit=item.unit,
+                quantity=item.quantity, unit_price=item.unit_price, order=item.order,
+            )
     messages.success(request, f'✅ Presupuesto duplicado como #{new_budget.number}. Ya puedes editarlo.')
     return redirect('budget_edit', pk=new_budget.pk)
 

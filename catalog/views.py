@@ -77,7 +77,26 @@ def product_search_api(request):
 
 import csv
 import io
+from decimal import Decimal, InvalidOperation
 from django.http import HttpResponse
+
+
+def _sanitize_csv_value(value):
+    """Prevent CSV formula injection by escaping dangerous prefixes."""
+    s = str(value)
+    if s and s[0] in ('=', '+', '-', '@', '\t', '\r'):
+        return "'" + s
+    return s
+
+
+def _parse_csv_price(raw):
+    """Parse Chilean-format price string to Decimal safely."""
+    try:
+        cleaned = str(raw).replace('.', '').replace(',', '.').strip() or '0'
+        d = Decimal(cleaned)
+        return max(Decimal('0'), d)
+    except (InvalidOperation, ValueError):
+        return Decimal('0')
 
 
 @login_required
@@ -92,8 +111,9 @@ def product_export_csv(request):
     products = Product.objects.filter(contractor=request.user, is_active=True)
     for p in products:
         writer.writerow([
-            p.name, p.description, p.get_category_display(),
-            p.get_unit_display(), p.cost_price, p.sale_price, p.sku
+            _sanitize_csv_value(p.name), _sanitize_csv_value(p.description),
+            p.get_category_display(), p.get_unit_display(),
+            p.cost_price, p.sale_price, _sanitize_csv_value(p.sku)
         ])
     return response
 
@@ -138,8 +158,8 @@ def product_import_csv(request):
                     description=row.get('Descripción', '').strip(),
                     category=CAT_MAP.get(cat_raw, 'otro'),
                     unit=UNIT_MAP.get(unit_raw, 'un'),
-                    cost_price=float(str(row.get('Precio Costo', 0)).replace('.', '').replace(',', '.') or 0),
-                    sale_price=float(str(row.get('Precio Venta', 0)).replace('.', '').replace(',', '.') or 0),
+                    cost_price=_parse_csv_price(row.get('Precio Costo', '0')),
+                    sale_price=_parse_csv_price(row.get('Precio Venta', '0')),
                     sku=row.get('SKU', '').strip(),
                 )
                 created += 1

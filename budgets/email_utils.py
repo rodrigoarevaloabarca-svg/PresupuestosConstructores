@@ -1,9 +1,12 @@
 """
 Utilidades para envío de presupuestos por email.
 """
+import logging
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 
 
 def send_budget_email(budget, recipient_email, request=None):
@@ -71,5 +74,5 @@ def send_budget_email(budget, recipient_email, request=None):
         msg.send()
         return True
     except Exception as e:
-        print(f"Error enviando email: {e}")
+        logger.error("Error enviando email a %s: %s", recipient_email, e)
         return False

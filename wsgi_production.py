@@ -1,16 +1,8 @@
 import os
-import sys
 
-sys.path.insert(0, '/home/rodrigocl/PresupuestosConstructores')
-
-# Activar entorno virtual
-activate_this = '/home/rodrigocl/PresupuestosConstructores/.venv/bin/activate_this.py'
-if os.path.exists(activate_this):
-    with open(activate_this) as f:
-        exec(f.read(), {'__file__': activate_this})
-
-# Cargar .env
-env_path = '/home/rodrigocl/PresupuestosConstructores/.env'
+# Cargar .env desde el directorio del proyecto
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(BASE_DIR, '.env')
 if os.path.exists(env_path):
     with open(env_path) as f:
         for line in f:

@@ -1,9 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Count, Q, F
 from django.utils import timezone
 from datetime import timedelta
-import json
 
 
 @login_required
@@ -66,10 +64,10 @@ def reports_view(request):
 
     context = {
         'months_data': months_data,
-        'months_labels': json.dumps([m['month'] for m in months_data]),
-        'months_created': json.dumps([m['created'] for m in months_data]),
-        'months_accepted': json.dumps([m['accepted'] for m in months_data]),
-        'months_revenue': json.dumps([m['revenue'] for m in months_data]),
+        'months_labels': [m['month'] for m in months_data],
+        'months_created': [m['created'] for m in months_data],
+        'months_accepted': [m['accepted'] for m in months_data],
+        'months_revenue': [m['revenue'] for m in months_data],
         'total_count': total_count,
         'accepted_count': accepted_count,
         'sent_count': sent_count,
