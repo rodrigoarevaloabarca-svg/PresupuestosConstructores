@@ -3,118 +3,256 @@
 {% block title %}Dashboard — Constructor Express{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 {% block page_actions %}
-  <a href="{% url 'budget_create' %}" class="btn-primary">
-    <i data-lucide="plus" class="w-4 h-4"></i>
+  <a href="{% url 'budget_create' %}" class="btn-accent">
+    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
     Nuevo Presupuesto
   </a>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Hero banner */
+  .dash-hero {
+    background: linear-gradient(160deg, #0a1628 0%, #1d3461 55%, #152a52 100%);
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.5rem;
+  }
+  .dash-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    border-radius: inherit;
+  }
+  .dash-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(45deg, rgba(255,255,255,0.012) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  /* KPI card hover lift */
+  .kpi-card {
+    background: #fff;
+    border-radius: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 6px 20px rgba(29,52,97,0.07);
+    border: 1.5px solid #e8ecf5;
+    padding: 1.25rem;
+    transition: box-shadow 0.22s, transform 0.18s;
+  }
+  .kpi-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 16px 40px rgba(29,52,97,0.11);
+    transform: translateY(-2px);
+  }
+
+  /* Stat row item */
+  .stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #f1f4f9;
+  }
+  .stat-row:last-child { border-bottom: none; }
+
+  /* Budget list row */
+  .budget-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.7rem 0.875rem;
+    border-radius: 0.875rem;
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+  .budget-row:hover { background: #f5f7fd; }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="space-y-6">
 
-  <!-- ── Alertas / Notificaciones ──────────────────────────────── -->
+  <!-- ── Alertas ─────────────────────────────────────────────── -->
   {% if alerts %}
   <div class="space-y-2">
     {% for alert in alerts %}
-    <div class="flex items-start justify-between gap-4 px-4 py-3 rounded-xl border text-sm
+    <div class="flex items-center justify-between gap-4 px-4 py-3 rounded-2xl border text-sm
       {% if alert.type == 'warning' %}bg-amber-50 border-amber-200 text-amber-800
       {% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %}">
-      <div class="flex items-start gap-2">
-        <span>{{ alert.icon }}</span>
+      <div class="flex items-center gap-2.5">
+        <i data-lucide="bell" class="w-4 h-4 flex-shrink-0"></i>
         <span>{{ alert.msg }}</span>
       </div>
       {% if alert.url_pk %}
-        <a href="{% url alert.url_name alert.url_pk %}" class="flex-shrink-0 font-semibold underline hover:no-underline text-xs">Ver →</a>
+        <a href="{% url alert.url_name alert.url_pk %}" class="flex-shrink-0 font-bold text-xs underline hover:no-underline">Ver →</a>
       {% else %}
-        <a href="{% url alert.url_name %}" class="flex-shrink-0 font-semibold underline hover:no-underline text-xs">Completar →</a>
+        <a href="{% url alert.url_name %}" class="flex-shrink-0 font-bold text-xs underline hover:no-underline">Completar →</a>
       {% endif %}
     </div>
     {% endfor %}
   </div>
   {% endif %}
 
-  <!-- ── KPI Cards ───────────────────────────────────────────────── -->
+  <!-- ── Hero Banner ──────────────────────────────────────────── -->
+  <div class="dash-hero px-8 py-8 relative z-10">
+
+    <!-- Orbes de luz decorativos -->
+    <div class="absolute top-0 right-0 w-72 h-72 pointer-events-none opacity-20"
+         style="background:radial-gradient(circle at top right,#e07a1f,transparent 65%);filter:blur(36px)"></div>
+    <div class="absolute bottom-0 left-0 w-56 h-56 pointer-events-none opacity-10"
+         style="background:radial-gradient(circle at bottom left,#3b82f6,transparent 65%);filter:blur(44px)"></div>
+
+    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+      <!-- Saludo -->
+      <div>
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
+               style="background:linear-gradient(135deg,#e07a1f,#f59e3a);box-shadow:0 6px 20px rgba(224,122,31,0.4)">
+            <i data-lucide="hard-hat" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <p class="text-blue-300 text-xs font-semibold uppercase tracking-widest">Bienvenido de vuelta</p>
+            <h1 class="text-white font-black text-xl leading-tight tracking-tight">
+              {% if user.profile and user.profile.company_name %}{{ user.profile.company_name }}{% else %}{{ user.email|truncatechars:28 }}{% endif %}
+            </h1>
+          </div>
+        </div>
+        <p class="text-blue-400 text-sm leading-relaxed max-w-md">
+          Aquí tienes un resumen de tu actividad. Gestiona tus presupuestos, clientes y catálogo en un solo lugar.
+        </p>
+      </div>
+
+      <!-- Stats rápidas en el hero -->
+      <div class="flex gap-4 flex-shrink-0">
+        <div class="text-center px-5 py-3 rounded-2xl" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1)">
+          <p class="text-white font-black text-2xl leading-none">{{ stats.total_budgets }}</p>
+          <p class="text-blue-400 text-xs mt-1 font-medium">Presupuestos</p>
+        </div>
+        <div class="text-center px-5 py-3 rounded-2xl" style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1)">
+          <p class="text-white font-black text-2xl leading-none">{{ stats.total_clients }}</p>
+          <p class="text-blue-400 text-xs mt-1 font-medium">Clientes</p>
+        </div>
+        <div class="text-center px-5 py-3 rounded-2xl" style="background:rgba(245,158,58,0.15);border:1px solid rgba(245,158,58,0.25)">
+          <p class="font-black text-2xl leading-none" style="color:#f59e3a">{{ stats.conversion_rate|floatformat:0 }}%</p>
+          <p class="text-blue-400 text-xs mt-1 font-medium">Conversión</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── KPI Cards ─────────────────────────────────────────────── -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-    <div class="card group">
-      <div class="flex items-center justify-between mb-3">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Ingresos confirmados</p>
-        <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center group-hover:bg-green-100 transition-colors">
-          <i data-lucide="trending-up" class="w-4.5 h-4.5 text-green-600"></i>
+
+    <!-- Ingresos confirmados -->
+    <div class="kpi-card">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:linear-gradient(135deg,#dcfce7,#bbf7d0)">
+          <i data-lucide="trending-up" class="w-5 h-5" style="color:#16a34a"></i>
         </div>
+        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">Aceptados</span>
       </div>
-      <p class="text-2xl font-black text-green-600 font-mono">{{ total_revenue|clp }}</p>
-      <p class="text-xs text-slate-400 mt-1.5">Presupuestos aceptados</p>
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Ingresos</p>
+      <p class="text-2xl font-black leading-none" style="color:#15803d;font-variant-numeric:tabular-nums">{{ total_revenue|clp }}</p>
+      <p class="text-xs text-slate-400 mt-2">Presupuestos aceptados</p>
     </div>
 
-    <div class="card group">
-      <div class="flex items-center justify-between mb-3">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Ingresos pendientes</p>
-        <div class="w-9 h-9 bg-amber-50 rounded-xl flex items-center justify-center group-hover:bg-amber-100 transition-colors">
-          <i data-lucide="clock" class="w-4.5 h-4.5 text-amber-500"></i>
+    <!-- Ingresos pendientes -->
+    <div class="kpi-card">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:linear-gradient(135deg,#fef3c7,#fde68a)">
+          <i data-lucide="clock" class="w-5 h-5" style="color:#d97706"></i>
         </div>
+        <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Pendientes</span>
       </div>
-      <p class="text-2xl font-black text-amber-500 font-mono">{{ pending_revenue|clp }}</p>
-      <p class="text-xs text-slate-400 mt-1.5">Enviados sin respuesta</p>
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Por cobrar</p>
+      <p class="text-2xl font-black leading-none" style="color:#b45309;font-variant-numeric:tabular-nums">{{ pending_revenue|clp }}</p>
+      <p class="text-xs text-slate-400 mt-2">Enviados sin respuesta</p>
     </div>
 
-    <div class="card group">
-      <div class="flex items-center justify-between mb-3">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Presup. este mes</p>
-        <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-          <i data-lucide="file-text" class="w-4.5 h-4.5 text-blue-600"></i>
+    <!-- Presupuestos este mes -->
+    <div class="kpi-card">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:linear-gradient(135deg,#e8eef8,#d6e1f5)">
+          <i data-lucide="file-text" class="w-5 h-5" style="color:#1d3461"></i>
         </div>
+        <span class="text-xs font-bold px-2 py-0.5 rounded-full" style="color:#1d3461;background:#e8eef8">Este mes</span>
       </div>
-      <div class="flex items-end gap-2">
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Presupuestos</p>
+      <div class="flex items-end gap-1.5 leading-none">
         <p class="text-2xl font-black text-slate-800">{{ stats.budgets_this_month }}</p>
-        {% if not is_pro %}
-          <p class="text-slate-400 text-sm mb-0.5">/ {{ plan_limits.max_budgets_month }}</p>
-        {% endif %}
+        {% if not is_pro %}<p class="text-slate-400 text-sm mb-0.5">/ {{ plan_limits.max_budgets_month }}</p>{% endif %}
       </div>
       {% if not is_pro %}
-      <div class="mt-2.5 w-full bg-slate-100 rounded-full h-1.5">
-        <div class="bg-blue-500 h-1.5 rounded-full transition-all" style="width: {% widthratio stats.budgets_this_month plan_limits.max_budgets_month 100 %}%"></div>
+      <div class="mt-3 w-full bg-slate-100 rounded-full h-1.5">
+        <div class="h-1.5 rounded-full transition-all" style="width:{% widthratio stats.budgets_this_month plan_limits.max_budgets_month 100 %}%;background:linear-gradient(90deg,#1d3461,#25407a)"></div>
       </div>
+      {% else %}
+      <p class="text-xs text-slate-400 mt-2">Presupuestos creados</p>
       {% endif %}
     </div>
 
-    <div class="card group">
-      <div class="flex items-center justify-between mb-3">
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Tasa conversión</p>
-        <div class="w-9 h-9 bg-violet-50 rounded-xl flex items-center justify-center group-hover:bg-violet-100 transition-colors">
-          <i data-lucide="percent" class="w-4.5 h-4.5 text-violet-600"></i>
+    <!-- Tasa conversión -->
+    <div class="kpi-card">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:linear-gradient(135deg,#fff4e8,#fde8cc)">
+          <i data-lucide="percent" class="w-5 h-5" style="color:#e07a1f"></i>
         </div>
+        <span class="text-xs font-bold px-2 py-0.5 rounded-full" style="color:#92400e;background:#fef3c7">Conversión</span>
       </div>
-      <p class="text-2xl font-black text-violet-600">{{ stats.conversion_rate|floatformat:0 }}%</p>
-      <p class="text-xs text-slate-400 mt-1.5">{{ stats.accepted_budgets }} de {{ stats.total_budgets }} aceptados</p>
+      <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5">Tasa éxito</p>
+      <p class="text-2xl font-black leading-none" style="color:#e07a1f">{{ stats.conversion_rate|floatformat:0 }}%</p>
+      <p class="text-xs text-slate-400 mt-2">{{ stats.accepted_budgets }} de {{ stats.total_budgets }} aceptados</p>
     </div>
 
   </div>
 
-  <!-- ── Segunda fila ─────────────────────────────────────────────── -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <!-- ── Segunda fila ───────────────────────────────────────────── -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
     <!-- Presupuestos recientes -->
     <div class="lg:col-span-2 card">
       <div class="flex items-center justify-between mb-5">
-        <h2 class="font-bold text-slate-800">Presupuestos Recientes</h2>
-        <a href="{% url 'budget_list' %}" class="text-sm text-blue-600 font-semibold hover:text-blue-700">Ver todos →</a>
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#1d3461,#25407a)">
+            <i data-lucide="clock-4" class="w-4 h-4 text-white"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-slate-800 text-sm leading-tight">Presupuestos Recientes</h2>
+            <p class="text-xs text-slate-400">Últimas cotizaciones creadas</p>
+          </div>
+        </div>
+        <a href="{% url 'budget_list' %}" class="text-xs font-bold flex items-center gap-1 px-3 py-1.5 rounded-xl transition-all"
+           style="color:#e07a1f;background:#fff4e8;border:1px solid #fde8cc"
+           onmouseover="this.style.background='#fde8cc'" onmouseout="this.style.background='#fff4e8'">
+          Ver todos <i data-lucide="arrow-right" class="w-3 h-3"></i>
+        </a>
       </div>
 
       {% if recent_budgets %}
-      <div class="space-y-1">
+      <div class="space-y-0.5">
         {% for b in recent_budgets %}
-        <a href="{% url 'budget_detail' b.pk %}" class="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+        <a href="{% url 'budget_detail' b.pk %}" class="budget-row group">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-bold text-xs flex-shrink-0">#{{ b.number }}</div>
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0"
+                 style="background:linear-gradient(135deg,#e8eef8,#d6e1f5);color:#1d3461">#{{ b.number }}</div>
             <div class="min-w-0">
-              <p class="text-sm font-semibold text-slate-800 group-hover:text-blue-600 truncate">{{ b.title|truncatechars:38 }}</p>
+              <p class="text-sm font-semibold text-slate-700 group-hover:text-slate-900 truncate transition-colors">{{ b.title|truncatechars:38 }}</p>
               <p class="text-xs text-slate-400 truncate">{{ b.client.name }}</p>
             </div>
           </div>
           <div class="flex items-center gap-3 flex-shrink-0 ml-3">
             <span class="font-mono text-sm font-bold text-slate-700">{{ b.total|clp }}</span>
             <span class="badge
-              {% if b.status == 'aceptado' %}bg-green-100 text-green-700
+              {% if b.status == 'aceptado' %}bg-emerald-100 text-emerald-700
               {% elif b.status == 'enviado' %}bg-amber-100 text-amber-700
               {% elif b.status == 'rechazado' %}bg-red-100 text-red-600
               {% else %}bg-slate-100 text-slate-500{% endif %}">
@@ -125,12 +263,17 @@
         {% endfor %}
       </div>
       {% else %}
-      <div class="text-center py-10">
-        <div class="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
-          <i data-lucide="file-text" class="w-8 h-8 text-slate-300"></i>
+      <div class="text-center py-12">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+             style="background:linear-gradient(135deg,#e8eef8,#d6e1f5)">
+          <i data-lucide="file-text" class="w-7 h-7" style="color:#a3b8d4"></i>
         </div>
-        <p class="text-sm text-slate-500 font-medium">Aún no tienes presupuestos</p>
-        <a href="{% url 'budget_create' %}" class="btn-primary mt-4 inline-flex">Crear primer presupuesto</a>
+        <p class="text-sm text-slate-600 font-bold mb-1">Aún no tienes presupuestos</p>
+        <p class="text-xs text-slate-400 mb-5">Crea tu primer presupuesto para empezar</p>
+        <a href="{% url 'budget_create' %}" class="btn-accent">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+          Crear presupuesto
+        </a>
       </div>
       {% endif %}
     </div>
@@ -138,72 +281,102 @@
     <!-- Panel derecho -->
     <div class="space-y-4">
 
-      <!-- Mini stats -->
+      <!-- Resumen -->
       <div class="card">
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-4">Resumen</h3>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2 text-sm text-slate-600">
-              <span class="w-2 h-2 rounded-full bg-green-500"></span>Aceptados
-            </div>
-            <span class="font-bold text-slate-800">{{ stats.accepted_budgets }}</span>
+        <div class="flex items-center gap-2.5 mb-4">
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#1d3461,#25407a)">
+            <i data-lucide="pie-chart" class="w-4 h-4 text-white"></i>
           </div>
-          <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-slate-700">Resumen</h3>
+        </div>
+        <div>
+          <div class="stat-row">
             <div class="flex items-center gap-2 text-sm text-slate-600">
-              <span class="w-2 h-2 rounded-full bg-amber-400"></span>Enviados
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 flex-shrink-0"></span>Aceptados
             </div>
-            <span class="font-bold text-slate-800">{{ stats.pending_budgets }}</span>
+            <span class="font-black text-slate-800">{{ stats.accepted_budgets }}</span>
           </div>
-          <div class="flex items-center justify-between">
+          <div class="stat-row">
             <div class="flex items-center gap-2 text-sm text-slate-600">
-              <span class="w-2 h-2 rounded-full bg-slate-300"></span>Clientes
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 flex-shrink-0"></span>Enviados
             </div>
-            <span class="font-bold text-slate-800">{{ stats.total_clients }}</span>
+            <span class="font-black text-slate-800">{{ stats.pending_budgets }}</span>
           </div>
-          <div class="flex items-center justify-between">
+          <div class="stat-row">
             <div class="flex items-center gap-2 text-sm text-slate-600">
-              <span class="w-2 h-2 rounded-full bg-blue-400"></span>Productos
+              <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:#1d3461"></span>Clientes
             </div>
-            <span class="font-bold text-slate-800">{{ stats.total_products }}</span>
+            <span class="font-black text-slate-800">{{ stats.total_clients }}</span>
+          </div>
+          <div class="stat-row">
+            <div class="flex items-center gap-2 text-sm text-slate-600">
+              <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background:#e07a1f"></span>Productos
+            </div>
+            <span class="font-black text-slate-800">{{ stats.total_products }}</span>
           </div>
         </div>
       </div>
 
       <!-- Acciones rápidas -->
       <div class="card">
-        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Acciones Rápidas</h3>
-        <div class="space-y-1.5">
-          <a href="{% url 'budget_create' %}" class="flex items-center gap-2.5 p-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors">
-            <i data-lucide="plus" class="w-4 h-4 flex-shrink-0"></i>
+        <div class="flex items-center gap-2.5 mb-4">
+          <div class="w-8 h-8 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#e07a1f,#f59e3a)">
+            <i data-lucide="zap" class="w-4 h-4 text-white"></i>
+          </div>
+          <h3 class="text-sm font-bold text-slate-700">Acciones Rápidas</h3>
+        </div>
+        <div class="space-y-2">
+          <a href="{% url 'budget_create' %}" class="flex items-center gap-3 p-3 rounded-xl text-white transition-all duration-200"
+             style="background:linear-gradient(135deg,#1d3461,#25407a);box-shadow:0 2px 10px rgba(29,52,97,0.3)"
+             onmouseover="this.style.boxShadow='0 5px 18px rgba(29,52,97,0.45)';this.style.transform='translateY(-1px)'"
+             onmouseout="this.style.boxShadow='0 2px 10px rgba(29,52,97,0.3)';this.style.transform='translateY(0)'">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background:rgba(255,255,255,0.15)">
+              <i data-lucide="plus" class="w-3.5 h-3.5 text-white"></i>
+            </div>
             <span class="text-sm font-semibold">Nuevo Presupuesto</span>
           </a>
-          <a href="{% url 'client_create' %}" class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
-            <i data-lucide="user-plus" class="w-4 h-4 text-slate-500 flex-shrink-0"></i>
-            <span class="text-sm font-semibold text-slate-700">Nuevo Cliente</span>
+          <a href="{% url 'client_create' %}" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-blue-50 transition-all duration-150 group">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-200 group-hover:bg-blue-100 transition-colors">
+              <i data-lucide="user-plus" class="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-600"></i>
+            </div>
+            <span class="text-sm font-semibold text-slate-600 group-hover:text-blue-700">Nuevo Cliente</span>
           </a>
-          <a href="{% url 'product_create' %}" class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
-            <i data-lucide="package-plus" class="w-4 h-4 text-slate-500 flex-shrink-0"></i>
-            <span class="text-sm font-semibold text-slate-700">Agregar Producto</span>
+          <a href="{% url 'product_create' %}" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-blue-50 transition-all duration-150 group">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-200 group-hover:bg-blue-100 transition-colors">
+              <i data-lucide="package-plus" class="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-600"></i>
+            </div>
+            <span class="text-sm font-semibold text-slate-600 group-hover:text-blue-700">Agregar Producto</span>
           </a>
-          <a href="{% url 'reports' %}" class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
-            <i data-lucide="bar-chart-2" class="w-4 h-4 text-slate-500 flex-shrink-0"></i>
-            <span class="text-sm font-semibold text-slate-700">Ver Reportes</span>
+          <a href="{% url 'reports' %}" class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 hover:bg-blue-50 transition-all duration-150 group">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-200 group-hover:bg-blue-100 transition-colors">
+              <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-slate-500 group-hover:text-blue-600"></i>
+            </div>
+            <span class="text-sm font-semibold text-slate-600 group-hover:text-blue-700">Ver Reportes</span>
           </a>
         </div>
       </div>
 
-      <!-- Plan upgrade -->
+      <!-- Upgrade -->
       {% if not is_pro %}
-      <div class="rounded-2xl p-5 border-0" style="background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)">
-        <div class="flex items-center gap-2 mb-2">
-          <i data-lucide="zap" class="w-4 h-4 text-yellow-300"></i>
-          <p class="text-white font-bold text-sm">Actualiza a Pro</p>
+      <div class="relative overflow-hidden rounded-2xl p-5" style="background:linear-gradient(145deg,#1d3461 0%,#25407a 100%)">
+        <!-- Grid pattern -->
+        <div class="absolute inset-0 rounded-2xl" style="background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:28px 28px"></div>
+        <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full opacity-10" style="background:#fff"></div>
+        <div class="absolute top-4 right-4 opacity-15">
+          <i data-lucide="hard-hat" class="w-10 h-10 text-white"></i>
         </div>
-        <p class="text-purple-200 text-xs mb-4 leading-relaxed">Presupuestos ilimitados, reportes avanzados y más funciones.</p>
-        <a href="#" class="inline-flex items-center gap-1.5 bg-white text-indigo-700 font-bold text-xs px-4 py-2 rounded-xl hover:bg-indigo-50 transition-colors">
-          <i data-lucide="arrow-right" class="w-3 h-3"></i>
-          Ver planes
-        </a>
+        <div class="relative z-10">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold mb-3"
+                style="background:rgba(245,158,58,0.2);color:#f59e3a;border:1px solid rgba(245,158,58,0.3)">
+            <i data-lucide="zap" class="w-3 h-3"></i> PLAN PRO
+          </span>
+          <p class="text-white font-black text-sm mb-1.5">Actualiza a Pro</p>
+          <p class="text-blue-300 text-xs leading-relaxed mb-4">Presupuestos ilimitados, reportes avanzados y más funciones.</p>
+          <a href="#" class="inline-flex items-center gap-1.5 font-bold text-xs px-4 py-2.5 rounded-xl transition-colors"
+             style="background:linear-gradient(135deg,#e07a1f,#f59e3a);color:#fff;box-shadow:0 4px 12px rgba(224,122,31,0.4)">
+            Ver planes <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </a>
+        </div>
       </div>
       {% endif %}
 

@@ -1,73 +1,370 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registro — Constructor Express</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 90'><rect x='0' y='0' width='100' height='90' rx='18' fill='%231d3461'/><path d='M18 64 Q18 24 50 24 Q82 24 82 64 Z' fill='%23fbbf24'/><rect x='10' y='61' width='80' height='13' rx='6' fill='%23e07a1f'/><path d='M30 61 Q50 55 70 61' fill='none' stroke='%23d97706' stroke-width='3'/></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>body{font-family:'Plus Jakarta Sans',sans-serif;} .fi{@apply w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500;}</style>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    * { -webkit-font-smoothing: antialiased; }
+    body { font-family: 'Inter', sans-serif; }
+    [data-lucide] { display: inline-block; flex-shrink: 0; }
+
+    .left-panel {
+      background: linear-gradient(160deg, #0a1628 0%, #1d3461 60%, #152a52 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: linear-gradient(45deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 68px 68px;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 0.7rem 1rem 0.7rem 2.75rem;
+      border: 2px solid #e8ecf5;
+      border-radius: 0.875rem;
+      color: #1e293b;
+      font-size: 0.875rem;
+      font-family: inherit;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.2s;
+      background: #f8fafd;
+    }
+    .input-field:focus {
+      border-color: #1d3461;
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(29,52,97,0.08);
+    }
+    .input-field::placeholder { color: #94a3b8; font-weight: 400; }
+
+    /* input sin ícono (ej. select) */
+    .input-field-bare {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border: 2px solid #e8ecf5;
+      border-radius: 0.875rem;
+      color: #1e293b;
+      font-size: 0.875rem;
+      font-family: inherit;
+      font-weight: 500;
+      outline: none;
+      transition: all 0.2s;
+      background: #f8fafd;
+      appearance: auto;
+    }
+    .input-field-bare:focus {
+      border-color: #1d3461;
+      background: #fff;
+      box-shadow: 0 0 0 4px rgba(29,52,97,0.08);
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-bottom: 0.45rem;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      font-size: 0.65rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      background: rgba(224,122,31,0.18);
+      color: #f59e3a;
+      border: 1px solid rgba(224,122,31,0.3);
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-  <div class="w-full max-w-lg">
-    <div class="text-center mb-6">
-      <div class="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center shadow-xl mx-auto mb-4">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-      </div>
-      <h1 class="text-2xl font-bold text-white">Crear cuenta gratis</h1>
-      <p class="text-slate-400 mt-1 text-sm">Comienza a generar presupuestos profesionales hoy</p>
+<body class="min-h-screen flex" style="background:#f0f2f8">
+
+  <!-- ── PANEL IZQUIERDO ─────────────────────────────── -->
+  <div class="left-panel hidden lg:flex lg:w-[42%] flex-col justify-between p-12 relative">
+
+    <!-- Orbes -->
+    <div class="absolute top-0 right-0 w-96 h-96 opacity-15 pointer-events-none"
+         style="background:radial-gradient(circle at top right,#e07a1f,transparent 70%);filter:blur(40px)"></div>
+    <div class="absolute bottom-0 left-0 w-80 h-80 opacity-10 pointer-events-none"
+         style="background:radial-gradient(circle at bottom left,#3b82f6,transparent 70%);filter:blur(50px)"></div>
+
+    <!-- Nav superior -->
+    <div class="relative z-10">
+      <a href="{% url 'landing' %}" class="inline-flex items-center gap-2 text-blue-300 hover:text-white transition-colors text-sm font-medium">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Volver al inicio
+      </a>
     </div>
-    <div class="bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 p-8 shadow-2xl">
-      {% if form.errors %}
-      <div class="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-        <p class="text-red-400 text-sm font-semibold mb-1">Hay errores en el formulario:</p>
-        {% for field in form %}{% for error in field.errors %}<p class="text-red-300 text-xs">· {{ field.label }}: {{ error }}</p>{% endfor %}{% endfor %}
-        {% for error in form.non_field_errors %}<p class="text-red-300 text-xs">· {{ error }}</p>{% endfor %}
+
+    <!-- Contenido central -->
+    <div class="relative z-10">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 mb-10">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-2xl flex-shrink-0"
+             style="background:linear-gradient(135deg,#e07a1f,#f59e3a);box-shadow:0 8px 24px rgba(224,122,31,0.45)">
+          <i data-lucide="hard-hat" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <p class="text-white font-black text-xl leading-none tracking-tight">Constructor</p>
+          <p class="font-black text-xl leading-tight tracking-tight" style="color:#f59e3a">Express</p>
+        </div>
       </div>
-      {% endif %}
-      <form method="post" class="space-y-4">
-        {% csrf_token %}
-        <div class="grid grid-cols-2 gap-3">
-          <div class="col-span-2">
-            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Nombre de la empresa *</label>
-            <input type="text" name="company_name" required value="{{ form.company_name.value|default:'' }}" class="fi" placeholder="Ej: Gasfiter González">
-          </div>
+
+      <h1 class="text-3xl font-black text-white leading-tight mb-4 tracking-tight">
+        Empieza gratis.<br>
+        <span style="background:linear-gradient(135deg,#f59e3a,#e07a1f);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+          Crece profesional.
+        </span>
+      </h1>
+      <p class="text-blue-300 text-sm leading-relaxed mb-10">
+        Únete a los contratistas chilenos que ya generan presupuestos profesionales con Constructor Express.
+      </p>
+
+      <!-- Pasos -->
+      <div class="space-y-4">
+        <p class="text-xs font-bold uppercase tracking-widest text-blue-500 mb-2">Así de fácil</p>
+        <div class="flex items-start gap-3">
+          <span class="step-badge mt-0.5">1</span>
           <div>
-            <label class="block text-sm font-semibold text-slate-300 mb-1.5">RUT empresa *</label>
-            <input type="text" name="rut" required value="{{ form.rut.value|default:'' }}" class="fi" placeholder="12345678-9">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Rubro *</label>
-            <select name="rubro" class="fi bg-slate-800 text-white">
-              {% for val, label in form.rubro.field.choices %}<option value="{{ val }}" {% if form.rubro.value == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
-            </select>
-          </div>
-          <div class="col-span-2">
-            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Teléfono *</label>
-            <input type="text" name="phone" required value="{{ form.phone.value|default:'' }}" class="fi" placeholder="+56 9 1234 5678">
-          </div>
-          <div class="col-span-2">
-            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Correo electrónico *</label>
-            <input type="email" name="email" required value="{{ form.email.value|default:'' }}" class="fi" placeholder="tu@email.com">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Usuario *</label>
-            <input type="text" name="username" required value="{{ form.username.value|default:'' }}" class="fi" placeholder="tu_usuario">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Contraseña *</label>
-            <input type="password" name="password1" required class="fi" placeholder="••••••••">
-          </div>
-          <div class="col-span-2">
-            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Confirmar contraseña *</label>
-            <input type="password" name="password2" required class="fi" placeholder="••••••••">
+            <p class="text-white text-sm font-semibold">Crea tu cuenta</p>
+            <p class="text-blue-400 text-xs mt-0.5">Solo toma 2 minutos</p>
           </div>
         </div>
-        <button type="submit" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/30 mt-2">
-          Crear cuenta gratis →
-        </button>
-      </form>
-      <p class="text-center text-slate-400 text-sm mt-5">¿Ya tienes cuenta? <a href="{% url 'login' %}" class="text-blue-400 hover:text-blue-300 font-semibold">Inicia sesión</a></p>
+        <div class="flex items-start gap-3">
+          <span class="step-badge mt-0.5">2</span>
+          <div>
+            <p class="text-white text-sm font-semibold">Configura tu empresa</p>
+            <p class="text-blue-400 text-xs mt-0.5">Logo, RUT y datos de contacto</p>
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="step-badge mt-0.5">3</span>
+          <div>
+            <p class="text-white text-sm font-semibold">Genera tu primer presupuesto</p>
+            <p class="text-blue-400 text-xs mt-0.5">PDF profesional listo para enviar</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Plan free badge -->
+      <div class="mt-10 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl"
+           style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1)">
+        <i data-lucide="check-circle" class="w-4 h-4" style="color:#4ade80"></i>
+        <span class="text-white text-sm font-semibold">Plan gratuito · Sin tarjeta de crédito</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="relative z-10">
+      <p class="text-blue-500 text-xs">© {% now "Y" %} Constructor Express · Hecho en Chile 🇨🇱</p>
     </div>
   </div>
+
+  <!-- ── PANEL DERECHO: FORMULARIO ──────────────────── -->
+  <div class="flex-1 flex flex-col justify-center items-center p-6 lg:p-10 overflow-y-auto">
+
+    <!-- Botón volver móvil -->
+    <div class="lg:hidden w-full max-w-lg mb-4">
+      <a href="{% url 'landing' %}" class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors font-medium">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Volver al inicio
+      </a>
+    </div>
+
+    <!-- Logo móvil -->
+    <div class="lg:hidden w-full max-w-lg text-center mb-6">
+      <div class="w-12 h-12 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-xl"
+           style="background:linear-gradient(135deg,#1d3461,#25407a)">
+        <i data-lucide="hard-hat" class="w-6 h-6 text-white"></i>
+      </div>
+      <h1 class="text-2xl font-black text-slate-900">Constructor <span style="color:#e07a1f">Express</span></h1>
+    </div>
+
+    <div class="w-full max-w-lg">
+
+      <!-- Encabezado -->
+      <div class="mb-6">
+        <h2 class="text-2xl font-black text-slate-900 tracking-tight mb-1">Crear cuenta gratis</h2>
+        <p class="text-slate-500 text-sm">Completa el formulario para comenzar</p>
+      </div>
+
+      <!-- Errores -->
+      {% if form.errors %}
+      <div class="mb-5 flex items-start gap-3 p-4 rounded-2xl text-sm text-red-700 bg-red-50 border border-red-100">
+        <i data-lucide="alert-circle" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+        <div>
+          <p class="font-bold mb-1">Revisa los siguientes errores:</p>
+          {% for field in form %}{% for error in field.errors %}
+            <p class="text-xs">· {{ field.label }}: {{ error }}</p>
+          {% endfor %}{% endfor %}
+          {% for error in form.non_field_errors %}
+            <p class="text-xs">· {{ error }}</p>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+
+        <!-- Empresa -->
+        <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3.5">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+            Datos de la empresa
+          </p>
+
+          <div>
+            <label class="field-label">Nombre o razón social *</label>
+            <div class="relative">
+              <i data-lucide="briefcase" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <input type="text" name="company_name" required value="{{ form.company_name.value|default:'' }}"
+                     class="input-field" placeholder="Ej: Juan González o Gasfiter González SpA">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="field-label">RUT *</label>
+              <div class="relative">
+                <i data-lucide="credit-card" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input type="text" name="rut" required value="{{ form.rut.value|default:'' }}"
+                       class="input-field" placeholder="12345678-9">
+              </div>
+              <p class="text-xs text-slate-400 mt-1">Empresa o persona natural</p>
+            </div>
+            <div>
+              <label class="field-label">Rubro *</label>
+              <select name="rubro" class="input-field-bare">
+                {% for val, label in form.rubro.field.choices %}
+                  <option value="{{ val }}" {% if form.rubro.value == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contacto -->
+        <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3.5">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+            Información de contacto
+          </p>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="field-label">Teléfono *</label>
+              <div class="relative">
+                <i data-lucide="phone" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input type="text" name="phone" required value="{{ form.phone.value|default:'' }}"
+                       class="input-field" placeholder="+56 9 1234 5678">
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Correo electrónico *</label>
+              <div class="relative">
+                <i data-lucide="mail" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input type="email" name="email" required value="{{ form.email.value|default:'' }}"
+                       class="input-field" placeholder="tu@email.com">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acceso -->
+        <div class="p-4 rounded-2xl border border-slate-200 bg-white space-y-3.5">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="key-round" class="w-3.5 h-3.5"></i>
+            Datos de acceso
+          </p>
+
+          <div>
+            <label class="field-label">Nombre de usuario *</label>
+            <div class="relative">
+              <i data-lucide="user" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <input type="text" name="username" required value="{{ form.username.value|default:'' }}"
+                     class="input-field" placeholder="tu_usuario">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="field-label">Contraseña *</label>
+              <div class="relative">
+                <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input type="password" name="password1" required class="input-field" placeholder="••••••••">
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Confirmar contraseña *</label>
+              <div class="relative">
+                <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input type="password" name="password2" required class="input-field" placeholder="••••••••">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit"
+                class="w-full py-3.5 rounded-2xl font-bold text-base text-white flex items-center justify-center gap-2.5 transition-all duration-200 relative overflow-hidden group"
+                style="background:linear-gradient(135deg,#1d3461 0%,#25407a 100%);box-shadow:0 6px 20px rgba(29,52,97,0.4)">
+          <span class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                style="background:linear-gradient(135deg,#25407a 0%,#2e5097 100%)"></span>
+          <span class="relative flex items-center gap-2">
+            <i data-lucide="user-plus" class="w-5 h-5"></i>
+            Crear cuenta gratis
+          </span>
+        </button>
+      </form>
+
+      <!-- Divisor -->
+      <div class="flex items-center gap-3 my-5">
+        <div class="flex-1 h-px bg-slate-200"></div>
+        <span class="text-slate-400 text-xs font-medium">¿Ya tienes cuenta?</span>
+        <div class="flex-1 h-px bg-slate-200"></div>
+      </div>
+
+      <a href="{% url 'login' %}"
+         class="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all duration-200 border-2"
+         style="border-color:#e07a1f;color:#e07a1f;background:transparent"
+         onmouseover="this.style.background='#fff7ed';this.style.borderColor='#c96c15';this.style.color='#c96c15'"
+         onmouseout="this.style.background='transparent';this.style.borderColor='#e07a1f';this.style.color='#e07a1f'">
+        <i data-lucide="log-in" class="w-4 h-4"></i>
+        Iniciar sesión
+      </a>
+
+      <p class="text-center text-slate-400 text-xs mt-6">
+        Constructor Express © {% now "Y" %} · Hecho en Chile 🇨🇱
+      </p>
+    </div>
+  </div>
+
+  <script>lucide.createIcons();</script>
 </body>
 </html>

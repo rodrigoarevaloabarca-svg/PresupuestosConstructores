@@ -45,7 +45,7 @@ def logout_view(request):
     if request.method == 'POST':
         logout(request)
         request.session.flush()
-        response = redirect('login')
+        response = redirect('landing')
         response.delete_cookie('sessionid')
         response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
         response['Pragma'] = 'no-cache'

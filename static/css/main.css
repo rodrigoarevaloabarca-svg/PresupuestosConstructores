@@ -1,46 +1,27 @@
 /* Constructor Express — Estilos globales */
-/* La mayoría del estilo viene de Tailwind CDN en desarrollo */
-/* En producción: ejecutar tailwind build para generar este archivo */
 
-/* Variables CSS */
 :root {
-  --color-brand: #2563eb;
-  --color-brand-dark: #1d4ed8;
-  --color-brand-light: #3b82f6;
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --color-brand: #6366f1;
+  --color-brand-dark: #4f46e5;
+  --color-brand-light: #818cf8;
+  --font-sans: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* Fuentes */
 body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Scrollbar personalizada */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #c7d2fe; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #a5b4fc; }
 
-/* Card enhancements */
-.card {
-  transition: box-shadow 0.2s ease, transform 0.15s ease;
-}
-.card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
-
-/* Lucide icon sizing fix */
-[data-lucide] {
-  display: inline-block;
-}
-
-/* Better focus styles for form inputs */
-.form-input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
-}
+/* Selección de texto */
+::selection { background: rgba(99,102,241,0.2); color: #4f46e5; }
 
 /* Print styles para PDF */
 @media print {

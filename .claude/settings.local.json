@@ -25,7 +25,10 @@
       "Bash(source .venv/Scripts/activate)",
       "Bash(python manage.py runserver)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8000/)",
-      "Bash(netstat -ano)"
+      "Bash(netstat -ano)",
+      "Bash(DEBUG=True python manage.py runserver)",
+      "Bash(DEBUG=True python manage.py runserver 8001)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8001/)"
     ]
   }
 }
