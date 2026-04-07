@@ -26,3 +26,7 @@ Thumbs.db
 desktop.ini
 dockerfile
 docker-compose.yml
+
+#carpeta
+.claude/
+CLAUDE.md.md
