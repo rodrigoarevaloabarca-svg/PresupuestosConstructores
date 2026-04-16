@@ -17,6 +17,9 @@ class Client(models.Model):
     class Meta:
         verbose_name = 'Cliente'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['contractor', 'name']),
+        ]
 
     def __str__(self):
         return self.name

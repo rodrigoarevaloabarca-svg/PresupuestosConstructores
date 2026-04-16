@@ -15,9 +15,14 @@ weasyprint>=60.0
 
 # ─── Config y utilidades ─────────────────────────────────────────
 python-decouple>=3.8
+django-ratelimit>=4.1
 
 # ─── Producción (servidor) ───────────────────────────────────────
 gunicorn>=21.0
+
+# ─── Observabilidad ──────────────────────────────────────────────
+sentry-sdk[django]>=2.0
+python-json-logger>=2.0
 
 # ─── Desarrollo ──────────────────────────────────────────────────
 # django-debug-toolbar>=4.0  # Descomentar en desarrollo

@@ -213,9 +213,14 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">
-            Contraseña
-          </label>
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Contraseña
+            </label>
+            <a href="{% url 'password_reset_request' %}"
+               class="text-xs font-semibold hover:underline"
+               style="color:#1d3461">¿Olvidaste tu contraseña?</a>
+          </div>
           <div class="relative">
             <i data-lucide="lock" class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
             <input type="password" name="password" required

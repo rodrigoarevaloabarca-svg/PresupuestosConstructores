@@ -1,12 +1,12 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from .models import User, ContractorProfile
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, SetPasswordForm
+from .models import User, ContractorProfile, validate_rut
 
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(label='Correo electrónico')
     company_name = forms.CharField(label='Nombre de tu empresa')
-    rut = forms.CharField(label='RUT de la empresa', help_text='Formato: 12345678-9')
+    rut = forms.CharField(label='RUT de la empresa', help_text='Formato: 12345678-9', validators=[validate_rut])
     phone = forms.CharField(label='Teléfono de contacto')
     rubro = forms.ChoiceField(label='Rubro principal', choices=ContractorProfile._meta.get_field('rubro').choices)
 
@@ -44,3 +44,17 @@ class ProfileForm(forms.ModelForm):
             'payment_terms': forms.Textarea(attrs={'rows': 3}),
             'notes_template': forms.Textarea(attrs={'rows': 3}),
         }
+
+
+class PasswordResetRequestForm(forms.Form):
+    email = forms.EmailField(label='Correo electrónico')
+
+    def get_user(self):
+        email = self.cleaned_data.get('email', '').strip()
+        if not email:
+            return None
+        return User.objects.filter(email__iexact=email).first()
+
+
+class PasswordResetConfirmForm(SetPasswordForm):
+    pass

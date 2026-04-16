@@ -1,6 +1,8 @@
 from rest_framework import generics
+from rest_framework.exceptions import PermissionDenied
 from .models import Product
 from .serializers import ProductSerializer
+from users.plan_guard import PlanGuard
 
 
 class ProductListAPIView(generics.ListCreateAPIView):
@@ -14,6 +16,9 @@ class ProductListAPIView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
+        allowed, msg = PlanGuard.can_create_product(self.request.user)
+        if not allowed:
+            raise PermissionDenied(msg)
         serializer.save(contractor=self.request.user)
 
 

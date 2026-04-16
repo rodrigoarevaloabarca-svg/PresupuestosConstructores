@@ -1,9 +1,11 @@
 from pathlib import Path
 import os
+import sys
+from django.core.exceptions import ImproperlyConfigured
 
-env_path = Path(__file__).resolve().parent.parent / '.env'
+env_path = Path(__file__).resolve().parent.parent / '.env.production'
 if env_path.exists():
-    with open(env_path) as f:
+    with open(env_path, encoding='utf-8') as f:
         for line in f:
             line = line.strip()
             if line and not line.startswith('#') and '=' in line:
@@ -12,9 +14,29 @@ if env_path.exists():
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-CHANGE-ME-in-production-xxxxxxxxxxxxxxx')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')]
+# Detectar contextos que permiten defaults de desarrollo
+_TESTING = 'test' in sys.argv
+_IS_MANAGEMENT_CMD = len(sys.argv) > 0 and 'manage.py' in sys.argv[0]
+
+_raw_secret = os.environ.get('SECRET_KEY', '')
+if not _raw_secret:
+    # Permitir defaults de dev si: DEBUG=True, test, o management command
+    if DEBUG or _TESTING or _IS_MANAGEMENT_CMD:
+        SECRET_KEY = 'dev-only-insecure-key'
+    else:
+        raise ImproperlyConfigured('SECRET_KEY required in production (set the SECRET_KEY environment variable)')
+else:
+    SECRET_KEY = _raw_secret
+
+_raw_hosts = os.environ.get('ALLOWED_HOSTS', '')
+if not _raw_hosts:
+    if DEBUG or _TESTING or _IS_MANAGEMENT_CMD:
+        ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+    else:
+        raise ImproperlyConfigured('ALLOWED_HOSTS required in production (set the ALLOWED_HOSTS environment variable)')
+else:
+    ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(',')]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -133,6 +155,8 @@ else:
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
+
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -164,8 +188,6 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # ─── Seguridad: producción (requiere HTTPS) ─────────────────────────────────
-import sys
-_TESTING = 'test' in sys.argv
 if not DEBUG and not _TESTING:
     SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000
@@ -178,6 +200,8 @@ if not DEBUG and not _TESTING:
 # ─── Seguridad: prevenir caché de páginas autenticadas ───────────────────────
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
+_log_formatter = 'json' if not DEBUG else 'verbose'
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -186,11 +210,15 @@ LOGGING = {
             'format': '{levelname} {asctime} {module} {message}',
             'style': '{',
         },
+        'json': {
+            '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s',
+        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'formatter': _log_formatter,
         },
     },
     'loggers': {
@@ -203,9 +231,40 @@ LOGGING = {
             'level': 'WARNING',
             'propagate': False,
         },
+        'budgets.email': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'users.auth': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'catalog.csv_import': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
+
+# ─── Sentry (solo en producción con DSN configurado) ─────────────────────────
+SENTRY_DSN = os.environ.get('SENTRY_DSN', '')
+if SENTRY_DSN and not DEBUG:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[DjangoIntegration()],
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+        environment=os.environ.get('SENTRY_ENV', 'production'),
+    )
 
 # ─── Upload limits ───────────────────────────────────────────────────────────
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB
+
+# ─── Rate limiting (django-ratelimit) ────────────────────────────────────────
+RATELIMIT_VIEW = 'constructor_express.views.rate_limited_view'

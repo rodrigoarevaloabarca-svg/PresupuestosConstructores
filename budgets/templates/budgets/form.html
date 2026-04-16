@@ -29,7 +29,7 @@
           <label class="form-label">Cliente *</label>
           <select name="client" class="form-input" required>
             <option value="">— Seleccionar cliente —</option>
-            {% for c in clients %}<option value="{{ c.pk }}" {% if form.client.value == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+            {% for c in clients %}<option value="{{ c.pk }}" {% if form.client.value|stringformat:"s" == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
           </select>
           <a href="{% url 'client_create' %}" class="text-xs text-blue-600 hover:underline mt-1 inline-block">+ Crear nuevo cliente</a>
         </div>

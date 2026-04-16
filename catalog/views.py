@@ -1,10 +1,12 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.conf import settings
 from django.http import JsonResponse
 from .models import Product
 from .forms import ProductForm
+from common.tenant import get_tenant_object_or_404
+from users.plan_guard import PlanGuard
 
 
 @login_required
@@ -22,11 +24,10 @@ def product_list(request):
 
 @login_required
 def product_create(request):
-    if not request.user.is_pro():
-        count = Product.objects.filter(contractor=request.user, is_active=True).count()
-        if count >= settings.PLAN_FREE_MAX_PRODUCTS:
-            messages.warning(request, f'Límite de {settings.PLAN_FREE_MAX_PRODUCTS} productos del plan gratuito alcanzado.')
-            return redirect('product_list')
+    allowed, msg = PlanGuard.can_create_product(request.user)
+    if not allowed:
+        messages.warning(request, msg)
+        return redirect('product_list')
     if request.method == 'POST':
         form = ProductForm(request.POST)
         if form.is_valid():
@@ -42,7 +43,7 @@ def product_create(request):
 
 @login_required
 def product_edit(request, pk):
-    product = get_object_or_404(Product, pk=pk, contractor=request.user)
+    product = get_tenant_object_or_404(Product, request, pk=pk)
     if request.method == 'POST':
         form = ProductForm(request.POST, instance=product)
         if form.is_valid():
@@ -56,7 +57,7 @@ def product_edit(request, pk):
 
 @login_required
 def product_delete(request, pk):
-    product = get_object_or_404(Product, pk=pk, contractor=request.user)
+    product = get_tenant_object_or_404(Product, request, pk=pk)
     if request.method == 'POST':
         product.is_active = False
         product.save()
@@ -77,8 +78,11 @@ def product_search_api(request):
 
 import csv
 import io
+import itertools
 from decimal import Decimal, InvalidOperation
 from django.http import HttpResponse
+
+MAX_CSV_ROWS = 5000
 
 
 def _sanitize_csv_value(value):
@@ -123,12 +127,12 @@ def product_import_csv(request):
     """Importa productos desde un archivo CSV."""
     if request.method != 'POST':
         return render(request, 'catalog/import.html', {})
-    
+
     csv_file = request.FILES.get('csv_file')
     if not csv_file:
         messages.error(request, 'No se seleccionó ningún archivo.')
         return redirect('product_import_csv')
-    
+
     if not csv_file.name.endswith('.csv'):
         messages.error(request, 'El archivo debe ser CSV (.csv)')
         return redirect('product_import_csv')
@@ -139,20 +143,33 @@ def product_import_csv(request):
     UNIT_MAP.update({k: k for k in UNIT_MAP.values()})
     CAT_MAP.update({k: k for k in CAT_MAP.values()})
 
+    is_pro = request.user.is_pro()
+    plan_limit = settings.PLAN_FREE_MAX_PRODUCTS
+    existing_count = Product.objects.filter(contractor=request.user, is_active=True).count()
+
     created = 0
     errors = []
-    
+    skipped_rows = 0
+    plan_limited = False
+
     try:
         decoded = csv_file.read().decode('utf-8-sig')
         reader = csv.DictReader(io.StringIO(decoded))
-        for i, row in enumerate(reader, start=2):
+        rows = list(itertools.islice(reader, MAX_CSV_ROWS + 1))
+        if len(rows) > MAX_CSV_ROWS:
+            skipped_rows = len(rows) - MAX_CSV_ROWS
+            rows = rows[:MAX_CSV_ROWS]
+        for i, row in enumerate(rows, start=2):
             name = row.get('Nombre', '').strip()
             if not name:
                 continue
+            if not is_pro and existing_count + created >= plan_limit:
+                plan_limited = True
+                break
             try:
                 unit_raw = row.get('Unidad', 'un').strip().lower()
                 cat_raw  = row.get('Categoría', 'otro').strip().lower()
-                Product.objects.create(
+                product = Product(
                     contractor=request.user,
                     name=name,
                     description=row.get('Descripción', '').strip(),
@@ -162,6 +179,8 @@ def product_import_csv(request):
                     sale_price=_parse_csv_price(row.get('Precio Venta', '0')),
                     sku=row.get('SKU', '').strip(),
                 )
+                product.full_clean()
+                product.save()
                 created += 1
             except Exception as e:
                 errors.append(f'Fila {i}: {e}')
@@ -171,8 +190,19 @@ def product_import_csv(request):
 
     if created:
         messages.success(request, f'✅ {created} producto(s) importados correctamente.')
+    if plan_limited:
+        messages.warning(
+            request,
+            f'Se alcanzó el límite de {plan_limit} productos del plan gratuito. '
+            'El resto de filas no se importó. ¡Actualiza a Pro para subir catálogos más grandes!'
+        )
+    if skipped_rows:
+        messages.warning(request, f'Se omitieron {skipped_rows} filas por límite máximo de {MAX_CSV_ROWS} filas.')
     if errors:
-        for err in errors[:5]:
+        display_errors = errors[:20]
+        for err in display_errors:
             messages.warning(request, err)
-    
+        if len(errors) > 20:
+            messages.warning(request, f'...y {len(errors) - 20} errores más.')
+
     return redirect('product_list')

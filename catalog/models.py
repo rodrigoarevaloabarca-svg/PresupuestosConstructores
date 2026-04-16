@@ -42,6 +42,10 @@ class Product(models.Model):
     class Meta:
         verbose_name = 'Producto'
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['contractor', 'is_active']),
+            models.Index(fields=['contractor', 'category']),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.get_unit_display()})"

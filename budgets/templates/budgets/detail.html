@@ -15,10 +15,19 @@
           <code id="public-url" class="text-xs bg-slate-700 text-blue-300 px-3 py-1.5 rounded-lg font-mono break-all">{{ request.scheme }}://{{ request.get_host }}{% url 'budget_public' budget.public_token.token %}</code>
         </div>
         <p class="text-slate-500 text-xs mt-2">Visto {{ budget.public_token.views }} vez{% if budget.public_token.views != 1 %}ces{% endif %} por el cliente</p>
+        <p class="text-slate-500 text-xs mt-1">Expira: {{ budget.public_token.expires_at|date:"d/m/Y" }}{% if budget.public_token.is_revoked %} — <span class="text-red-400 font-semibold">REVOCADO</span>{% endif %}</p>
       </div>
       <div class="flex-shrink-0 flex flex-col gap-2">
         <button onclick="copyLink()" class="btn-primary text-xs py-2">📋 Copiar link</button>
-        <a href="{% url 'budget_generate_link' budget.pk %}?regenerate=1" class="btn-ghost text-xs py-2 text-slate-400">🔄 Regenerar</a>
+        <form method="post" action="{% url 'budget_generate_link' budget.pk %}" onsubmit="return confirm('¿Regenerar el link? El link anterior dejará de funcionar.')">
+          {% csrf_token %}
+          <input type="hidden" name="regenerate" value="1">
+          <button type="submit" class="btn-ghost text-xs py-2 text-slate-400 w-full">🔄 Regenerar</button>
+        </form>
+        <form method="post" action="{% url 'budget_revoke_link' budget.pk %}" onsubmit="return confirm('¿Revocar el link? El cliente no podrá acceder más.')">
+          {% csrf_token %}
+          <button type="submit" class="btn-ghost text-xs py-2 text-red-400 w-full">🚫 Revocar link</button>
+        </form>
       </div>
     </div>
   </div>
@@ -28,9 +37,10 @@
       <p class="text-sm font-semibold text-slate-700">Compartir presupuesto con cliente</p>
       <p class="text-xs text-slate-400">Genera un link público para que tu cliente pueda ver el presupuesto.</p>
     </div>
-    <a href="{% url 'budget_generate_link' budget.pk %}" class="btn-secondary text-xs flex-shrink-0">
-      🔗 Generar link
-    </a>
+    <form method="post" action="{% url 'budget_generate_link' budget.pk %}" class="flex-shrink-0">
+      {% csrf_token %}
+      <button type="submit" class="btn-secondary text-xs">🔗 Generar link</button>
+    </form>
   </div>
   {% endif %}
 {% endblock %}
@@ -40,10 +50,13 @@
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
     Exportar PDF
   </a>
-  <a href="{% url 'budget_generate_link' budget.pk %}" class="btn-ghost" title="Generar link para cliente">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-    Compartir
-  </a>
+  <form method="post" action="{% url 'budget_generate_link' budget.pk %}" class="inline">
+    {% csrf_token %}
+    <button type="submit" class="btn-ghost" title="Generar link para cliente">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      Compartir
+    </button>
+  </form>
   <a href="{% url 'budget_edit' budget.pk %}" class="btn-primary">
     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
     Editar

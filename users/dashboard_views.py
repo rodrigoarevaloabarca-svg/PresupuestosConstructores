@@ -1,7 +1,11 @@
-from django.shortcuts import render
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
+from django.db.models import Sum, F, Q, Value, DecimalField
+from django.db.models.functions import Coalesce
+from django.shortcuts import render
 from django.utils import timezone
-from datetime import timedelta
+
+from users.services.dashboard_alerts import build_alerts
 
 
 @login_required
@@ -16,62 +20,21 @@ def dashboard_view(request):
 
     budgets_this_month = budgets.filter(created_at__gte=month_start)
     recent_budgets = budgets.order_by('-created_at')[:6]
+    alerts = build_alerts(user)
 
-    # ── Notificaciones / alertas ─────────────────────────────────────
-    alerts = []
-
-    # Presupuestos próximos a vencer (enviados, vencen en ≤3 días)
-    expiring_soon = budgets.filter(
-        status='enviado',
-        created_at__gte=now - timedelta(days=60)
-    )
-    about_to_expire = []
-    for b in expiring_soon:
-        days_left = (b.valid_until - now).days
-        if 0 <= days_left <= 3:
-            about_to_expire.append({'budget': b, 'days_left': days_left})
-    if about_to_expire:
-        for item in about_to_expire:
-            d = item['days_left']
-            label = 'hoy' if d == 0 else f'en {d} día{"s" if d > 1 else ""}'
-            alerts.append({
-                'type': 'warning',
-                'icon': '⏰',
-                'msg': f'Presupuesto #{item["budget"].number} — {item["budget"].client.name} vence {label}.',
-                'url_name': 'budget_detail',
-                'url_pk': item['budget'].pk,
-            })
-
-    # Presupuestos enviados hace más de 7 días sin respuesta
-    followup_date = now - timedelta(days=7)
-    pending_followup = budgets.filter(
-        status='enviado',
-        sent_at__lte=followup_date
-    )
-    for b in pending_followup[:2]:
-        alerts.append({
-            'type': 'info',
-            'icon': '📬',
-            'msg': f'Presupuesto #{b.number} — {b.client.name} lleva más de 7 días sin respuesta.',
-            'url_name': 'budget_detail',
-            'url_pk': b.pk,
-        })
-
-    # Perfil incompleto
-    profile = getattr(user, 'profile', None)
-    if profile and not profile.logo:
-        alerts.append({
-            'type': 'info',
-            'icon': '🏢',
-            'msg': 'Completa tu perfil: sube el logo de tu empresa para que aparezca en los PDFs.',
-            'url_name': 'profile',
-            'url_pk': None,
-        })
-
-    # ── Stats ────────────────────────────────────────────────────────
     accepted_budgets = budgets.filter(status='aceptado')
-    total_revenue = sum(int(b.total) for b in accepted_budgets)
-    pending_revenue = sum(int(b.total) for b in budgets.filter(status='enviado'))
+    revenue_agg = budgets.with_totals().aggregate(
+        accepted=Coalesce(
+            Sum(F('_subtotal_materials') + F('_subtotal_labor'), filter=Q(status='aceptado')),
+            Value(0), output_field=DecimalField(),
+        ),
+        pending=Coalesce(
+            Sum(F('_subtotal_materials') + F('_subtotal_labor'), filter=Q(status='enviado')),
+            Value(0), output_field=DecimalField(),
+        ),
+    )
+    total_revenue = int(revenue_agg['accepted'])
+    pending_revenue = int(revenue_agg['pending'])
 
     stats = {
         'total_clients': clients.count(),
@@ -87,14 +50,13 @@ def dashboard_view(request):
         ) if budgets.count() > 0 else 0,
     }
 
-    from django.conf import settings
     plan_limits = {
         'max_clients': settings.PLAN_FREE_MAX_CLIENTS,
         'max_products': settings.PLAN_FREE_MAX_PRODUCTS,
         'max_budgets_month': settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH,
     }
 
-    context = {
+    return render(request, 'users/dashboard.html', {
         'stats': stats,
         'recent_budgets': recent_budgets,
         'plan_limits': plan_limits,
@@ -102,5 +64,4 @@ def dashboard_view(request):
         'alerts': alerts,
         'total_revenue': total_revenue,
         'pending_revenue': pending_revenue,
-    }
-    return render(request, 'users/dashboard.html', context)
+    })

@@ -5,6 +5,7 @@ from datetime import timedelta
 from users.models import User
 from clients.models import Client
 from catalog.models import Product, UNIT_CHOICES
+from budgets.managers import BudgetQuerySet
 
 
 STATUS_CHOICES = [
@@ -17,6 +18,8 @@ STATUS_CHOICES = [
 
 
 class Budget(models.Model):
+    objects = BudgetQuerySet.as_manager()
+
     contractor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budgets')
     client = models.ForeignKey(Client, on_delete=models.PROTECT, related_name='budgets')
     number = models.PositiveIntegerField('N° Presupuesto')
@@ -34,6 +37,11 @@ class Budget(models.Model):
         verbose_name = 'Presupuesto'
         ordering = ['-created_at']
         unique_together = [['contractor', 'number']]
+        indexes = [
+            models.Index(fields=['contractor', 'status']),
+            models.Index(fields=['contractor', '-created_at']),
+            models.Index(fields=['contractor', 'sent_at']),
+        ]
 
     def __str__(self):
         return f"#{self.number} - {self.title}"
@@ -48,10 +56,14 @@ class Budget(models.Model):
 
     @property
     def subtotal_materials(self):
+        if hasattr(self, '_subtotal_materials'):
+            return self._subtotal_materials or 0
         return sum(item.total for item in self.material_items.all())
 
     @property
     def subtotal_labor(self):
+        if hasattr(self, '_subtotal_labor'):
+            return self._subtotal_labor or 0
         return sum(item.total for item in self.labor_items.all())
 
     @property
@@ -79,7 +91,7 @@ class Budget(models.Model):
         if not self.payment_terms:
             try:
                 self.payment_terms = self.contractor.profile.payment_terms
-            except Exception:
+            except AttributeError:
                 pass
         super().save(*args, **kwargs)
 
@@ -123,12 +135,22 @@ class BudgetItemLabor(models.Model):
         return self.name
 
 
+def _default_token_expiry():
+    return timezone.now() + timedelta(days=30)
+
+
 class BudgetPublicToken(models.Model):
     """Token único para compartir un presupuesto públicamente con el cliente."""
     budget = models.OneToOneField(Budget, on_delete=models.CASCADE, related_name='public_token')
     token = models.CharField(max_length=64, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     views = models.PositiveIntegerField(default=0)
+    expires_at = models.DateTimeField('Expira el', default=_default_token_expiry)
+    is_revoked = models.BooleanField('Revocado', default=False)
+
+    @property
+    def is_valid(self):
+        return not self.is_revoked and timezone.now() <= self.expires_at
 
     def save(self, *args, **kwargs):
         if not self.token:

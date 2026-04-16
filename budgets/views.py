@@ -1,34 +1,57 @@
+import re
+import secrets
 from decimal import Decimal, InvalidOperation
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
+
 from django.contrib import messages
-from django.db import transaction
-from django.http import HttpResponse
-from django.utils import timezone
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
-from .models import Budget, BudgetItemMaterial, BudgetItemLabor
+from django.core.paginator import Paginator
+from django.db import transaction
+from django.db.models import Sum, F, Q, Value, DecimalField
+from django.db.models.functions import Coalesce
+from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
+from django_ratelimit.decorators import ratelimit
+
+from .models import Budget, BudgetItemMaterial, BudgetItemLabor, BudgetPublicToken
 from .forms import BudgetForm
 from clients.models import Client
+from common.tenant import get_tenant_object_or_404
+from users.plan_guard import PlanGuard
 
 
 @login_required
 def budget_list(request):
-    budgets = Budget.objects.filter(contractor=request.user).select_related('client')
+    budgets = (
+        Budget.objects
+        .filter(contractor=request.user)
+        .select_related('client')
+        .prefetch_related('material_items', 'labor_items')
+        .with_totals()
+    )
     status = request.GET.get('status', '')
     q = request.GET.get('q', '')
     if status:
         budgets = budgets.filter(status=status)
     if q:
         budgets = budgets.filter(
-            __import__('django.db.models', fromlist=['Q']).Q(title__icontains=q) |
-            __import__('django.db.models', fromlist=['Q']).Q(client__name__icontains=q)
+            Q(title__icontains=q) | Q(client__name__icontains=q)
         )
-    # Calculate totals for stats bar
-    accepted_total = sum(int(b.total) for b in budgets.filter(status='aceptado'))
-    sent_total = sum(int(b.total) for b in budgets.filter(status='enviado'))
+    # Calculate totals for stats bar using DB aggregation (no N+1)
+    totals_agg = budgets.aggregate(
+        accepted_total=Coalesce(
+            Sum(F('_subtotal_materials') + F('_subtotal_labor'), filter=Q(status='aceptado')),
+            Value(0), output_field=DecimalField(),
+        ),
+        sent_total=Coalesce(
+            Sum(F('_subtotal_materials') + F('_subtotal_labor'), filter=Q(status='enviado')),
+            Value(0), output_field=DecimalField(),
+        ),
+    )
+    accepted_total = int(totals_agg['accepted_total'])
+    sent_total = int(totals_agg['sent_total'])
 
-    # Paginación
-    from django.core.paginator import Paginator
     paginator = Paginator(budgets.order_by('-created_at'), 20)
     page_num = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_num)
@@ -46,12 +69,10 @@ def budget_list(request):
 
 @login_required
 def budget_create(request):
-    if not request.user.is_pro():
-        month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0)
-        count = Budget.objects.filter(contractor=request.user, created_at__gte=month_start).count()
-        if count >= settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH:
-            messages.warning(request, f'Límite de {settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH} presupuestos/mes del plan gratuito alcanzado. ¡Actualiza a Pro!')
-            return redirect('budget_list')
+    allowed, msg = PlanGuard.can_create_budget(request.user)
+    if not allowed:
+        messages.warning(request, msg)
+        return redirect('budget_list')
 
     clients = Client.objects.filter(contractor=request.user)
     preselect_client = request.GET.get('client', '')
@@ -67,12 +88,13 @@ def budget_create(request):
                         contractor=request.user, created_at__gte=month_start
                     ).count()
                     if count >= settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH:
-                        messages.warning(request, f'Límite mensual alcanzado.')
+                        messages.warning(request, 'Límite mensual alcanzado.')
                         return redirect('budget_list')
                 budget = form.save(commit=False)
                 budget.contractor = request.user
                 budget.save()
-                _save_items(request, budget)
+                _save_line_items(request, budget, 'mat', BudgetItemMaterial, 'un')
+                _save_line_items(request, budget, 'lab', BudgetItemLabor, 'gl')
             messages.success(request, f'✅ Presupuesto #{budget.number} creado exitosamente.')
             return redirect('budget_detail', pk=budget.pk)
     else:
@@ -90,13 +112,13 @@ def budget_create(request):
 
 @login_required
 def budget_detail(request, pk):
-    budget = get_object_or_404(Budget, pk=pk, contractor=request.user)
+    budget = get_tenant_object_or_404(Budget, request, pk=pk)
     return render(request, 'budgets/detail.html', {'budget': budget})
 
 
 @login_required
 def budget_edit(request, pk):
-    budget = get_object_or_404(Budget, pk=pk, contractor=request.user)
+    budget = get_tenant_object_or_404(Budget, request, pk=pk)
     clients = Client.objects.filter(contractor=request.user)
     if request.method == 'POST':
         form = BudgetForm(request.POST, instance=budget, user=request.user)
@@ -104,7 +126,8 @@ def budget_edit(request, pk):
             form.save()
             budget.material_items.all().delete()
             budget.labor_items.all().delete()
-            _save_items(request, budget)
+            _save_line_items(request, budget, 'mat', BudgetItemMaterial, 'un')
+            _save_line_items(request, budget, 'lab', BudgetItemLabor, 'gl')
             messages.success(request, '✅ Presupuesto actualizado correctamente.')
             return redirect('budget_detail', pk=budget.pk)
     else:
@@ -121,36 +144,21 @@ def _parse_decimal(value, default='0'):
         return Decimal(default)
 
 
-def _save_items(request, budget):
-    mat_names  = request.POST.getlist('mat_name[]')
-    mat_units  = request.POST.getlist('mat_unit[]')
-    mat_qtys   = request.POST.getlist('mat_qty[]')
-    mat_prices = request.POST.getlist('mat_price[]')
-    for i, name in enumerate(mat_names):
+def _save_line_items(request, budget, prefix, model, default_unit):
+    """Guarda ítems de línea (materiales o mano de obra) desde el POST."""
+    names = request.POST.getlist(f'{prefix}_name[]')
+    units = request.POST.getlist(f'{prefix}_unit[]')
+    qtys = request.POST.getlist(f'{prefix}_qty[]')
+    prices = request.POST.getlist(f'{prefix}_price[]')
+    for i, name in enumerate(names):
         if name.strip():
             try:
-                BudgetItemMaterial.objects.create(
-                    budget=budget, name=name.strip(),
-                    unit=mat_units[i] if i < len(mat_units) else 'un',
-                    quantity=_parse_decimal(mat_qtys[i], '1') if i < len(mat_qtys) and mat_qtys[i] else Decimal('1'),
-                    unit_price=_parse_decimal(mat_prices[i]) if i < len(mat_prices) and mat_prices[i] else Decimal('0'),
-                    order=i,
-                )
-            except (ValueError, IndexError):
-                pass
-
-    lab_names  = request.POST.getlist('lab_name[]')
-    lab_units  = request.POST.getlist('lab_unit[]')
-    lab_qtys   = request.POST.getlist('lab_qty[]')
-    lab_prices = request.POST.getlist('lab_price[]')
-    for i, name in enumerate(lab_names):
-        if name.strip():
-            try:
-                BudgetItemLabor.objects.create(
-                    budget=budget, name=name.strip(),
-                    unit=lab_units[i] if i < len(lab_units) else 'gl',
-                    quantity=_parse_decimal(lab_qtys[i], '1') if i < len(lab_qtys) and lab_qtys[i] else Decimal('1'),
-                    unit_price=_parse_decimal(lab_prices[i]) if i < len(lab_prices) and lab_prices[i] else Decimal('0'),
+                model.objects.create(
+                    budget=budget,
+                    name=name.strip(),
+                    unit=units[i] if i < len(units) else default_unit,
+                    quantity=_parse_decimal(qtys[i], '1') if i < len(qtys) and qtys[i] else Decimal('1'),
+                    unit_price=_parse_decimal(prices[i]) if i < len(prices) and prices[i] else Decimal('0'),
                     order=i,
                 )
             except (ValueError, IndexError):
@@ -159,7 +167,7 @@ def _save_items(request, budget):
 
 @login_required
 def budget_update_status(request, pk):
-    budget = get_object_or_404(Budget, pk=pk, contractor=request.user)
+    budget = get_tenant_object_or_404(Budget, request, pk=pk)
     if request.method == 'POST':
         new_status = request.POST.get('status')
         valid = [s[0] for s in Budget._meta.get_field('status').choices]
@@ -174,7 +182,7 @@ def budget_update_status(request, pk):
 
 @login_required
 def budget_delete(request, pk):
-    budget = get_object_or_404(Budget, pk=pk, contractor=request.user)
+    budget = get_tenant_object_or_404(Budget, request, pk=pk)
     if request.method == 'POST':
         num = budget.number
         budget.delete()
@@ -185,7 +193,7 @@ def budget_delete(request, pk):
 
 @login_required
 def budget_pdf(request, pk):
-    budget = get_object_or_404(Budget, pk=pk, contractor=request.user)
+    budget = get_tenant_object_or_404(Budget, request, pk=pk)
     profile = getattr(request.user, 'profile', None)
     context = {'budget': budget, 'profile': profile}
 
@@ -194,8 +202,6 @@ def budget_pdf(request, pk):
         from django.template.loader import render_to_string
 
         html_string = render_to_string('budgets/pdf_template.html', context)
-
-        # base_url sin request para evitar problemas con WeasyPrint y URLs relativas
         html = HTML(
             string=html_string,
             base_url=request.build_absolute_uri('/'),
@@ -203,7 +209,6 @@ def budget_pdf(request, pk):
         css = CSS(string='@page { size: A4; margin: 0; }')
         pdf_bytes = html.write_pdf(stylesheets=[css])
 
-        import re
         safe_name = re.sub(r'[^\w\s-]', '', budget.client.name[:20]).strip().replace(' ', '-')
         filename = f'presupuesto-{budget.number}-{safe_name}.pdf'
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
@@ -220,7 +225,7 @@ def budget_pdf(request, pk):
 
 @login_required
 def budget_duplicate(request, pk):
-    original = get_object_or_404(Budget, pk=pk, contractor=request.user)
+    original = get_tenant_object_or_404(Budget, request, pk=pk)
 
     with transaction.atomic():
         if not request.user.is_pro():
@@ -229,7 +234,7 @@ def budget_duplicate(request, pk):
                 contractor=request.user, created_at__gte=month_start
             ).count()
             if count >= settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH:
-                messages.warning(request, f'Límite mensual de presupuestos alcanzado.')
+                messages.warning(request, 'Límite mensual de presupuestos alcanzado.')
                 return redirect('budget_list')
 
         new_budget = Budget.objects.create(
@@ -256,28 +261,51 @@ def budget_duplicate(request, pk):
     return redirect('budget_edit', pk=new_budget.pk)
 
 
-from .models import BudgetPublicToken
-
-
 @login_required
 def budget_generate_link(request, pk):
-    """Genera o regenera el link público para compartir con el cliente."""
-    budget = get_object_or_404(Budget, pk=pk, contractor=request.user)
+    """Genera o regenera el link público para compartir con el cliente. Solo POST."""
+    budget = get_tenant_object_or_404(Budget, request, pk=pk)
+    if request.method != 'POST':
+        return redirect('budget_detail', pk=pk)
     token, created = BudgetPublicToken.objects.get_or_create(budget=budget)
-    if not created and request.GET.get('regenerate'):
-        import secrets
+    if not created and request.POST.get('regenerate'):
+        from datetime import timedelta
         token.token = secrets.token_urlsafe(32)
+        token.expires_at = timezone.now() + timedelta(days=30)
+        token.is_revoked = False
         token.save()
-    messages.success(request, '🔗 Link público generado. Cópialo y envíalo a tu cliente.')
+        messages.success(request, '🔄 Link regenerado. El link anterior ya no es válido.')
+    else:
+        messages.success(request, '🔗 Link público generado. Cópialo y envíalo a tu cliente.')
     return redirect('budget_detail', pk=pk)
 
 
+@login_required
+def budget_revoke_link(request, pk):
+    """Revoca el link público activo de un presupuesto."""
+    budget = get_tenant_object_or_404(Budget, request, pk=pk)
+    if request.method == 'POST':
+        try:
+            token = budget.public_token
+            token.is_revoked = True
+            token.save(update_fields=['is_revoked'])
+            messages.success(request, 'Link público revocado. El cliente ya no puede acceder.')
+        except BudgetPublicToken.DoesNotExist:
+            pass
+    return redirect('budget_detail', pk=pk)
+
+
+@ratelimit(key='ip', rate='20/m', block=True)
 def budget_public_view(request, token):
     """Vista pública del presupuesto para el cliente final (sin login)."""
-    public_token = get_object_or_404(BudgetPublicToken, token=token)
+    public_token = get_object_or_404(
+        BudgetPublicToken,
+        token=token,
+        is_revoked=False,
+        expires_at__gt=timezone.now(),
+    )
     budget = public_token.budget
     profile = getattr(budget.contractor, 'profile', None)
-    # Increment view counter
     public_token.views += 1
     public_token.save(update_fields=['views'])
     return render(request, 'budgets/public_view.html', {
@@ -288,9 +316,10 @@ def budget_public_view(request, token):
 
 
 @login_required
+@ratelimit(key='user', rate='10/h', method='POST', block=True)
 def budget_send_email(request, pk):
     """Envía el presupuesto por email al cliente."""
-    budget = get_object_or_404(Budget, pk=pk, contractor=request.user)
+    budget = get_tenant_object_or_404(Budget, request, pk=pk)
 
     if request.method == 'POST':
         email = request.POST.get('email', '').strip()
@@ -301,15 +330,12 @@ def budget_send_email(request, pk):
             messages.error(request, 'El cliente no tiene email registrado. Ingrésalo manualmente.')
             return redirect('budget_detail', pk=pk)
 
-        # Generar token público si no existe
-        from .models import BudgetPublicToken
         BudgetPublicToken.objects.get_or_create(budget=budget)
 
         from .email_utils import send_budget_email
         ok = send_budget_email(budget, email, request=request)
 
         if ok:
-            # Cambiar estado a enviado
             if budget.status == 'borrador':
                 budget.status = 'enviado'
                 budget.sent_at = timezone.now()

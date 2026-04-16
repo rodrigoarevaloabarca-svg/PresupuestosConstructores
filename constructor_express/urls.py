@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from users.landing_view import landing_view
+from constructor_express.health import healthz
 
 # API imports
 from budgets.api_views import BudgetListAPIView, BudgetDetailAPIView, dashboard_stats_api
@@ -13,6 +14,7 @@ urlpatterns = [
     # ── Público ────────────────────────────────────────────────────
     path('admin/', admin.site.urls),
     path('', landing_view, name='landing'),
+    path('healthz/', healthz, name='healthz'),
 
     # ── Aplicación web ─────────────────────────────────────────────
     path('usuarios/', include('users.urls')),

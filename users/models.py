@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.exceptions import ValidationError
+from users.validators import validate_image_upload
 import re
 
 
@@ -53,7 +54,7 @@ class ContractorProfile(models.Model):
     phone = models.CharField('Teléfono', max_length=20)
     address = models.CharField('Dirección', max_length=300, blank=True)
     city = models.CharField('Ciudad', max_length=100, default='Santiago')
-    logo = models.ImageField('Logo', upload_to='logos/', null=True, blank=True)
+    logo = models.ImageField('Logo', upload_to='logos/', null=True, blank=True, validators=[validate_image_upload])
     brand_color = models.CharField('Color Principal', max_length=7, default='#1e40af')
     website = models.URLField('Sitio Web', blank=True)
     budget_validity_days = models.PositiveIntegerField('Validez (días)', default=15)

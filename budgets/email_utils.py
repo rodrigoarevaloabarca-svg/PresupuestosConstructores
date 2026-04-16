@@ -2,9 +2,12 @@
 Utilidades para envío de presupuestos por email.
 """
 import logging
+
+from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
-from django.conf import settings
+
+from common.formatting import format_clp
 
 logger = logging.getLogger(__name__)
 
@@ -35,9 +38,6 @@ def send_budget_email(budget, recipient_email, request=None):
 
     iva_note = f"(IVA {budget.tax_percent}% incl.)" if budget.tax_percent > 0 else "(sin IVA)"
 
-    def fmt(n):
-        return f"{int(round(float(n))):,}".replace(",", ".")
-
     context = {
         'client_name': budget.client.name,
         'company_name': company_name,
@@ -46,9 +46,9 @@ def send_budget_email(budget, recipient_email, request=None):
         'brand_color': brand_color,
         'budget_number': budget.number,
         'budget_title': budget.title,
-        'budget_total': fmt(budget.total),
-        'mat_total': fmt(budget.subtotal_materials) if budget.subtotal_materials else None,
-        'labor_total': fmt(budget.subtotal_labor) if budget.subtotal_labor else None,
+        'budget_total': format_clp(budget.total),
+        'mat_total': format_clp(budget.subtotal_materials) if budget.subtotal_materials else None,
+        'labor_total': format_clp(budget.subtotal_labor) if budget.subtotal_labor else None,
         'valid_until': budget.valid_until.strftime('%d/%m/%Y'),
         'validity_days': budget.validity_days,
         'payment_terms': budget.payment_terms,
