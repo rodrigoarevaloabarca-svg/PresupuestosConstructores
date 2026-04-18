@@ -91,8 +91,8 @@
               <option value="bls" {% if item.unit == 'bls' %}selected{% endif %}>Bolsa</option>
               <option value="pk" {% if item.unit == 'pk' %}selected{% endif %}>Pack</option>
             </select>
-            <input type="number" name="mat_qty[]" value="{{ item.quantity }}" class="form-input col-span-3 sm:col-span-2 text-sm mat-qty" min="0" step="0.01" required>
-            <input type="number" name="mat_price[]" value="{{ item.unit_price }}" class="form-input col-span-3 sm:col-span-2 text-sm mat-price" min="0" step="1" required>
+            <input type="number" name="mat_qty[]" value="{{ item.quantity|floatformat:2 }}" class="form-input col-span-3 sm:col-span-2 text-sm mat-qty" min="0" step="0.01" required>
+            <input type="number" name="mat_price[]" value="{{ item.unit_price|floatformat:0 }}" class="form-input col-span-3 sm:col-span-2 text-sm mat-price" min="0" step="1" required>
             <div class="col-span-10 sm:col-span-1 text-right">
               <span class="font-mono text-xs font-bold text-slate-700 row-total">$0</span>
             </div>
@@ -135,8 +135,8 @@
               <option value="m2" {% if item.unit == 'm2' %}selected{% endif %}>m²</option>
               <option value="ml" {% if item.unit == 'ml' %}selected{% endif %}>Metro lineal</option>
             </select>
-            <input type="number" name="lab_qty[]" value="{{ item.quantity }}" class="form-input col-span-3 sm:col-span-2 text-sm lab-qty" min="0" step="0.5">
-            <input type="number" name="lab_price[]" value="{{ item.unit_price }}" class="form-input col-span-3 sm:col-span-2 text-sm lab-price" min="0" step="1">
+            <input type="number" name="lab_qty[]" value="{{ item.quantity|floatformat:2 }}" class="form-input col-span-3 sm:col-span-2 text-sm lab-qty" min="0" step="0.5">
+            <input type="number" name="lab_price[]" value="{{ item.unit_price|floatformat:0 }}" class="form-input col-span-3 sm:col-span-2 text-sm lab-price" min="0" step="1">
             <div class="col-span-10 sm:col-span-1 text-right">
               <span class="font-mono text-xs font-bold text-amber-700 row-total">$0</span>
             </div>
