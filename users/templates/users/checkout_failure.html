@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Pago fallido — Constructor Express{% endblock %}
+{% block page_title %}Error en el pago{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto text-center card mt-10">
+  <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+    <i data-lucide="x-circle" class="w-8 h-8 text-red-500"></i>
+  </div>
+  <h2 class="text-xl font-bold text-slate-800 mb-2">No se pudo procesar el pago</h2>
+  <p class="text-slate-500 text-sm mb-6">Intenta de nuevo o contacta a soporte si el problema persiste.</p>
+  <a href="{% url 'checkout_start' %}" class="btn-accent">Intentar de nuevo</a>
+</div>
+{% endblock %}

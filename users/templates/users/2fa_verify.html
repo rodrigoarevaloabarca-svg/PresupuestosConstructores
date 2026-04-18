@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Verificación 2FA — Constructor Express{% endblock %}
+
+{% block public_content %}
+<div class="min-h-screen app-bg flex items-center justify-center p-4">
+  <div class="card w-full max-w-sm">
+    <div class="text-center mb-6">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3" style="background:linear-gradient(135deg,#1d3461,#25407a)">
+        <i data-lucide="shield-check" class="w-5 h-5 text-white"></i>
+      </div>
+      <h1 class="text-lg font-bold text-slate-800">Verificación en dos pasos</h1>
+      <p class="text-sm text-slate-500 mt-1">Ingresa el código de tu aplicación autenticadora</p>
+    </div>
+    {% if messages %}
+      {% for m in messages %}
+        <div class="mb-4 px-4 py-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200">{{ m }}</div>
+      {% endfor %}
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-4">{{ form.token }}</div>
+      <button type="submit" class="btn-primary w-full">Verificar</button>
+    </form>
+    <p class="text-center mt-4 text-xs text-slate-400">
+      <a href="{% url 'login' %}" class="hover:text-slate-600">← Volver al login</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

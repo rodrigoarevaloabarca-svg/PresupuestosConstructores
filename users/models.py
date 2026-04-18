@@ -37,13 +37,59 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     def is_pro(self):
-        from django.utils import timezone
-        if self.plan == 'pro':
-            return self.plan_expires_at is None or self.plan_expires_at > timezone.now()
-        return False
+        if hasattr(self, '_pro_cache'):
+            return self._pro_cache
+        from django.utils.timezone import now
+        today = now().date()
+        result = self.subscriptions.filter(
+            status='active', next_billing_date__gte=today
+        ).exists()
+        # Fallback: plan field manual (legado)
+        if not result and self.plan == 'pro':
+            result = self.plan_expires_at is None or self.plan_expires_at > now()
+        self._pro_cache = result
+        return result
 
     def __str__(self):
         return self.email
+
+
+SUBSCRIPTION_STATUS = [
+    ('pending', 'Pendiente'),
+    ('active', 'Activo'),
+    ('cancelled', 'Cancelado'),
+    ('past_due', 'Vencido'),
+]
+
+
+class Subscription(models.Model):
+    contractor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    mp_preapproval_id = models.CharField('ID preapproval MP', max_length=100, blank=True)
+    status = models.CharField('Estado', max_length=20, choices=SUBSCRIPTION_STATUS, default='pending')
+    amount_clp = models.PositiveIntegerField('Monto CLP', default=0)
+    next_billing_date = models.DateField('Próxima cobranza', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Suscripción'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.contractor.email} — {self.get_status_display()}"
+
+
+class Payment(models.Model):
+    subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, related_name='payments')
+    mp_payment_id = models.CharField('ID pago MP', max_length=100)
+    amount = models.PositiveIntegerField('Monto CLP')
+    paid_at = models.DateTimeField('Fecha de pago')
+
+    class Meta:
+        verbose_name = 'Pago'
+        ordering = ['-paid_at']
+
+    def __str__(self):
+        return f"Pago {self.mp_payment_id} — ${self.amount:,}"
 
 
 class ContractorProfile(models.Model):

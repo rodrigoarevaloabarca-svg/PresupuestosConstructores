@@ -349,6 +349,17 @@
         <i data-lucide="key-round" class="w-4 h-4"></i>
         Cambiar Clave
       </a>
+
+      <a href="{% url 'enable_2fa' %}" class="sidebar-link {% if '2fa' in request.resolver_match.url_name %}active{% endif %}">
+        <i data-lucide="shield-check" class="w-4 h-4"></i>
+        Seguridad 2FA
+      </a>
+
+      <a href="{% url 'billing' %}" class="sidebar-link {% if request.resolver_match.url_name == 'billing' %}active{% endif %}">
+        <i data-lucide="credit-card" class="w-4 h-4"></i>
+        Facturación
+        {% if not user.is_pro %}<span class="ml-auto text-xs px-1.5 py-0.5 rounded-md" style="background:rgba(240,168,56,0.15);color:#f59e3a">Pro</span>{% endif %}
+      </a>
     </nav>
 
     <!-- User card -->

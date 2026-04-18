@@ -58,3 +58,12 @@ class PasswordResetRequestForm(forms.Form):
 
 class PasswordResetConfirmForm(SetPasswordForm):
     pass
+
+
+class OTPTokenForm(forms.Form):
+    token = forms.CharField(
+        label='Código de verificación',
+        max_length=6,
+        min_length=6,
+        widget=forms.TextInput(attrs={'autocomplete': 'one-time-code', 'inputmode': 'numeric', 'class': 'form-input text-center text-2xl tracking-widest'}),
+    )

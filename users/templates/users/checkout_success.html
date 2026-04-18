@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Pago exitoso — Constructor Express{% endblock %}
+{% block page_title %}Pago Exitoso{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto text-center card mt-10">
+  <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+    <i data-lucide="check-circle-2" class="w-8 h-8 text-emerald-600"></i>
+  </div>
+  <h2 class="text-xl font-bold text-slate-800 mb-2">¡Bienvenido al Plan Pro!</h2>
+  <p class="text-slate-500 text-sm mb-6">Tu suscripción fue procesada correctamente. Ya puedes usar todas las funciones Pro.</p>
+  <a href="{% url 'dashboard' %}" class="btn-primary">Ir al Dashboard</a>
+</div>
+{% endblock %}

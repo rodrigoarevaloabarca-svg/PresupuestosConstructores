@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Plantillas de Presupuesto — Constructor Express{% endblock %}
+{% block page_title %}Plantillas{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'budget_list' %}" class="btn-secondary">← Presupuestos</a>
+{% endblock %}
+{% block content %}
+<div class="card">
+  {% if templates %}
+  <div class="space-y-3">
+    {% for tpl in templates %}
+    <div class="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-3">
+      <div>
+        <p class="font-semibold text-slate-800">{{ tpl.title }}</p>
+        <p class="text-xs text-slate-400 mt-0.5">{{ tpl.material_items.count }} materiales · {{ tpl.labor_items.count }} partidas M.O.</p>
+      </div>
+      <div class="flex gap-2">
+        <a href="{% url 'budget_duplicate' tpl.pk %}" class="btn-secondary text-xs">Usar plantilla</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-12">
+    <p class="text-slate-400 text-sm">No tienes plantillas guardadas aún.</p>
+    <p class="text-xs text-slate-300 mt-1">Desde el detalle de un presupuesto, usa "Guardar como plantilla".</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

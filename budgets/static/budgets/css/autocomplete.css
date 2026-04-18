@@ -1,0 +1,43 @@
+.ac-dropdown {
+  position: absolute;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+  min-width: 260px;
+  max-height: 280px;
+  overflow-y: auto;
+  top: calc(100% + 4px);
+  left: 0;
+}
+.ac-group-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: #94a3b8;
+  padding: 8px 12px 4px;
+}
+.ac-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  gap: 8px;
+  transition: background .1s;
+}
+.ac-item:hover, .ac-item.ac-focused {
+  background: #eff6ff;
+}
+.ac-item-name { font-size: .85rem; font-weight: 500; color: #1e293b; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ac-item-price { font-size: .75rem; font-family: monospace; color: #64748b; white-space: nowrap; }
+.ac-badge { font-size: .6rem; font-weight: 700; padding: 1px 5px; border-radius: 4px; white-space: nowrap; }
+.ac-badge-catalog { background: #dbeafe; color: #1d4ed8; }
+.ac-badge-sodimac { background: #fef3c7; color: #92400e; }
+.ac-badge-easy { background: #dcfce7; color: #166534; }
+.ac-badge-imperial { background: #f1f5f9; color: #334155; }
+.ac-link { font-size: .7rem; color: #3b82f6; text-decoration: none; flex-shrink: 0; }
+.ac-link:hover { text-decoration: underline; }
+.ac-tooltip { font-size: .68rem; color: #94a3b8; padding: 6px 12px 8px; border-top: 1px solid #f1f5f9; }

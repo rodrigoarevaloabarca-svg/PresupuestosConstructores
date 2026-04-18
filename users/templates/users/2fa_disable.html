@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Desactivar 2FA — Constructor Express{% endblock %}
+{% block page_title %}Desactivar Autenticación en Dos Pasos{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+  <div class="card">
+    <div class="flex items-center gap-3 mb-4 p-3 bg-amber-50 rounded-xl border border-amber-200">
+      <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500 flex-shrink-0"></i>
+      <p class="text-sm text-amber-700">Desactivar 2FA reduce la seguridad de tu cuenta.</p>
+    </div>
+    <form method="post">
+      {% csrf_token %}
+      <label class="form-label">Código actual de tu aplicación autenticadora</label>
+      {{ form.token }}
+      {% if form.token.errors %}
+        <p class="text-red-500 text-xs mt-1">{{ form.token.errors.0 }}</p>
+      {% endif %}
+      <div class="flex gap-3 mt-4">
+        <button type="submit" class="btn-danger">Desactivar 2FA</button>
+        <a href="{% url 'profile' %}" class="btn-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

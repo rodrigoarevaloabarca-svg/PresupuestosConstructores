@@ -22,7 +22,12 @@ class Budget(models.Model):
 
     contractor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='budgets')
     client = models.ForeignKey(Client, on_delete=models.PROTECT, related_name='budgets')
-    number = models.PositiveIntegerField('N° Presupuesto')
+    number = models.PositiveIntegerField('N° Presupuesto', null=True, blank=True)
+    version = models.PositiveIntegerField('Versión', default=1)
+    parent = models.ForeignKey(
+        'self', on_delete=models.SET_NULL, null=True, blank=True, related_name='versions'
+    )
+    is_template = models.BooleanField('Es plantilla', default=False)
     title = models.CharField('Título / Obra', max_length=300)
     status = models.CharField('Estado', max_length=20, choices=STATUS_CHOICES, default='borrador')
     validity_days = models.PositiveIntegerField('Validez (días)', default=15)
@@ -36,11 +41,12 @@ class Budget(models.Model):
     class Meta:
         verbose_name = 'Presupuesto'
         ordering = ['-created_at']
-        unique_together = [['contractor', 'number']]
+        unique_together = [['contractor', 'number', 'version']]
         indexes = [
             models.Index(fields=['contractor', 'status']),
             models.Index(fields=['contractor', '-created_at']),
             models.Index(fields=['contractor', 'sent_at']),
+            models.Index(fields=['contractor', 'is_template']),
         ]
 
     def __str__(self):
@@ -79,11 +85,12 @@ class Budget(models.Model):
         return self.subtotal + self.tax_amount
 
     def save(self, *args, **kwargs):
-        if not self.number:
+        if not self.is_template and not self.number:
             with transaction.atomic():
                 last = (
                     Budget.objects.select_for_update()
-                    .filter(contractor=self.contractor)
+                    .filter(contractor=self.contractor, is_template=False)
+                    .exclude(number=None)
                     .order_by('-number')
                     .first()
                 )
@@ -133,6 +140,33 @@ class BudgetItemLabor(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class BudgetSignature(models.Model):
+    """Firma digital del cliente sobre la vista pública del presupuesto."""
+    budget = models.OneToOneField(Budget, on_delete=models.CASCADE, related_name='signature')
+    signature_png = models.ImageField('Firma PNG', upload_to='budgets/signatures/%Y/%m/')
+    hash_sha256 = models.CharField('SHA-256', max_length=64)
+    ip = models.GenericIPAddressField('IP del firmante')
+    user_agent = models.TextField('User-Agent', blank=True)
+    signed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Firma de presupuesto #{self.budget.number}"
+
+
+class BudgetAttachment(models.Model):
+    """Archivos adjuntos (fotos, planos, PDFs) de un presupuesto."""
+    budget = models.ForeignKey(Budget, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField('Archivo', upload_to='budgets/attachments/%Y/%m/')
+    filename = models.CharField('Nombre del archivo', max_length=255)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['uploaded_at']
+
+    def __str__(self):
+        return self.filename
 
 
 def _default_token_expiry():

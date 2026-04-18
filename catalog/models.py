@@ -55,3 +55,34 @@ class Product(models.Model):
         if self.cost_price > 0:
             return round(((self.sale_price - self.cost_price) / self.cost_price) * 100, 1)
         return 0
+
+
+RETAILER_CHOICES = [
+    ('sodimac', 'Sodimac'),
+    ('easy', 'Easy'),
+    ('imperial', 'Ferretería Imperial'),
+]
+
+
+class RetailerProduct(models.Model):
+    """Caché de precios de ferreterías externas (Sodimac, Easy, Imperial)."""
+    retailer = models.CharField('Ferretería', max_length=20, choices=RETAILER_CHOICES)
+    name = models.CharField('Nombre', max_length=500)
+    sku = models.CharField('SKU', max_length=100, blank=True, null=True)
+    price_clp = models.DecimalField('Precio CLP', max_digits=12, decimal_places=0)
+    url = models.URLField('URL', max_length=1000)
+    category = models.CharField('Categoría', max_length=200, blank=True, null=True)
+    last_scraped = models.DateTimeField('Última actualización', auto_now=True)
+    is_active = models.BooleanField('Activo', default=True)
+
+    class Meta:
+        verbose_name = 'Producto de Ferretería'
+        verbose_name_plural = 'Productos de Ferreterías'
+        unique_together = [['retailer', 'sku']]
+        indexes = [
+            models.Index(fields=['retailer', 'is_active']),
+            models.Index(fields=['name']),
+        ]
+
+    def __str__(self):
+        return f"[{self.get_retailer_display()}] {self.name}"

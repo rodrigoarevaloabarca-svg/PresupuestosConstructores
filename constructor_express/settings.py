@@ -47,10 +47,17 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'rest_framework',
+    'django_otp',
+    'django_otp.plugins.otp_totp',
+    'django_celery_results',
+    'drf_spectacular',
     'users',
     'clients',
     'catalog',
     'budgets',
+    'billing',
+    'auditlog',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -60,9 +67,11 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django_otp.middleware.OTPMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'users.middleware.NoCacheAuthMiddleware',  # Previene back-button post-logout
+    'auditlog.middleware.AuditlogMiddleware',
 ]
 
 ROOT_URLCONF = 'constructor_express.urls'
@@ -160,6 +169,7 @@ PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
 # Django REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ],
@@ -175,7 +185,9 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',
         'user': '1000/hour',
+        'token_obtain': '5/min',
     },
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 # ─── Seguridad: cookies y headers (siempre activos) ──────────────────────────
@@ -268,3 +280,60 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5 MB
 
 # ─── Rate limiting (django-ratelimit) ────────────────────────────────────────
 RATELIMIT_VIEW = 'constructor_express.views.rate_limited_view'
+
+# ─── Mercado Pago ────────────────────────────────────────────────────────────
+MP_ACCESS_TOKEN = os.environ.get('MP_ACCESS_TOKEN', '')
+MP_PUBLIC_KEY = os.environ.get('MP_PUBLIC_KEY', '')
+MP_WEBHOOK_SECRET = os.environ.get('MP_WEBHOOK_SECRET', '')
+
+# ─── Celery ──────────────────────────────────────────────────────────────────
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+if _TESTING:
+    CELERY_TASK_ALWAYS_EAGER = True
+
+# ─── Email transaccional (Anymail / SendGrid) ────────────────────────────────
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', '')
+if SENDGRID_API_KEY and not DEBUG:
+    EMAIL_BACKEND = 'anymail.backends.sendgrid.EmailBackend'
+    ANYMAIL = {'SENDGRID_API_KEY': SENDGRID_API_KEY}
+elif _TESTING:
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
+
+# ─── Twilio / WhatsApp ───────────────────────────────────────────────────────
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
+TWILIO_WHATSAPP_FROM = os.environ.get('TWILIO_WHATSAPP_FROM', 'whatsapp:+14155238886')
+
+# ─── JWT (SimpleJWT) ─────────────────────────────────────────────────────────
+from datetime import timedelta
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+}
+
+# ─── OpenAPI / Spectacular ───────────────────────────────────────────────────
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Constructor Express API',
+    'DESCRIPTION': 'API para contratistas chilenos — presupuestos, clientes, catálogo.',
+    'VERSION': '1.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
+# ─── SII / DTE ───────────────────────────────────────────────────────────────
+SII_PROVIDER_API_KEY = os.environ.get('SII_PROVIDER_API_KEY', '')
+SII_RUT_EMISOR = os.environ.get('SII_RUT_EMISOR', '')
+SII_ENV = os.environ.get('SII_ENV', 'sandbox')
+
+# ─── Celery Beat ─────────────────────────────────────────────────────────────
+from celery.schedules import crontab
+CELERY_BEAT_SCHEDULE = {
+    'scrape-retailers-weekly': {
+        'task': 'catalog.tasks.scrape_all_retailers',
+        'schedule': crontab(hour=3, minute=0, day_of_week='sunday'),
+    },
+}

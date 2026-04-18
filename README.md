@@ -1,44 +1,54 @@
-# 🏗️ Constructor Express
+# Constructor Express
 
 > Plataforma SaaS de presupuestos profesionales para contratistas chilenos
 
-**Demo en vivo:** [https://rodrigocl.alwaysdata.net](https://rodrigocl.alwaysdata.net)
+**Demo en vivo:** [https://rodrigocl.alwaysdata.net](https://rodrigocl.alwaysdata.net)  
+**Credenciales demo:** `demo@constructorexpress.cl` / `Demo1234!`
 
 ---
 
-## 📋 Descripción
+## Descripción
 
-Constructor Express es una aplicación web diseñada para pequeños contratistas y reparadores de oficio en Chile — gasfiteros, electricistas, carpinteros, pintores y más. Permite crear presupuestos profesionales en PDF, gestionar clientes y mantener un catálogo de productos y materiales, todo desde una interfaz simple y moderna.
-
-### ¿Para quién es?
-
-- Gasfiteros, electricistas, carpinteros, pintores
-- Constructores independientes
-- Cualquier contratista que necesite presupuestar trabajos de forma profesional
+Constructor Express es una aplicación web para pequeños contratistas en Chile — gasfiteros, electricistas, carpinteros, pintores y más. Permite crear presupuestos profesionales en PDF, gestionar clientes, mantener un catálogo de productos y recibir la aceptación del cliente con firma digital, todo desde una interfaz simple y moderna.
 
 ---
 
-## ✅ Funcionalidades
+## Funcionalidades
 
-### MVP (disponible ahora)
+### Presupuestos
+- Builder dinámico con materiales + mano de obra + IVA configurable
+- PDF con logo y colores de marca del contratista
+- Versionado automático: editar un presupuesto aceptado/enviado crea una versión nueva (v2, v3…) sin sobrescribir la original
+- Firma digital del cliente en la vista pública (canvas HTML5 + SHA-256)
+- Archivos adjuntos (fotos, planos, PDFs — máx. 5 × 5MB)
+- Plantillas reutilizables para trabajos frecuentes
+- Link público sin login para compartir con el cliente
+- Envío por email y WhatsApp
+- Historial de cambios (audit log) por campo
 
-| Módulo | Descripción |
-|---|---|
-| 🔐 **Autenticación** | Registro, login seguro, cambio de contraseña |
-| 🏢 **Perfil de empresa** | Logo, RUT, colores de marca, datos de contacto |
-| 👥 **Clientes** | CRUD completo con historial de presupuestos |
-| 📦 **Catálogo** | Productos con precio costo/venta, margen, import/export CSV |
-| 📄 **Presupuestos** | Builder dinámico con materiales + mano de obra + IVA |
-| 🔗 **Link público** | Compartir presupuesto con cliente sin que tenga cuenta |
-| 📧 **Email** | Envío de presupuesto por correo al cliente |
-| 📋 **Duplicar** | Copiar un presupuesto con 1 clic |
-| 🖨️ **PDF** | Generación con logo y colores de marca |
-| 📊 **Dashboard** | Stats, alertas de vencimiento, ingresos |
-| 📈 **Reportes** | Gráficos de actividad, conversión, ingresos por mes |
-| 🔍 **Búsqueda global** | Busca en clientes, presupuestos y productos |
-| 🌐 **API REST** | Endpoints JSON para futura app móvil |
+### Clientes y catálogo
+- CRUD completo de clientes y productos
+- Import/Export CSV del catálogo
+- Autocompletado de materiales con precios de Sodimac, Easy e Imperial (scraper semanal)
 
-### Planes
+### Analytics
+- Dashboard con ingresos, tasa de conversión, alertas de vencimiento
+- CLV por cliente, producto más rentable, tasa de aceptación mensual
+
+### Pagos y facturación
+- Checkout MercadoPago para suscripción Pro
+- Scaffolding DTE/SII para factura electrónica
+
+### Seguridad y calidad
+- 2FA con TOTP (Google Authenticator)
+- Rate limiting por IP y por usuario
+- Audit log (django-auditlog) en Budget, Client y Product
+- JWT para la API REST
+- Tenant isolation estricto: cada query filtra por `contractor=request.user`
+
+---
+
+## Planes
 
 | Feature | Básico (Gratis) | Pro |
 |---|:-:|:-:|
@@ -46,298 +56,255 @@ Constructor Express es una aplicación web diseñada para pequeños contratistas
 | Clientes | 10 | ∞ |
 | Catálogo de productos | 20 | ∞ |
 | PDF con marca propia | ✅ | ✅ |
-| Link público para cliente | ✅ | ✅ |
-| Reportes y analíticas | ✅ | ✅ |
-| Import/Export CSV | ✅ | ✅ |
-| API REST | ✅ | ✅ |
-| Facturación DTE (próximo) | ❌ | ✅ |
-| Firma digital (próximo) | ❌ | ✅ |
+| Link público + firma digital | ✅ | ✅ |
+| Adjuntos (fotos/planos) | ✅ | ✅ |
+| Plantillas reutilizables | ✅ | ✅ |
+| Precios de ferreterías | ✅ | ✅ |
+| Analytics avanzado | ✅ | ✅ |
+| API REST + JWT | ✅ | ✅ |
+| WhatsApp | ✅ | ✅ |
+| Facturación DTE (SII) | ❌ | ✅ |
 
 ---
 
-## 🛠️ Stack Tecnológico
+## Stack tecnológico
 
 | Capa | Tecnología |
-|---|---|
-| **Backend** | Python 3.12 + Django 4.2 |
-| **API** | Django REST Framework |
+|------|------------|
+| **Backend** | Python 3.12 + Django 5.2 |
+| **API** | Django REST Framework + SimpleJWT + drf-spectacular |
 | **Base de datos** | PostgreSQL (producción) / SQLite (desarrollo) |
-| **Frontend** | HTML + Tailwind CSS + JavaScript |
-| **Archivos estáticos** | WhiteNoise |
-| **PDF** | xhtml2pdf |
-| **Servidor** | uWSGI (alwaysdata) |
-| **Hosting** | alwaysdata.com |
+| **Frontend** | HTML + Tailwind CSS + JS vanilla |
+| **Task queue** | Celery + Redis + django-celery-beat |
+| **Scraping** | httpx async + BeautifulSoup4 + lxml |
+| **Audit log** | django-auditlog |
+| **PDF** | WeasyPrint (dev/Docker) / xhtml2pdf (alwaysdata) |
+| **Email** | Anymail/SendGrid (prod) + Twilio WhatsApp |
+| **Pagos** | MercadoPago |
+| **Observabilidad** | Sentry + python-json-logger |
+| **Servidor** | Gunicorn + WhiteNoise |
 
 ---
 
-## 📁 Estructura del Proyecto
-
-```
-PresupuestosConstructores/
-│
-├── constructor_express/        # Configuración principal Django
-│   ├── settings.py             # Config (local + producción)
-│   ├── urls.py                 # URLs principales + API
-│   └── wsgi.py                 # Punto entrada WSGI (local)
-│
-├── users/                      # App: usuarios y autenticación
-│   ├── models.py               # User, ContractorProfile
-│   ├── views.py                # Login, registro, perfil
-│   ├── dashboard_views.py      # Dashboard con stats y alertas
-│   ├── reports_view.py         # Reportes con Chart.js
-│   ├── search_view.py          # Búsqueda global
-│   ├── landing_view.py         # Landing page pública
-│   ├── middleware.py           # NoCacheAuth (seguridad logout)
-│   ├── context_processors.py  # Perfil disponible en todos los templates
-│   ├── templates/users/        # Templates de la app
-│   └── management/commands/
-│       ├── seed_demo.py        # Datos de demostración
-│       └── clean_data.py       # Limpiar BD conservando catálogo
-│
-├── clients/                    # App: gestión de clientes
-│   ├── models.py               # Client
-│   ├── views.py                # CRUD clientes
-│   ├── serializers.py          # DRF serializer
-│   ├── api_views.py            # API REST endpoints
-│   └── templates/clients/
-│
-├── catalog/                    # App: catálogo de productos
-│   ├── models.py               # Product
-│   ├── views.py                # CRUD + import/export CSV
-│   ├── serializers.py
-│   ├── api_views.py
-│   └── templates/catalog/
-│
-├── budgets/                    # App: presupuestos (core del negocio)
-│   ├── models.py               # Budget, BudgetItemMaterial, BudgetItemLabor, BudgetPublicToken
-│   ├── views.py                # CRUD + PDF + duplicate + public link + email
-│   ├── email_utils.py          # Envío de presupuesto por correo
-│   ├── serializers.py
-│   ├── api_views.py
-│   ├── templatetags/
-│   │   └── budget_filters.py   # Filtro |clp (pesos chilenos)
-│   └── templates/
-│       ├── budgets/            # Templates de presupuestos
-│       └── emails/             # Templates de email
-│
-├── templates/                  # Templates globales
-│   ├── base.html               # Layout principal con sidebar
-│   ├── landing.html            # Landing page
-│   └── partials/
-│       └── pagination.html
-│
-├── static/                     # Archivos estáticos
-│   ├── css/main.css
-│   └── js/main.js
-│
-├── wsgi_production.py          # Punto entrada WSGI (producción alwaysdata)
-├── requirements.txt
-├── .env.example
-└── manage.py
-```
-
----
-
-## 🚀 Instalación Local
+## Instalación local
 
 ### Requisitos
-- Python 3.10+
+- Python 3.12+
 - Git
 
 ### Pasos
 
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/rodrigoarevaloabarca-svg/PresupuestosConstructores.git
-cd PresupuestosConstructores
+# 1. Clonar
+git clone <repo-url>
+cd constructor_express
 
-# 2. Crear entorno virtual
+# 2. Entorno virtual
 python -m venv .venv
-
 # Windows
 .venv\Scripts\activate
-
 # Linux/Mac
 source .venv/bin/activate
 
-# 3. Instalar dependencias
+# 3. Dependencias
 pip install -r requirements.txt
 
-# 4. Migraciones (usa SQLite automáticamente en local)
+# 4. Migraciones (SQLite automático si no hay DB_NAME)
 python manage.py migrate
 
-# 5. Cargar datos de demo
+# 5. Datos de demo
 python manage.py seed_demo
 
-# 6. Iniciar servidor
+# 6. Servidor
 python manage.py runserver
 ```
 
 Abrir en el navegador: **http://127.0.0.1:8000**
 
-**Credenciales demo:**
-- Email: `demo@constructorexpress.cl`
-- Contraseña: `Demo1234!`
+---
+
+## Docker (con PostgreSQL)
+
+```bash
+# Requiere .env_producion con SECRET_KEY y POSTGRES_PASSWORD
+docker-compose up --build
+```
+
+Incluye: Postgres + Gunicorn + Celery worker + Celery Beat (scrapers).
 
 ---
 
-## ⚙️ Variables de Entorno
+## Variables de entorno
 
-Copia `.env.example` a `.env` y completa los valores:
+Copia `.env.example` a `.env_producion` y completa:
 
 ```env
-SECRET_KEY=clave-secreta-larga-y-unica
+SECRET_KEY=clave-secreta-larga
 DEBUG=False
 ALLOWED_HOSTS=tudominio.cl
 
-# Base de datos PostgreSQL (solo producción)
-DB_NAME=nombre_base_datos
+# PostgreSQL (solo producción)
+DB_NAME=constructor_express
 DB_USER=usuario
 DB_PASS=contraseña
-DB_HOST=host-postgresql
+DB_HOST=localhost
+
+# Email (SendGrid)
+SENDGRID_API_KEY=SG.xxx
+
+# WhatsApp (Twilio)
+TWILIO_ACCOUNT_SID=ACxxx
+TWILIO_AUTH_TOKEN=xxx
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+
+# Celery / Redis
+CELERY_BROKER_URL=redis://localhost:6379/0
+
+# MercadoPago
+MP_ACCESS_TOKEN=APP_USR-xxx
+MP_PUBLIC_KEY=APP_USR-xxx
+MP_WEBHOOK_SECRET=xxx
+
+# Sentry
+SENTRY_DSN=https://xxx@sentry.io/xxx
 ```
 
-> En desarrollo local **no necesitas** el `.env` — usa SQLite automáticamente.
+> En desarrollo local no necesitas el archivo — usa SQLite y email por consola automáticamente.
 
 ---
 
-## 🌐 API REST
+## Comandos de gestión
 
-Todos los endpoints requieren autenticación.
+```bash
+# Datos de demo
+python manage.py seed_demo
+
+# Scraping manual de ferreterías
+python manage.py scrape_retailers --retailer all
+python manage.py scrape_retailers --retailer sodimac --dry-run
+python manage.py scrape_sodimac --dry-run
+
+# Migraciones
+python manage.py makemigrations
+python manage.py migrate
+
+# Tests
+python manage.py test budgets clients catalog
+
+# Colectar estáticos
+python manage.py collectstatic --noinput
+```
+
+---
+
+## API REST
+
+Documentación completa en [docs/api.md](docs/api.md) y Swagger en `/api/v1/docs/`.
+
+**Autenticación:** JWT Bearer token.
+
+### Endpoints resumen
 
 | Método | Endpoint | Descripción |
-|---|---|---|
-| `GET` | `/api/v1/stats/` | Estadísticas del dashboard |
-| `GET` | `/api/v1/presupuestos/` | Listar presupuestos |
+|--------|----------|-------------|
+| `POST` | `/api/v1/auth/token/` | Obtener access + refresh token |
+| `POST` | `/api/v1/auth/refresh/` | Renovar access token |
+| `POST` | `/api/v1/auth/blacklist/` | Revocar refresh token |
+| `GET` | `/api/v1/stats/` | Stats del dashboard |
+| `GET` | `/api/v1/presupuestos/` | Listar presupuestos (`?status=`) |
 | `GET` | `/api/v1/presupuestos/{id}/` | Detalle con ítems |
+| `GET/POST` | `/api/v1/presupuestos/write/` | CRUD completo con ítems |
+| `GET/PUT/PATCH/DELETE` | `/api/v1/presupuestos/write/{id}/` | Detalle CRUD |
 | `GET/POST` | `/api/v1/clientes/` | Listar / crear clientes |
-| `GET/PUT/DELETE` | `/api/v1/clientes/{id}/` | CRUD cliente |
-| `GET/POST` | `/api/v1/productos/` | Listar / crear productos |
-| `GET/PUT/DELETE` | `/api/v1/productos/{id}/` | CRUD producto |
+| `GET/PUT/PATCH/DELETE` | `/api/v1/clientes/{id}/` | CRUD cliente |
+| `GET/POST` | `/api/v1/productos/` | Listar / crear productos (`?q=`) |
+| `GET/PUT/PATCH/DELETE` | `/api/v1/productos/{id}/` | CRUD producto |
+| `GET` | `/api/v1/productos/sugerencias/` | Sugerencias ferreterías + catálogo (`?q=`) |
+| `GET` | `/api/v1/schema/` | OpenAPI schema |
+| `GET` | `/api/v1/docs/` | Swagger UI |
 
-### Ejemplo de respuesta
+---
 
-```json
-GET /api/v1/presupuestos/1/
+## Estructura del proyecto
 
-{
-  "id": 1,
-  "number": 1,
-  "title": "Reparación baño principal",
-  "client_name": "María González",
-  "status": "enviado",
-  "status_display": "Enviado al Cliente",
-  "subtotal_materials": 122700,
-  "subtotal_labor": 130000,
-  "total": 252700,
-  "valid_until": "2024-04-03",
-  "material_items": [...],
-  "labor_items": [...]
-}
+```
+constructor_express/
+├── constructor_express/      # Config principal
+│   ├── settings.py           # Variables, DB, Celery, JWT, Sentry…
+│   ├── urls.py               # URLs raíz + API
+│   └── celery.py             # App Celery
+│
+├── users/                    # Auth, perfil, dashboard, pagos, 2FA
+├── clients/                  # CRUD clientes
+├── catalog/                  # Catálogo de productos + scrapers ferreterías
+│   ├── models.py             # Product, RetailerProduct
+│   ├── scrapers/             # BaseRetailerScraper, SodimacScraper, EasyScraper, ImperialScraper
+│   ├── tasks.py              # Celery task: scrape_all_retailers (semanal)
+│   ├── api/                  # ProductSuggestionsView
+│   └── management/commands/  # scrape_retailers, scrape_sodimac
+│
+├── budgets/                  # Core: presupuestos
+│   ├── models.py             # Budget (version/parent/is_template), BudgetItem*, BudgetSignature, BudgetAttachment, BudgetPublicToken
+│   ├── managers.py           # BudgetQuerySet con analytics
+│   ├── services/
+│   │   ├── versioning.py     # create_new_version()
+│   │   └── whatsapp.py       # send_budget_whatsapp_task
+│   ├── api/                  # BudgetViewSet (escritura completa)
+│   └── templates/budgets/    # list, detail, form, pdf, public_view, history, signature…
+│
+├── billing/                  # MercadoPago checkout + DTE scaffolding
+├── templates/                # base.html, landing.html, partials/
+├── docs/
+│   └── api.md                # Documentación completa de la API
+├── sprint/                   # Plan de sprints de desarrollo
+└── docker-compose.yml
 ```
 
 ---
 
-## 🗄️ Modelos de Datos
+## Modelos de datos
 
 ```
-User ──────────────────────────┐
-  │                            │
-  ├── ContractorProfile        │ (perfil de empresa)
-  │                            │
-  ├── Client[] ────────────────┤
-  │     └── Budget[] ──────────┤
-  │           ├── BudgetItemMaterial[]
-  │           ├── BudgetItemLabor[]
-  │           └── BudgetPublicToken
-  │
-  └── Product[] (catálogo)
+User
+ ├── ContractorProfile          (empresa, logo, colores de marca)
+ ├── Client[]
+ │    └── Budget[]
+ │         ├── version, parent  (versionado)
+ │         ├── is_template      (plantillas)
+ │         ├── BudgetItemMaterial[]
+ │         ├── BudgetItemLabor[]
+ │         ├── BudgetPublicToken (link público con expiración)
+ │         ├── BudgetSignature   (firma digital del cliente)
+ │         └── BudgetAttachment[] (fotos, planos, PDFs)
+ └── Product[]                  (catálogo propio)
+
+RetailerProduct                 (caché precios Sodimac/Easy/Imperial)
 ```
 
 ---
 
-## 🧪 Tests
+## Tests
 
 ```bash
 python manage.py test budgets clients catalog
 ```
 
-18 tests unitarios cubriendo:
-- Modelos (cálculo de totales, márgenes, numeración)
-- Vistas (autenticación, CRUD, aislamiento de datos)
-- API REST (endpoints, permisos)
+---
+
+## Localización Chile
+
+- Precios en CLP sin decimales — filtro `|clp` → `$1.234.567`
+- Zona horaria `America/Santiago`
+- IVA configurable por presupuesto (habitualmente 0% o 19%)
+- Idioma `es-cl`
+- RUT en clientes
 
 ---
 
-## 📦 Comandos de Gestión
-
-```bash
-# Crear datos de demostración
-python manage.py seed_demo
-
-# Limpiar BD conservando el catálogo de productos
-python manage.py clean_data
-
-# Limpiar BD de un usuario específico
-python manage.py clean_data --email=tu@email.cl
-
-# Limpiar todo incluyendo productos
-python manage.py clean_data --all
-```
-
----
-
-## 🔄 Flujo de Actualización en Producción
-
-```bash
-# 1. En tu PC — subir cambios
-git add .
-git commit -m "descripción del cambio"
-git push
-
-# 2. En alwaysdata por SSH
-cd /home/rodrigocl/PresupuestosConstructores/
-git pull
-source .venv/bin/activate
-
-# Solo si cambiaste modelos
-python manage.py migrate
-
-# Solo si cambiaste CSS/JS/imágenes
-python manage.py collectstatic --noinput
-
-# 3. Reiniciar desde el panel
-# admin.alwaysdata.com → Web → Sitios → Reiniciar
-```
-
----
-
-## 🇨🇱 Localización Chile
-
-- Validación de RUT chileno
-- Precios en Pesos Chilenos (CLP) sin decimales — filtro `|clp` → `$1.234.567`
-- Zona horaria: `America/Santiago`
-- IVA configurable por presupuesto (0% o 19%)
-- Idioma: Español chileno (`es-cl`)
-
----
-
-## 🛣️ Roadmap
-
-- [ ] Generación de PDF con WeasyPrint (requiere Linux)
-- [ ] Integración Webpay Plus / Khipu (pagos en línea)
-- [ ] Facturación electrónica DTE (SII Chile)
-- [ ] Firma digital del presupuesto por el cliente
-- [ ] Módulo de gastos por obra
-- [ ] Múltiples usuarios por empresa
-- [ ] App móvil (API REST ya implementada)
-
----
-
-## 📄 Licencia
+## Licencia
 
 Proyecto privado — todos los derechos reservados.
 
 ---
 
-*Desarrollado con ❤️ en Chile 🇨🇱*
+*Desarrollado en Chile 🇨🇱*

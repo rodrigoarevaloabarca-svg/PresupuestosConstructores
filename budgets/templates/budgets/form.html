@@ -1,14 +1,16 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}{{ action }} Presupuesto — Constructor Express{% endblock %}
 {% block page_title %}{{ action }} Presupuesto{% endblock %}
 {% block extra_head %}
+<link rel="stylesheet" href="{% static 'budgets/css/autocomplete.css' %}">
 <style>
   .item-row { @apply grid gap-2 items-start; }
   input[type=number]::-webkit-inner-spin-button { opacity: 1; }
 </style>
 {% endblock %}
 {% block content %}
-<form method="post" id="budget-form">
+<form method="post" id="budget-form" enctype="multipart/form-data">
   {% csrf_token %}
   <div class="space-y-6">
 
@@ -154,6 +156,26 @@
       </div>
     </div>
 
+    <!-- Adjuntos -->
+    <div class="card">
+      <h2 class="text-base font-bold text-slate-700 mb-4">📎 Archivos adjuntos</h2>
+      <p class="text-xs text-slate-400 mb-3">Máx. 5 archivos · 5MB cada uno · JPG, PNG, WEBP, PDF</p>
+      {% if budget and budget.attachments.all %}
+      <ul class="mb-4 space-y-2">
+        {% for att in budget.attachments.all %}
+        <li class="flex items-center justify-between bg-slate-50 rounded-xl px-4 py-2">
+          <span class="text-sm text-slate-700 truncate">{{ att.filename }}</span>
+          <form method="post" action="{% url 'budget_delete_attachment' budget.pk att.pk %}" class="ml-2 flex-shrink-0">
+            {% csrf_token %}
+            <button type="submit" class="text-xs text-red-400 hover:text-red-600">Eliminar</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      <input type="file" name="attachments" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="form-input text-sm">
+    </div>
+
     <!-- Totals -->
     <div class="card bg-slate-900">
       <div class="space-y-2 text-sm max-w-sm ml-auto">
@@ -297,4 +319,5 @@ document.querySelectorAll('.material-row, .labor-row').forEach(row => {
 });
 recalc();
 </script>
+<script src="{% static 'budgets/js/product_autocomplete.js' %}"></script>
 {% endblock %}
