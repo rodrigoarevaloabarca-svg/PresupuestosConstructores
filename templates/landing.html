@@ -1,17 +1,30 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Constructor Express — Presupuestos para Contratistas</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 90'><rect x='0' y='0' width='100' height='90' rx='18' fill='%231d3461'/><path d='M18 64 Q18 24 50 24 Q82 24 82 64 Z' fill='%23fbbf24'/><rect x='10' y='61' width='80' height='13' rx='6' fill='%23e07a1f'/><path d='M30 61 Q50 55 70 61' fill='none' stroke='%23d97706' stroke-width='3'/></svg>">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 90'><rect x='0' y='0' width='100' height='90' rx='18' fill='%231d3461'/><path d='M18 64 Q18 24 50 24 Q82 24 82 64 Z' fill='%23fbbf24'/><rect x='10' y='61' width='80' height='13' rx='6' fill='%23e07a1f'/><path d='M30 61 Q50 55 70 61' fill='none' stroke='%23d97706' stroke-width='3'/></svg>">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <style>
-    * { -webkit-font-smoothing: antialiased; }
-    body { font-family: 'Inter', sans-serif; color: #0f172a; }
-    [data-lucide] { display: inline-block; flex-shrink: 0; }
+    * {
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: #0f172a;
+    }
+
+    [data-lucide] {
+      display: inline-block;
+      flex-shrink: 0;
+    }
 
     :root {
       --navy: #1d3461;
@@ -22,14 +35,23 @@
     }
 
     /* Nav */
-    .nav-link { font-size:.875rem; font-weight:600; color:#475569; transition:color .15s; }
-    .nav-link:hover { color:#1d3461; }
+    .nav-link {
+      font-size: .875rem;
+      font-weight: 600;
+      color: #475569;
+      transition: color .15s;
+    }
+
+    .nav-link:hover {
+      color: #1d3461;
+    }
 
     /* Hero noise texture overlay */
     .hero-bg {
       background: linear-gradient(160deg, #0e1e40 0%, #1d3461 45%, #1a2d57 100%);
       position: relative;
     }
+
     .hero-bg::before {
       content: '';
       position: absolute;
@@ -45,9 +67,10 @@
       padding: 1.75rem;
       transition: all .25s ease;
     }
+
     .feat-card:hover {
       border-color: #c5d2e8;
-      box-shadow: 0 12px 32px rgba(29,52,97,0.1);
+      box-shadow: 0 12px 32px rgba(29, 52, 97, 0.1);
       transform: translateY(-3px);
     }
 
@@ -58,12 +81,13 @@
       border-radius: 1.5rem;
       padding: 2rem;
     }
+
     .price-card-pro {
       background: linear-gradient(145deg, #1d3461 0%, #25407a 100%);
       border: none;
       border-radius: 1.5rem;
       padding: 2rem;
-      box-shadow: 0 20px 60px rgba(29,52,97,0.35);
+      box-shadow: 0 20px 60px rgba(29, 52, 97, 0.35);
     }
 
     /* CTA button */
@@ -78,29 +102,32 @@
       border-radius: .875rem;
       text-decoration: none;
       transition: all .2s;
-      box-shadow: 0 4px 16px rgba(224,122,31,.4);
+      box-shadow: 0 4px 16px rgba(224, 122, 31, .4);
     }
+
     .btn-orange:hover {
       background: linear-gradient(135deg, #c96c15, #e8920a);
-      box-shadow: 0 8px 24px rgba(224,122,31,.5);
+      box-shadow: 0 8px 24px rgba(224, 122, 31, .5);
       transform: translateY(-2px);
     }
+
     .btn-outline-white {
       display: inline-flex;
       align-items: center;
       gap: .5rem;
-      background: rgba(255,255,255,.08);
+      background: rgba(255, 255, 255, .08);
       color: #fff;
       font-weight: 600;
       padding: .875rem 2rem;
       border-radius: .875rem;
       text-decoration: none;
-      border: 1.5px solid rgba(255,255,255,.2);
+      border: 1.5px solid rgba(255, 255, 255, .2);
       transition: all .2s;
     }
+
     .btn-outline-white:hover {
-      background: rgba(255,255,255,.14);
-      border-color: rgba(255,255,255,.35);
+      background: rgba(255, 255, 255, .14);
+      border-color: rgba(255, 255, 255, .35);
     }
 
     /* Step number */
@@ -119,10 +146,17 @@
     }
 
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-thumb { background: #c5d2e8; border-radius: 99px; }
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #c5d2e8;
+      border-radius: 99px;
+    }
   </style>
 </head>
+
 <body class="bg-white">
 
   <!-- ── NAVBAR ──────────────────────────────────────────────── -->
@@ -130,10 +164,11 @@
     <div class="max-w-6xl mx-auto px-6 py-3.5 flex items-center justify-between">
       <a href="/" class="flex items-center gap-2.5">
         <div class="w-9 h-9 rounded-xl flex items-center justify-center shadow-md flex-shrink-0"
-             style="background:linear-gradient(135deg,#1d3461,#25407a)">
+          style="background:linear-gradient(135deg,#1d3461,#25407a)">
           <i data-lucide="hard-hat" class="w-4.5 h-4.5 text-white"></i>
         </div>
-        <span class="font-black text-slate-900 tracking-tight">Constructor <span style="color:#e07a1f">Express</span></span>
+        <span class="font-black text-slate-900 tracking-tight">Constructor <span
+            style="color:#e07a1f">Express</span></span>
       </a>
       <div class="hidden sm:flex items-center gap-6">
         <a href="#features" class="nav-link">Funciones</a>
@@ -141,7 +176,8 @@
       </div>
       <div class="flex items-center gap-3">
         <a href="{% url 'login' %}" class="nav-link">Ingresar</a>
-        <a href="{% url 'register' %}" class="btn-orange text-sm" style="padding:.55rem 1.1rem;border-radius:.65rem;box-shadow:0 2px 10px rgba(224,122,31,.35)">
+        <a href="{% url 'register' %}" class="btn-orange text-sm"
+          style="padding:.55rem 1.1rem;border-radius:.65rem;box-shadow:0 2px 10px rgba(224,122,31,.35)">
           Empezar gratis
           <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
         </a>
@@ -154,19 +190,21 @@
     <div class="relative z-10 max-w-5xl mx-auto">
       <div class="text-center max-w-3xl mx-auto mb-14">
         <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-6"
-              style="background:rgba(224,122,31,.15);color:#f59e3a;border:1px solid rgba(224,122,31,.25)">
+          style="background:rgba(224,122,31,.15);color:#f59e3a;border:1px solid rgba(224,122,31,.25)">
           <i data-lucide="map-pin" class="w-3 h-3"></i>
           Hecho para contratistas chilenos
         </span>
         <h1 class="text-5xl sm:text-6xl font-black text-white leading-tight mb-6 tracking-tight">
           Presupuestos<br>
-          <span style="background:linear-gradient(135deg,#f59e3a,#e07a1f);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+          <span
+            style="background:linear-gradient(135deg,#f59e3a,#e07a1f);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
             profesionales
           </span><br>
           en minutos
         </h1>
         <p class="text-lg text-blue-200 leading-relaxed mb-10 max-w-xl mx-auto">
-          Genera PDFs con tu marca, gestiona clientes y controla tus ingresos. Para gasfiteros, electricistas, constructores y más.
+          Genera PDFs con tu marca, gestiona clientes y controla tus ingresos. Para gasfiteros, electricistas,
+          constructores y más.
         </p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
           <a href="{% url 'register' %}" class="btn-orange text-base">
@@ -183,15 +221,18 @@
 
       <!-- Stats row -->
       <div class="grid grid-cols-3 gap-4 max-w-lg mx-auto">
-        <div class="text-center p-4 rounded-2xl" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)">
+        <div class="text-center p-4 rounded-2xl"
+          style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)">
           <p class="text-3xl font-black text-white">PDF</p>
           <p class="text-xs text-blue-300 mt-1">Profesional</p>
         </div>
-        <div class="text-center p-4 rounded-2xl" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)">
+        <div class="text-center p-4 rounded-2xl"
+          style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)">
           <p class="text-3xl font-black text-white">IVA</p>
           <p class="text-xs text-blue-300 mt-1">Automático</p>
         </div>
-        <div class="text-center p-4 rounded-2xl" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)">
+        <div class="text-center p-4 rounded-2xl"
+          style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)">
           <p class="text-3xl font-black text-white">CLP</p>
           <p class="text-xs text-blue-300 mt-1">Mercado CL</p>
         </div>
@@ -200,9 +241,9 @@
 
     <!-- Decorative orb -->
     <div class="absolute right-0 top-0 w-96 h-96 opacity-10 pointer-events-none"
-         style="background:radial-gradient(circle,#f59e3a,transparent);filter:blur(60px)"></div>
+      style="background:radial-gradient(circle,#f59e3a,transparent);filter:blur(60px)"></div>
     <div class="absolute left-0 bottom-0 w-72 h-72 opacity-8 pointer-events-none"
-         style="background:radial-gradient(circle,#3b82f6,transparent);filter:blur(80px)"></div>
+      style="background:radial-gradient(circle,#3b82f6,transparent);filter:blur(80px)"></div>
   </section>
 
   <!-- ── MOCKUP APP ───────────────────────────────────────────── -->
@@ -225,7 +266,8 @@
           <!-- Sidebar mockup -->
           <div class="w-52 flex-shrink-0 p-3" style="background:#0f172a">
             <div class="flex items-center gap-2 px-2 py-3 mb-2">
-              <div class="w-8 h-8 rounded-xl flex-shrink-0" style="background:linear-gradient(135deg,#1d3461,#25407a)"></div>
+              <div class="w-8 h-8 rounded-xl flex-shrink-0" style="background:linear-gradient(135deg,#1d3461,#25407a)">
+              </div>
               <div class="space-y-1.5">
                 <div class="h-2 bg-white/20 rounded w-20"></div>
                 <div class="h-1.5 bg-white/10 rounded w-14"></div>
@@ -235,7 +277,8 @@
             <div class="flex items-center gap-2.5 px-3 py-2 rounded-xl mb-1
               {% if forloop.first %}{% else %}opacity-40{% endif %}"
               style="{% if forloop.first %}background:rgba(224,122,31,0.2);border:1px solid rgba(224,122,31,0.25){% endif %}">
-              <div class="w-3.5 h-3.5 rounded {% if forloop.first %}bg-orange-400{% else %}bg-slate-600{% endif %}"></div>
+              <div class="w-3.5 h-3.5 rounded {% if forloop.first %}bg-orange-400{% else %}bg-slate-600{% endif %}">
+              </div>
               <div class="h-2 rounded w-16 {% if forloop.first %}bg-orange-200{% else %}bg-slate-600{% endif %}"></div>
             </div>
             {% endfor %}
@@ -247,15 +290,20 @@
               {% for color in "green amber blue slate" %}
               <div class="rounded-xl p-3" style="background:white;border:1px solid #e2e8f0">
                 <div class="h-1.5 bg-slate-200 rounded w-16 mb-3"></div>
-                <div class="h-5 rounded w-20 mb-1.5 {% if forloop.first %}bg-green-200{% elif forloop.counter == 2 %}bg-amber-200{% elif forloop.counter == 3 %}bg-blue-200{% else %}bg-slate-200{% endif %}"></div>
+                <div
+                  class="h-5 rounded w-20 mb-1.5 {% if forloop.first %}bg-green-200{% elif forloop.counter == 2 %}bg-amber-200{% elif forloop.counter == 3 %}bg-blue-200{% else %}bg-slate-200{% endif %}">
+                </div>
                 <div class="h-1.5 bg-slate-100 rounded w-12"></div>
               </div>
               {% endfor %}
             </div>
             <!-- Table mockup -->
             <div class="rounded-xl overflow-hidden" style="background:white;border:1px solid #e2e8f0">
-              <div class="grid grid-cols-5 gap-3 px-4 py-2.5" style="background:#f8f9fc;border-bottom:1px solid #e8ecf4">
-                {% for i in "12345" %}<div class="h-2 bg-slate-300 rounded {% if forloop.first %}w-8{% elif forloop.counter == 2 %}w-24{% elif forloop.counter == 3 %}w-16{% elif forloop.counter == 4 %}w-14{% else %}w-12{% endif %}"></div>{% endfor %}
+              <div class="grid grid-cols-5 gap-3 px-4 py-2.5"
+                style="background:#f8f9fc;border-bottom:1px solid #e8ecf4">
+                {% for i in "12345" %}<div
+                  class="h-2 bg-slate-300 rounded {% if forloop.first %}w-8{% elif forloop.counter == 2 %}w-24{% elif forloop.counter == 3 %}w-16{% elif forloop.counter == 4 %}w-14{% else %}w-12{% endif %}">
+                </div>{% endfor %}
               </div>
               {% for i in "123" %}
               <div class="grid grid-cols-5 gap-3 px-4 py-3 items-center" style="border-bottom:1px solid #f1f5f9">
@@ -263,7 +311,9 @@
                 <div class="h-2.5 bg-slate-200 rounded w-24"></div>
                 <div class="h-2.5 bg-slate-200 rounded w-16"></div>
                 <div class="h-2.5 bg-slate-200 rounded w-14"></div>
-                <div class="h-5 rounded-full w-16 {% if forloop.first %}bg-green-100{% elif forloop.counter == 2 %}bg-amber-100{% else %}bg-slate-100{% endif %}"></div>
+                <div
+                  class="h-5 rounded-full w-16 {% if forloop.first %}bg-green-100{% elif forloop.counter == 2 %}bg-amber-100{% else %}bg-slate-100{% endif %}">
+                </div>
               </div>
               {% endfor %}
             </div>
@@ -278,7 +328,7 @@
     <div class="max-w-5xl mx-auto">
       <div class="text-center mb-14">
         <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-4"
-              style="background:#eef1f9;color:#1d3461">Funcionalidades</span>
+          style="background:#eef1f9;color:#1d3461">Funcionalidades</span>
         <h2 class="text-3xl font-black text-slate-900 mb-3 tracking-tight">
           Todo lo que necesitas para presupuestar
         </h2>
@@ -288,7 +338,7 @@
         {% for feat in features %}
         <div class="feat-card group">
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 text-2xl transition-colors"
-               style="background:#eef1f9">
+            style="background:#eef1f9">
             {{ feat.icon }}
           </div>
           <h3 class="font-bold text-slate-800 mb-2">{{ feat.title }}</h3>
@@ -304,25 +354,29 @@
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-14">
         <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-4"
-              style="background:#fff4e8;color:#e07a1f">Proceso</span>
+          style="background:#fff4e8;color:#e07a1f">Proceso</span>
         <h2 class="text-3xl font-black text-slate-900 tracking-tight">Así de simple</h2>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div class="text-center">
           <div class="step-num mx-auto mb-4">1</div>
           <h3 class="font-bold text-slate-800 mb-2">Crea tu cuenta</h3>
-          <p class="text-slate-500 text-sm">Regístrate en 2 minutos y configura el perfil de tu empresa con logo y datos.</p>
+          <p class="text-slate-500 text-sm">Regístrate en 2 minutos y configura el perfil de tu empresa con logo y
+            datos.</p>
         </div>
         <div class="text-center relative">
-          <div class="hidden md:block absolute top-5 left-0 right-0" style="height:2px;background:linear-gradient(90deg,transparent,#e8ecf4,transparent)"></div>
+          <div class="hidden md:block absolute top-5 left-0 right-0"
+            style="height:2px;background:linear-gradient(90deg,transparent,#e8ecf4,transparent)"></div>
           <div class="step-num mx-auto mb-4">2</div>
           <h3 class="font-bold text-slate-800 mb-2">Agrega materiales y mano de obra</h3>
-          <p class="text-slate-500 text-sm">Busca desde tu catálogo de productos o agrega ítems personalizados al instante.</p>
+          <p class="text-slate-500 text-sm">Busca desde tu catálogo de productos o agrega ítems personalizados al
+            instante.</p>
         </div>
         <div class="text-center">
           <div class="step-num mx-auto mb-4" style="background:linear-gradient(135deg,#e07a1f,#f59e3a)">3</div>
           <h3 class="font-bold text-slate-800 mb-2">Envía el PDF a tu cliente</h3>
-          <p class="text-slate-500 text-sm">Genera un PDF profesional con tu marca y envíalo directamente por email o link.</p>
+          <p class="text-slate-500 text-sm">Genera un PDF profesional con tu marca y envíalo directamente por email o
+            link.</p>
         </div>
       </div>
     </div>
@@ -332,7 +386,7 @@
   <section id="pricing" class="py-24 px-6" style="background:#f8f9fc">
     <div class="max-w-2xl mx-auto text-center">
       <span class="inline-block px-3 py-1 rounded-full text-xs font-bold mb-4"
-            style="background:#eef1f9;color:#1d3461">Precio</span>
+        style="background:#eef1f9;color:#1d3461">Precio</span>
       <h2 class="text-3xl font-black text-slate-900 mb-3 tracking-tight">100% Gratuito</h2>
       <p class="text-slate-500 mb-10">Sin tarjeta de crédito · Sin límites · Sin letra chica</p>
 
@@ -349,9 +403,9 @@
           {% endfor %}
         </ul>
         <a href="{% url 'register' %}" class="block text-center font-bold py-3 rounded-xl transition-all text-sm"
-           style="background:linear-gradient(135deg,#e07a1f,#f59e3a);color:#fff;box-shadow:0 4px 14px rgba(224,122,31,.4)"
-           onmouseover="this.style.boxShadow='0 6px 20px rgba(224,122,31,.55)'"
-           onmouseout="this.style.boxShadow='0 4px 14px rgba(224,122,31,.4)'">
+          style="background:linear-gradient(135deg,#e07a1f,#f59e3a);color:#fff;box-shadow:0 4px 14px rgba(224,122,31,.4)"
+          onmouseover="this.style.boxShadow='0 6px 20px rgba(224,122,31,.55)'"
+          onmouseout="this.style.boxShadow='0 4px 14px rgba(224,122,31,.4)'">
           Crear cuenta gratis
         </a>
       </div>
@@ -362,7 +416,7 @@
   <section class="py-24 px-6 text-center" style="background:linear-gradient(160deg,#0e1e40 0%,#1d3461 100%)">
     <div class="max-w-2xl mx-auto relative z-10">
       <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl"
-           style="background:linear-gradient(135deg,#e07a1f,#f59e3a)">
+        style="background:linear-gradient(135deg,#e07a1f,#f59e3a)">
         <i data-lucide="hard-hat" class="w-8 h-8 text-white"></i>
       </div>
       <h2 class="text-3xl font-black text-white mb-4 tracking-tight">
@@ -382,19 +436,22 @@
   <footer style="background:#0a1628;border-top:1px solid rgba(255,255,255,.05)" class="py-8 px-6">
     <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
       <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#1d3461,#25407a)">
+        <div class="w-7 h-7 rounded-lg flex items-center justify-center"
+          style="background:linear-gradient(135deg,#1d3461,#25407a)">
           <i data-lucide="hard-hat" class="w-3.5 h-3.5 text-white"></i>
         </div>
         <span class="text-white font-bold text-sm">Constructor <span style="color:#f59e3a">Express</span></span>
       </div>
-      <p class="text-slate-500 text-sm">© {% now "Y" %} Constructor Express · Hecho con ❤️ en Chile 🇨🇱</p>
+      <p class="text-slate-500 text-sm">© {% now "Y" %} Constructor Express · Hecho en Chile 🇨🇱</p>
       <div class="flex items-center gap-4">
         <a href="{% url 'login' %}" class="text-slate-500 hover:text-slate-300 text-sm transition-colors">Ingresar</a>
-        <a href="{% url 'register' %}" class="text-slate-500 hover:text-slate-300 text-sm transition-colors">Registro</a>
+        <a href="{% url 'register' %}"
+          class="text-slate-500 hover:text-slate-300 text-sm transition-colors">Registro</a>
       </div>
     </div>
   </footer>
 
   <script>lucide.createIcons();</script>
 </body>
+
 </html>
