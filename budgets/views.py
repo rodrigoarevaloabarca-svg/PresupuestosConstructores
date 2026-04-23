@@ -81,15 +81,6 @@ def budget_create(request):
         form = BudgetForm(request.POST, user=request.user)
         if form.is_valid():
             with transaction.atomic():
-                # Re-check limit inside transaction to prevent race condition
-                if not request.user.is_pro():
-                    month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0)
-                    count = Budget.objects.select_for_update().filter(
-                        contractor=request.user, created_at__gte=month_start
-                    ).count()
-                    if count >= settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH:
-                        messages.warning(request, 'Límite mensual alcanzado.')
-                        return redirect('budget_list')
                 budget = form.save(commit=False)
                 budget.contractor = request.user
                 budget.save()

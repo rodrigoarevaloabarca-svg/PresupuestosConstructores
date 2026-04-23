@@ -18,7 +18,7 @@ from .forms import (
     PasswordResetConfirmForm,
     OTPTokenForm,
 )
-from .models import ContractorProfile, User, Subscription
+from .models import ContractorProfile, User
 
 logger = logging.getLogger('users.auth')
 
@@ -171,91 +171,30 @@ def password_reset_complete_view(request):
 
 @login_required
 def checkout_start(request):
-    if not settings.MP_ACCESS_TOKEN:
-        messages.error(request, 'Pagos no configurados. Contacta soporte.')
-        return redirect('dashboard')
-    try:
-        import mercadopago
-        sdk = mercadopago.SDK(settings.MP_ACCESS_TOKEN)
-        back_url = request.build_absolute_uri('/usuarios/planes/exito/')
-        preapproval_data = {
-            'reason': 'Constructor Express — Plan Pro mensual',
-            'auto_recurring': {
-                'frequency': 1,
-                'frequency_type': 'months',
-                'transaction_amount': 9990,
-                'currency_id': 'CLP',
-            },
-            'back_url': back_url,
-            'payer_email': request.user.email,
-            'status': 'pending',
-        }
-        result = sdk.preapproval().create(preapproval_data)
-        if result['status'] in (200, 201):
-            info = result['response']
-            sub, _ = Subscription.objects.get_or_create(
-                contractor=request.user,
-                mp_preapproval_id=info['id'],
-                defaults={'amount_clp': 9990, 'status': 'pending'},
-            )
-            return redirect(info['init_point'])
-        messages.error(request, 'Error al crear el checkout. Intenta de nuevo.')
-    except Exception as e:
-        logger.error('checkout_start error para %s: %s', request.user.email, e)
-        messages.error(request, 'Error inesperado. Intenta de nuevo.')
+    messages.info(request, 'Constructor Express es 100% gratuito. No se requiere suscripción.')
     return redirect('dashboard')
 
 
 @login_required
-def checkout_success(request):
-    return render(request, 'users/checkout_success.html')
+def checkout_success(_request):
+    return redirect('dashboard')
 
 
 @login_required
-def checkout_failure(request):
-    return render(request, 'users/checkout_failure.html')
+def checkout_failure(_request):
+    return redirect('dashboard')
 
 
 # ─── Facturación ─────────────────────────────────────────────────────────────
 
 @login_required
 def billing_view(request):
-    subscription = (
-        Subscription.objects.filter(contractor=request.user, status='active')
-        .order_by('-created_at').first()
-    )
-    payments = []
-    if subscription:
-        payments = list(subscription.payments.order_by('-paid_at')[:12])
-    return render(request, 'users/billing.html', {
-        'subscription': subscription,
-        'payments': payments,
-    })
+    return render(request, 'users/billing.html')
 
 
 @login_required
-def cancel_subscription(request):
-    if request.method != 'POST':
-        return redirect('billing')
-    sub = Subscription.objects.filter(contractor=request.user, status='active').first()
-    if not sub:
-        messages.warning(request, 'No tienes una suscripción activa.')
-        return redirect('billing')
-    try:
-        import mercadopago
-        sdk = mercadopago.SDK(settings.MP_ACCESS_TOKEN)
-        sdk.preapproval().update(sub.mp_preapproval_id, {'status': 'cancelled'})
-        sub.status = 'cancelled'
-        sub.save()
-        messages.success(
-            request,
-            f'Suscripción cancelada. Tu plan Pro sigue activo hasta '
-            f'{sub.next_billing_date.strftime("%d/%m/%Y") if sub.next_billing_date else "fin del período"}.'
-        )
-    except Exception as e:
-        logger.error('cancel_subscription error: %s', e)
-        messages.error(request, 'Error al cancelar. Contacta soporte.')
-    return redirect('billing')
+def cancel_subscription(_request):
+    return redirect('dashboard')
 
 
 # ─── 2FA / TOTP ──────────────────────────────────────────────────────────────

@@ -96,16 +96,15 @@ class ClientPlanLimitTest(TestCase):
         for i in range(limit):
             Client.objects.create(contractor=self.user, name=f'C{i}', phone='1')
 
-    def test_11th_client_blocked(self):
-        r = self.tc.post(reverse('client_create'), {
+    def test_extra_client_allowed(self):
+        self.tc.post(reverse('client_create'), {
             'name': 'Extra', 'phone': '1', 'email': '', 'rut': '',
             'address': '', 'city': '', 'notes': '',
         })
-        # Debe redirigir al listado con mensaje de advertencia, no crear
-        self.assertRedirects(r, reverse('client_list'))
+        # Sin límites de plan — el cliente se crea
         self.assertEqual(
             Client.objects.filter(contractor=self.user).count(),
-            settings.PLAN_FREE_MAX_CLIENTS,
+            settings.PLAN_FREE_MAX_CLIENTS + 1,
         )
 
 

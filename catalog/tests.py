@@ -113,16 +113,16 @@ class ProductPlanLimitTest(TestCase):
         for i in range(limit):
             make_product(self.user, name=f'P{i}')
 
-    def test_21st_product_blocked(self):
+    def test_extra_product_allowed(self):
         count_before = Product.objects.filter(contractor=self.user, is_active=True).count()
-        r = self.tc.post(reverse('product_create'), {
+        self.tc.post(reverse('product_create'), {
             'name': 'Extra', 'unit': 'un', 'category': 'otro',
             'cost_price': '0', 'sale_price': '0', 'sku': '', 'description': '',
         })
-        self.assertRedirects(r, reverse('product_list'))
+        # Sin límites de plan — el producto se crea
         self.assertEqual(
             Product.objects.filter(contractor=self.user, is_active=True).count(),
-            count_before,
+            count_before + 1,
         )
 
 

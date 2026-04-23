@@ -7,16 +7,6 @@
 {% endblock %}
 
 {% block content %}
-{% if not is_pro %}
-<div class="mb-6 p-5 bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl text-white flex items-center justify-between">
-  <div>
-    <p class="font-bold text-lg">⚡ Reportes Avanzados — Plan Pro</p>
-    <p class="text-blue-200 text-sm mt-0.5">Estás viendo una vista previa. Actualiza a Pro para acceso completo.</p>
-  </div>
-  <a href="#" class="flex-shrink-0 bg-white text-blue-700 font-bold px-5 py-2.5 rounded-xl text-sm hover:bg-blue-50 transition-colors">Actualizar a Pro →</a>
-</div>
-{% endif %}
-
 <!-- KPI Cards -->
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
   <div class="card">

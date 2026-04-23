@@ -37,18 +37,8 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     def is_pro(self):
-        if hasattr(self, '_pro_cache'):
-            return self._pro_cache
-        from django.utils.timezone import now
-        today = now().date()
-        result = self.subscriptions.filter(
-            status='active', next_billing_date__gte=today
-        ).exists()
-        # Fallback: plan field manual (legado)
-        if not result and self.plan == 'pro':
-            result = self.plan_expires_at is None or self.plan_expires_at > now()
-        self._pro_cache = result
-        return result
+        # Sistema gratuito — siempre Pro. Lógica legacy en git history.
+        return True
 
     def __str__(self):
         return self.email

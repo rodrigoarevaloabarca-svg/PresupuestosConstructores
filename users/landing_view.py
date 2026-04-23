@@ -14,26 +14,16 @@ def landing_view(request):
         {'icon': '🇨🇱', 'title': 'Localizado para Chile', 'desc': 'Validación de RUT, precios en pesos chilenos, soporte para IVA y adaptado al mercado local.'},
     ]
 
-    free_features = [
-        'Hasta 5 presupuestos por mes',
-        'Hasta 10 clientes',
-        'Catálogo de 20 productos',
-        'PDF con tu marca',
-        'Dashboard básico',
-    ]
-
-    pro_features = [
+    free_highlights = [
         'Presupuestos ilimitados',
         'Clientes ilimitados',
-        'Catálogo ilimitado',
-        'PDF premium personalizado',
-        'Reportes avanzados',
-        'Soporte prioritario',
-        'Próximamente: Facturación DTE',
+        'Catálogo ilimitado de productos',
+        'PDF profesional con tu logo y colores',
+        'Reportes y analíticas de tu negocio',
+        'Sin tarjeta de crédito · Sin letra chica',
     ]
 
     return render(request, 'landing.html', {
         'features': features,
-        'free_features': free_features,
-        'pro_features': pro_features,
+        'free_highlights': free_highlights,
     })

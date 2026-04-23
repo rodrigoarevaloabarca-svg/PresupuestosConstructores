@@ -172,14 +172,15 @@ class BudgetDuplicateTest(TestCase):
         self.assertEqual(new.material_items.count(), 1)
         self.assertEqual(new.labor_items.count(), 1)
 
-    def test_budget_duplicate_respects_plan_limit(self):
+    def test_budget_duplicate_no_plan_limit(self):
         limit = settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH
-        # fill up to limit (original already counts as 1)
+        # fill well past the old limit
         for _ in range(limit - 1):
             make_budget(self.user, self.client_obj)
         count_before = Budget.objects.filter(contractor=self.user).count()
         self.tc.post(reverse('budget_duplicate', args=[self.original.pk]))
-        self.assertEqual(Budget.objects.filter(contractor=self.user).count(), count_before)
+        # Sin límites de plan — la duplicación siempre crea
+        self.assertEqual(Budget.objects.filter(contractor=self.user).count(), count_before + 1)
 
 
 class BudgetStatusTest(TestCase):
@@ -354,7 +355,7 @@ class APITest(TestCase):
         r = self.tc.get('/api/v1/stats/')
         self.assertIn(r.status_code, [401, 403])
 
-    def test_free_plan_blocks_6th_budget_in_month(self):
+    def test_no_monthly_budget_limit(self):
         client_obj = Client.objects.create(contractor=self.user, name='C', phone='1')
         limit = settings.PLAN_FREE_MAX_BUDGETS_PER_MONTH
         for _ in range(limit):
@@ -364,4 +365,5 @@ class APITest(TestCase):
             'client': client_obj.pk, 'title': 'Extra', 'validity_days': 15,
             'tax_percent': 0, 'payment_terms': '', 'notes': '',
         })
-        self.assertEqual(Budget.objects.filter(contractor=self.user).count(), count_before)
+        # Sin límites de plan — el presupuesto se crea
+        self.assertEqual(Budget.objects.filter(contractor=self.user).count(), count_before + 1)

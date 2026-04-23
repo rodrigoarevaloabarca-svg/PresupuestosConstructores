@@ -37,6 +37,8 @@ if not _raw_hosts:
         raise ImproperlyConfigured('ALLOWED_HOSTS required in production (set the ALLOWED_HOSTS environment variable)')
 else:
     ALLOWED_HOSTS = [h.strip() for h in _raw_hosts.split(',')]
+    if _IS_MANAGEMENT_CMD or _TESTING:
+        ALLOWED_HOSTS += ['localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'django.contrib.admin',

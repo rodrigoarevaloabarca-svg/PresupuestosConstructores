@@ -1,5 +1,4 @@
 from django.shortcuts import render, redirect
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
@@ -143,14 +142,9 @@ def product_import_csv(request):
     UNIT_MAP.update({k: k for k in UNIT_MAP.values()})
     CAT_MAP.update({k: k for k in CAT_MAP.values()})
 
-    is_pro = request.user.is_pro()
-    plan_limit = settings.PLAN_FREE_MAX_PRODUCTS
-    existing_count = Product.objects.filter(contractor=request.user, is_active=True).count()
-
     created = 0
     errors = []
     skipped_rows = 0
-    plan_limited = False
 
     try:
         decoded = csv_file.read().decode('utf-8-sig')
@@ -163,9 +157,6 @@ def product_import_csv(request):
             name = row.get('Nombre', '').strip()
             if not name:
                 continue
-            if not is_pro and existing_count + created >= plan_limit:
-                plan_limited = True
-                break
             try:
                 unit_raw = row.get('Unidad', 'un').strip().lower()
                 cat_raw  = row.get('Categoría', 'otro').strip().lower()
@@ -190,12 +181,6 @@ def product_import_csv(request):
 
     if created:
         messages.success(request, f'✅ {created} producto(s) importados correctamente.')
-    if plan_limited:
-        messages.warning(
-            request,
-            f'Se alcanzó el límite de {plan_limit} productos del plan gratuito. '
-            'El resto de filas no se importó. ¡Actualiza a Pro para subir catálogos más grandes!'
-        )
     if skipped_rows:
         messages.warning(request, f'Se omitieron {skipped_rows} filas por límite máximo de {MAX_CSV_ROWS} filas.')
     if errors:
