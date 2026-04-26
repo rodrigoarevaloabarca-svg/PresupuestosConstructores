@@ -2,6 +2,7 @@ from django import template
 
 register = template.Library()
 
+
 @register.filter
 def clp(value):
     """Format number as Chilean Peso: $1.234.567"""
@@ -11,6 +12,7 @@ def clp(value):
         return f"${s}"
     except (ValueError, TypeError):
         return "$0"
+
 
 @register.filter
 def pct(value, total):

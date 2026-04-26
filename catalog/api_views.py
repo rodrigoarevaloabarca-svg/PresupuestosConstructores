@@ -12,7 +12,7 @@ class ProductListAPIView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         qs = Product.objects.filter(contractor=self.request.user, is_active=True)
-        q = self.request.query_params.get('q')
+        q = self.request.query_params.get("q")
         if q:
             qs = qs.filter(name__icontains=q)
         return qs

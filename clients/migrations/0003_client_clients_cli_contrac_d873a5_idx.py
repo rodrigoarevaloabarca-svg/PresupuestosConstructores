@@ -5,15 +5,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('clients', '0002_initial'),
+        ("clients", "0002_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='client',
-            index=models.Index(fields=['contractor', 'name'], name='clients_cli_contrac_d873a5_idx'),
+            model_name="client",
+            index=models.Index(fields=["contractor", "name"], name="clients_cli_contrac_d873a5_idx"),
         ),
     ]

@@ -4,30 +4,28 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Client',
+            name="Client",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=200, verbose_name='Nombre / Razón Social')),
-                ('rut', models.CharField(blank=True, max_length=12, verbose_name='RUT')),
-                ('phone', models.CharField(blank=True, max_length=20, verbose_name='Teléfono')),
-                ('email', models.EmailField(blank=True, max_length=254, verbose_name='Email')),
-                ('address', models.CharField(blank=True, max_length=300, verbose_name='Dirección del Proyecto')),
-                ('city', models.CharField(blank=True, max_length=100, verbose_name='Ciudad')),
-                ('notes', models.TextField(blank=True, verbose_name='Notas')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=200, verbose_name="Nombre / Razón Social")),
+                ("rut", models.CharField(blank=True, max_length=12, verbose_name="RUT")),
+                ("phone", models.CharField(blank=True, max_length=20, verbose_name="Teléfono")),
+                ("email", models.EmailField(blank=True, max_length=254, verbose_name="Email")),
+                ("address", models.CharField(blank=True, max_length=300, verbose_name="Dirección del Proyecto")),
+                ("city", models.CharField(blank=True, max_length=100, verbose_name="Ciudad")),
+                ("notes", models.TextField(blank=True, verbose_name="Notas")),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'verbose_name': 'Cliente',
-                'ordering': ['-created_at'],
+                "verbose_name": "Cliente",
+                "ordering": ["-created_at"],
             },
         ),
     ]

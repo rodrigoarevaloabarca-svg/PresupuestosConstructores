@@ -5,18 +5,14 @@ from abc import ABC, abstractmethod
 logger = logging.getLogger(__name__)
 
 BROWSER_HEADERS = {
-    'User-Agent': (
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-        'AppleWebKit/537.36 (KHTML, like Gecko) '
-        'Chrome/124.0.0.0 Safari/537.36'
-    ),
-    'Accept-Language': 'es-CL,es;q=0.9',
-    'Accept': 'application/json, text/html, */*',
+    "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"),
+    "Accept-Language": "es-CL,es;q=0.9",
+    "Accept": "application/json, text/html, */*",
 }
 
 
 class BaseRetailerScraper(ABC):
-    retailer_slug: str = ''
+    retailer_slug: str = ""
     rate_limit_seconds: float = 2.0
 
     def __init__(self):
@@ -46,21 +42,24 @@ class BaseRetailerScraper(ABC):
 
         count = 0
         for p in products:
-            sku = p.get('sku') or None
+            sku = p.get("sku") or None
             defaults = {
-                'name': p['name'][:500],
-                'price_clp': int(p['price_clp']),
-                'url': p['url'][:1000],
-                'category': (p.get('category') or '')[:200] or None,
-                'is_active': True,
+                "name": p["name"][:500],
+                "price_clp": int(p["price_clp"]),
+                "url": p["url"][:1000],
+                "category": (p.get("category") or "")[:200] or None,
+                "is_active": True,
             }
             if sku:
                 obj, _ = RetailerProduct.objects.update_or_create(
-                    retailer=self.retailer_slug, sku=sku, defaults=defaults,
+                    retailer=self.retailer_slug,
+                    sku=sku,
+                    defaults=defaults,
                 )
             else:
                 obj, _ = RetailerProduct.objects.update_or_create(
-                    retailer=self.retailer_slug, name=p['name'][:500],
+                    retailer=self.retailer_slug,
+                    name=p["name"][:500],
                     defaults=defaults,
                 )
             count += 1

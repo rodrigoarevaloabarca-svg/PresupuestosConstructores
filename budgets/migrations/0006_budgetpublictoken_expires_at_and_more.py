@@ -7,34 +7,33 @@ import budgets.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('budgets', '0005_alter_budgetitemlabor_quantity_and_more'),
-        ('clients', '0003_client_clients_cli_contrac_d873a5_idx'),
+        ("budgets", "0005_alter_budgetitemlabor_quantity_and_more"),
+        ("clients", "0003_client_clients_cli_contrac_d873a5_idx"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='budgetpublictoken',
-            name='expires_at',
-            field=models.DateTimeField(default=budgets.models._default_token_expiry, verbose_name='Expira el'),
+            model_name="budgetpublictoken",
+            name="expires_at",
+            field=models.DateTimeField(default=budgets.models._default_token_expiry, verbose_name="Expira el"),
         ),
         migrations.AddField(
-            model_name='budgetpublictoken',
-            name='is_revoked',
-            field=models.BooleanField(default=False, verbose_name='Revocado'),
+            model_name="budgetpublictoken",
+            name="is_revoked",
+            field=models.BooleanField(default=False, verbose_name="Revocado"),
         ),
         migrations.AddIndex(
-            model_name='budget',
-            index=models.Index(fields=['contractor', 'status'], name='budgets_bud_contrac_cd47f9_idx'),
+            model_name="budget",
+            index=models.Index(fields=["contractor", "status"], name="budgets_bud_contrac_cd47f9_idx"),
         ),
         migrations.AddIndex(
-            model_name='budget',
-            index=models.Index(fields=['contractor', '-created_at'], name='budgets_bud_contrac_74b6c0_idx'),
+            model_name="budget",
+            index=models.Index(fields=["contractor", "-created_at"], name="budgets_bud_contrac_74b6c0_idx"),
         ),
         migrations.AddIndex(
-            model_name='budget',
-            index=models.Index(fields=['contractor', 'sent_at'], name='budgets_bud_contrac_f6bc88_idx'),
+            model_name="budget",
+            index=models.Index(fields=["contractor", "sent_at"], name="budgets_bud_contrac_f6bc88_idx"),
         ),
     ]

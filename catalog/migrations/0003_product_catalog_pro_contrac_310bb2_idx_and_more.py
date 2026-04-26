@@ -5,19 +5,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('catalog', '0002_initial'),
+        ("catalog", "0002_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='product',
-            index=models.Index(fields=['contractor', 'is_active'], name='catalog_pro_contrac_310bb2_idx'),
+            model_name="product",
+            index=models.Index(fields=["contractor", "is_active"], name="catalog_pro_contrac_310bb2_idx"),
         ),
         migrations.AddIndex(
-            model_name='product',
-            index=models.Index(fields=['contractor', 'category'], name='catalog_pro_contrac_cd73c4_idx'),
+            model_name="product",
+            index=models.Index(fields=["contractor", "category"], name="catalog_pro_contrac_cd73c4_idx"),
         ),
     ]

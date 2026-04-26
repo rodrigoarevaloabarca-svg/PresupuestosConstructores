@@ -6,9 +6,9 @@ class ContractorTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token['contractor_id'] = user.pk
-        token['email'] = user.email
-        token['is_pro'] = user.is_pro()
+        token["contractor_id"] = user.pk
+        token["email"] = user.email
+        token["is_pro"] = user.is_pro()
         return token
 
 

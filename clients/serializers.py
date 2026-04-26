@@ -8,9 +8,8 @@ class ClientSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Client
-        fields = ['id', 'name', 'rut', 'phone', 'email', 'address', 'city', 'notes',
-                  'budget_count', 'created_at']
-        read_only_fields = ['id', 'created_at', 'budget_count']
+        fields = ["id", "name", "rut", "phone", "email", "address", "city", "notes", "budget_count", "created_at"]
+        read_only_fields = ["id", "created_at", "budget_count"]
 
     def get_budget_count(self, obj):
         return obj.budgets.count()

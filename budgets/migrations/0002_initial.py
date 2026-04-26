@@ -5,18 +5,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('budgets', '0001_initial'),
-        ('clients', '0001_initial'),
+        ("budgets", "0001_initial"),
+        ("clients", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='budget',
-            name='client',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='budgets', to='clients.client'),
+            model_name="budget",
+            name="client",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name="budgets", to="clients.client"),
         ),
     ]

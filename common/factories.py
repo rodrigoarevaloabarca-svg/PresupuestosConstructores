@@ -11,9 +11,9 @@ class UserFactory(DjangoModelFactory):
     class Meta:
         model = User
 
-    email = factory.Sequence(lambda n: f'user{n}@test.cl')
+    email = factory.Sequence(lambda n: f"user{n}@test.cl")
     username = factory.LazyAttribute(lambda o: o.email)
-    password = factory.PostGenerationMethodCall('set_password', 'pass123')
+    password = factory.PostGenerationMethodCall("set_password", "pass123")
 
 
 class ContractorProfileFactory(DjangoModelFactory):
@@ -21,9 +21,9 @@ class ContractorProfileFactory(DjangoModelFactory):
         model = ContractorProfile
 
     user = factory.SubFactory(UserFactory)
-    company_name = factory.Sequence(lambda n: f'Empresa {n}')
-    rut = '12345678-9'
-    phone = '999'
+    company_name = factory.Sequence(lambda n: f"Empresa {n}")
+    rut = "12345678-9"
+    phone = "999"
 
 
 class ClientFactory(DjangoModelFactory):
@@ -31,8 +31,8 @@ class ClientFactory(DjangoModelFactory):
         model = Client
 
     contractor = factory.SubFactory(UserFactory)
-    name = factory.Sequence(lambda n: f'Cliente {n}')
-    phone = '999'
+    name = factory.Sequence(lambda n: f"Cliente {n}")
+    phone = "999"
 
 
 class ProductFactory(DjangoModelFactory):
@@ -40,8 +40,8 @@ class ProductFactory(DjangoModelFactory):
         model = Product
 
     contractor = factory.SubFactory(UserFactory)
-    name = factory.Sequence(lambda n: f'Producto {n}')
-    unit = 'un'
+    name = factory.Sequence(lambda n: f"Producto {n}")
+    unit = "un"
     cost_price = 1000
     sale_price = 1500
 
@@ -51,8 +51,8 @@ class BudgetFactory(DjangoModelFactory):
         model = Budget
 
     contractor = factory.SubFactory(UserFactory)
-    client = factory.SubFactory(ClientFactory, contractor=factory.SelfAttribute('..contractor'))
-    title = factory.Sequence(lambda n: f'Presupuesto {n}')
+    client = factory.SubFactory(ClientFactory, contractor=factory.SelfAttribute("..contractor"))
+    title = factory.Sequence(lambda n: f"Presupuesto {n}")
     validity_days = 15
     tax_percent = 0
 
@@ -69,8 +69,8 @@ class BudgetItemMaterialFactory(DjangoModelFactory):
         model = BudgetItemMaterial
 
     budget = factory.SubFactory(BudgetFactory)
-    name = factory.Sequence(lambda n: f'Material {n}')
-    unit = 'un'
+    name = factory.Sequence(lambda n: f"Material {n}")
+    unit = "un"
     quantity = 2
     unit_price = 1000
     order = 0
@@ -81,8 +81,8 @@ class BudgetItemLaborFactory(DjangoModelFactory):
         model = BudgetItemLabor
 
     budget = factory.SubFactory(BudgetFactory)
-    name = factory.Sequence(lambda n: f'Trabajo {n}')
-    unit = 'gl'
+    name = factory.Sequence(lambda n: f"Trabajo {n}")
+    unit = "gl"
     quantity = 1
     unit_price = 5000
     order = 0

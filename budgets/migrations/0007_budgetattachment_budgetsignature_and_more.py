@@ -6,77 +6,76 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('budgets', '0006_budgetpublictoken_expires_at_and_more'),
-        ('clients', '0003_client_clients_cli_contrac_d873a5_idx'),
+        ("budgets", "0006_budgetpublictoken_expires_at_and_more"),
+        ("clients", "0003_client_clients_cli_contrac_d873a5_idx"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='BudgetAttachment',
+            name="BudgetAttachment",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file', models.FileField(upload_to='budgets/attachments/%Y/%m/', verbose_name='Archivo')),
-                ('filename', models.CharField(max_length=255, verbose_name='Nombre del archivo')),
-                ('uploaded_at', models.DateTimeField(auto_now_add=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("file", models.FileField(upload_to="budgets/attachments/%Y/%m/", verbose_name="Archivo")),
+                ("filename", models.CharField(max_length=255, verbose_name="Nombre del archivo")),
+                ("uploaded_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'ordering': ['uploaded_at'],
+                "ordering": ["uploaded_at"],
             },
         ),
         migrations.CreateModel(
-            name='BudgetSignature',
+            name="BudgetSignature",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('signature_png', models.ImageField(upload_to='budgets/signatures/%Y/%m/', verbose_name='Firma PNG')),
-                ('hash_sha256', models.CharField(max_length=64, verbose_name='SHA-256')),
-                ('ip', models.GenericIPAddressField(verbose_name='IP del firmante')),
-                ('user_agent', models.TextField(blank=True, verbose_name='User-Agent')),
-                ('signed_at', models.DateTimeField(auto_now_add=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("signature_png", models.ImageField(upload_to="budgets/signatures/%Y/%m/", verbose_name="Firma PNG")),
+                ("hash_sha256", models.CharField(max_length=64, verbose_name="SHA-256")),
+                ("ip", models.GenericIPAddressField(verbose_name="IP del firmante")),
+                ("user_agent", models.TextField(blank=True, verbose_name="User-Agent")),
+                ("signed_at", models.DateTimeField(auto_now_add=True)),
             ],
         ),
         migrations.AlterUniqueTogether(
-            name='budget',
+            name="budget",
             unique_together=set(),
         ),
         migrations.AddField(
-            model_name='budget',
-            name='is_template',
-            field=models.BooleanField(default=False, verbose_name='Es plantilla'),
+            model_name="budget",
+            name="is_template",
+            field=models.BooleanField(default=False, verbose_name="Es plantilla"),
         ),
         migrations.AddField(
-            model_name='budget',
-            name='parent',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='versions', to='budgets.budget'),
+            model_name="budget",
+            name="parent",
+            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name="versions", to="budgets.budget"),
         ),
         migrations.AddField(
-            model_name='budget',
-            name='version',
-            field=models.PositiveIntegerField(default=1, verbose_name='Versión'),
+            model_name="budget",
+            name="version",
+            field=models.PositiveIntegerField(default=1, verbose_name="Versión"),
         ),
         migrations.AlterField(
-            model_name='budget',
-            name='number',
-            field=models.PositiveIntegerField(blank=True, null=True, verbose_name='N° Presupuesto'),
+            model_name="budget",
+            name="number",
+            field=models.PositiveIntegerField(blank=True, null=True, verbose_name="N° Presupuesto"),
         ),
         migrations.AlterUniqueTogether(
-            name='budget',
-            unique_together={('contractor', 'number', 'version')},
+            name="budget",
+            unique_together={("contractor", "number", "version")},
         ),
         migrations.AddIndex(
-            model_name='budget',
-            index=models.Index(fields=['contractor', 'is_template'], name='budgets_bud_contrac_591781_idx'),
+            model_name="budget",
+            index=models.Index(fields=["contractor", "is_template"], name="budgets_bud_contrac_591781_idx"),
         ),
         migrations.AddField(
-            model_name='budgetattachment',
-            name='budget',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attachments', to='budgets.budget'),
+            model_name="budgetattachment",
+            name="budget",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="attachments", to="budgets.budget"),
         ),
         migrations.AddField(
-            model_name='budgetsignature',
-            name='budget',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='signature', to='budgets.budget'),
+            model_name="budgetsignature",
+            name="budget",
+            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name="signature", to="budgets.budget"),
         ),
     ]

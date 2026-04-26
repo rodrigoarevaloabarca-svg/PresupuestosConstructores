@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('catalog', '0003_product_catalog_pro_contrac_310bb2_idx_and_more'),
+        ("catalog", "0003_product_catalog_pro_contrac_310bb2_idx_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='RetailerProduct',
+            name="RetailerProduct",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('retailer', models.CharField(choices=[('sodimac', 'Sodimac'), ('easy', 'Easy'), ('imperial', 'Ferretería Imperial')], max_length=20, verbose_name='Ferretería')),
-                ('name', models.CharField(max_length=500, verbose_name='Nombre')),
-                ('sku', models.CharField(blank=True, max_length=100, null=True, verbose_name='SKU')),
-                ('price_clp', models.DecimalField(decimal_places=0, max_digits=12, verbose_name='Precio CLP')),
-                ('url', models.URLField(max_length=1000, verbose_name='URL')),
-                ('category', models.CharField(blank=True, max_length=200, null=True, verbose_name='Categoría')),
-                ('last_scraped', models.DateTimeField(auto_now=True, verbose_name='Última actualización')),
-                ('is_active', models.BooleanField(default=True, verbose_name='Activo')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("retailer", models.CharField(choices=[("sodimac", "Sodimac"), ("easy", "Easy"), ("imperial", "Ferretería Imperial")], max_length=20, verbose_name="Ferretería")),
+                ("name", models.CharField(max_length=500, verbose_name="Nombre")),
+                ("sku", models.CharField(blank=True, max_length=100, null=True, verbose_name="SKU")),
+                ("price_clp", models.DecimalField(decimal_places=0, max_digits=12, verbose_name="Precio CLP")),
+                ("url", models.URLField(max_length=1000, verbose_name="URL")),
+                ("category", models.CharField(blank=True, max_length=200, null=True, verbose_name="Categoría")),
+                ("last_scraped", models.DateTimeField(auto_now=True, verbose_name="Última actualización")),
+                ("is_active", models.BooleanField(default=True, verbose_name="Activo")),
             ],
             options={
-                'verbose_name': 'Producto de Ferretería',
-                'verbose_name_plural': 'Productos de Ferreterías',
-                'indexes': [models.Index(fields=['retailer', 'is_active'], name='catalog_ret_retaile_bd3452_idx'), models.Index(fields=['name'], name='catalog_ret_name_a172d2_idx')],
-                'unique_together': {('retailer', 'sku')},
+                "verbose_name": "Producto de Ferretería",
+                "verbose_name_plural": "Productos de Ferreterías",
+                "indexes": [models.Index(fields=["retailer", "is_active"], name="catalog_ret_retaile_bd3452_idx"), models.Index(fields=["name"], name="catalog_ret_name_a172d2_idx")],
+                "unique_together": {("retailer", "sku")},
             },
         ),
     ]

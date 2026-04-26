@@ -6,15 +6,14 @@ import users.validators
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='contractorprofile',
-            name='logo',
-            field=models.ImageField(blank=True, null=True, upload_to='logos/', validators=[users.validators.validate_image_upload], verbose_name='Logo'),
+            model_name="contractorprofile",
+            name="logo",
+            field=models.ImageField(blank=True, null=True, upload_to="logos/", validators=[users.validators.validate_image_upload], verbose_name="Logo"),
         ),
     ]

@@ -22,103 +22,98 @@ from .forms import (
 )
 from .models import ContractorProfile, User
 
-logger = logging.getLogger('users.auth')
+logger = logging.getLogger("users.auth")
 
 
-@ratelimit(key='ip', rate='3/h', block=True, method='POST')
+@ratelimit(key="ip", rate="3/h", block=True, method="POST")
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard')
-    if request.method == 'POST':
+        return redirect("dashboard")
+    if request.method == "POST":
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, '¡Bienvenido a Constructor Express! Tu cuenta ha sido creada.')
-            return redirect('dashboard')
+            messages.success(request, "¡Bienvenido a Constructor Express! Tu cuenta ha sido creada.")
+            return redirect("dashboard")
     else:
         form = RegisterForm()
-    return render(request, 'users/register.html', {'form': form})
+    return render(request, "users/register.html", {"form": form})
 
 
-@ratelimit(key='ip', rate='5/m', block=True, method='POST')
+@ratelimit(key="ip", rate="5/m", block=True, method="POST")
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard')
-    if request.method == 'POST':
+        return redirect("dashboard")
+    if request.method == "POST":
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
             user = form.get_user()
             from django_otp.plugins.otp_totp.models import TOTPDevice
+
             if TOTPDevice.objects.filter(user=user, confirmed=True).exists():
-                request.session['_2fa_pending_uid'] = user.pk
-                return redirect('verify_2fa')
+                request.session["_2fa_pending_uid"] = user.pk
+                return redirect("verify_2fa")
             login(request, user)
-            next_url = request.GET.get('next', '')
+            next_url = request.GET.get("next", "")
             if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
                 return redirect(next_url)
-            return redirect('dashboard')
-        messages.error(request, 'Correo o contraseña incorrectos.')
+            return redirect("dashboard")
+        messages.error(request, "Correo o contraseña incorrectos.")
     else:
         form = LoginForm()
-    return render(request, 'users/login.html', {'form': form})
+    return render(request, "users/login.html", {"form": form})
 
 
 def logout_view(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         logout(request)
         request.session.flush()
-        response = redirect('landing')
+        response = redirect("landing")
         response.delete_cookie(settings.SESSION_COOKIE_NAME)
-        response['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        response['Pragma'] = 'no-cache'
+        response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response["Pragma"] = "no-cache"
         return response
     # GET: redirigir al login si no está autenticado, al dashboard si lo está
     if request.user.is_authenticated:
-        return redirect('dashboard')
-    return redirect('login')
+        return redirect("dashboard")
+    return redirect("login")
 
 
 @login_required
 def profile_view(request):
-    profile, _ = ContractorProfile.objects.get_or_create(
-        user=request.user,
-        defaults={'company_name': request.user.email, 'rut': '00000000-0', 'phone': ''}
-    )
-    if request.method == 'POST':
+    profile, _ = ContractorProfile.objects.get_or_create(user=request.user, defaults={"company_name": request.user.email, "rut": "00000000-0", "phone": ""})
+    if request.method == "POST":
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Perfil actualizado correctamente.')
-            return redirect('profile')
+            messages.success(request, "Perfil actualizado correctamente.")
+            return redirect("profile")
     else:
         form = ProfileForm(instance=profile)
-    return render(request, 'users/profile.html', {'form': form, 'profile': profile})
-
-
-
+    return render(request, "users/profile.html", {"form": form, "profile": profile})
 
 
 @login_required
 def change_password_view(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)
-            messages.success(request, '✅ Contraseña actualizada correctamente.')
-            return redirect('profile')
-        messages.error(request, 'Por favor corrige los errores del formulario.')
+            messages.success(request, "✅ Contraseña actualizada correctamente.")
+            return redirect("profile")
+        messages.error(request, "Por favor corrige los errores del formulario.")
     else:
         form = PasswordChangeForm(request.user)
-    return render(request, 'users/change_password.html', {'form': form})
+    return render(request, "users/change_password.html", {"form": form})
 
 
-@ratelimit(key='ip', rate='3/h', block=True, method='POST')
+@ratelimit(key="ip", rate="3/h", block=True, method="POST")
 def password_reset_request_view(request):
     if request.user.is_authenticated:
-        return redirect('dashboard')
-    if request.method == 'POST':
+        return redirect("dashboard")
+    if request.method == "POST":
         form = PasswordResetRequestForm(request.POST)
         if form.is_valid():
             user = form.get_user()
@@ -127,15 +122,16 @@ def password_reset_request_view(request):
             else:
                 # Dummy work to match timing — prevent user enumeration
                 import hashlib
-                hashlib.pbkdf2_hmac('sha256', b'dummy', b'salt', 260000)
-            return redirect('password_reset_sent')
+
+                hashlib.pbkdf2_hmac("sha256", b"dummy", b"salt", 260000)
+            return redirect("password_reset_sent")
     else:
         form = PasswordResetRequestForm()
-    return render(request, 'users/password_reset_request.html', {'form': form})
+    return render(request, "users/password_reset_request.html", {"form": form})
 
 
 def password_reset_sent_view(request):
-    return render(request, 'users/password_reset_sent.html')
+    return render(request, "users/password_reset_sent.html")
 
 
 def _get_user_from_uidb64(uidb64):
@@ -150,53 +146,56 @@ def password_reset_confirm_view(request, uidb64, token):
     user = _get_user_from_uidb64(uidb64)
     token_generator = PasswordResetTokenGenerator()
     if user is None or not token_generator.check_token(user, token):
-        return render(request, 'users/password_reset_invalid.html', status=400)
+        return render(request, "users/password_reset_invalid.html", status=400)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = PasswordResetConfirmForm(user, request.POST)
         if form.is_valid():
             form.save()
-            return redirect('password_reset_complete')
+            return redirect("password_reset_complete")
     else:
         form = PasswordResetConfirmForm(user)
-    return render(request, 'users/password_reset_confirm.html', {'form': form})
+    return render(request, "users/password_reset_confirm.html", {"form": form})
 
 
 def password_reset_complete_view(request):
-    return render(request, 'users/password_reset_complete.html')
+    return render(request, "users/password_reset_complete.html")
 
 
 # ─── Mercado Pago checkout ────────────────────────────────────────────────────
 
+
 @login_required
 def checkout_start(request):
-    messages.info(request, 'Constructor Express es 100% gratuito. No se requiere suscripción.')
-    return redirect('dashboard')
+    messages.info(request, "Constructor Express es 100% gratuito. No se requiere suscripción.")
+    return redirect("dashboard")
 
 
 @login_required
 def checkout_success(_request):
-    return redirect('dashboard')
+    return redirect("dashboard")
 
 
 @login_required
 def checkout_failure(_request):
-    return redirect('dashboard')
+    return redirect("dashboard")
 
 
 # ─── Facturación ─────────────────────────────────────────────────────────────
 
+
 @login_required
 def billing_view(request):
-    return render(request, 'users/billing.html')
+    return render(request, "users/billing.html")
 
 
 @login_required
 def cancel_subscription(_request):
-    return redirect('dashboard')
+    return redirect("dashboard")
 
 
 # ─── 2FA / TOTP ──────────────────────────────────────────────────────────────
+
 
 @login_required
 def enable_2fa(request):
@@ -208,23 +207,23 @@ def enable_2fa(request):
 
     device = TOTPDevice.objects.filter(user=request.user, confirmed=True).first()
     if device:
-        messages.info(request, '2FA ya está activado en tu cuenta.')
-        return redirect('profile')
+        messages.info(request, "2FA ya está activado en tu cuenta.")
+        return redirect("profile")
 
     pending = TOTPDevice.objects.filter(user=request.user, confirmed=False).first()
     if not pending:
-        pending = TOTPDevice.objects.create(user=request.user, name='default', confirmed=False)
+        pending = TOTPDevice.objects.create(user=request.user, name="default", confirmed=False)
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = OTPTokenForm(request.POST)
         if form.is_valid():
-            token = form.cleaned_data['token']
+            token = form.cleaned_data["token"]
             if pending.verify_token(token):
                 pending.confirmed = True
                 pending.save()
-                messages.success(request, '2FA activado correctamente.')
-                return redirect('profile')
-            messages.error(request, 'Código incorrecto. Intenta de nuevo.')
+                messages.success(request, "2FA activado correctamente.")
+                return redirect("profile")
+            messages.error(request, "Código incorrecto. Intenta de nuevo.")
     else:
         form = OTPTokenForm()
 
@@ -232,51 +231,53 @@ def enable_2fa(request):
     img = qrcode.make(qr_url, image_factory=qrcode.image.svg.SvgImage)
     buf = io.BytesIO()
     img.save(buf)
-    qr_svg = buf.getvalue().decode('utf-8')
+    qr_svg = buf.getvalue().decode("utf-8")
 
-    return render(request, 'users/2fa_setup.html', {'form': form, 'qr_svg': qr_svg, 'device': pending})
+    return render(request, "users/2fa_setup.html", {"form": form, "qr_svg": qr_svg, "device": pending})
 
 
 @login_required
 def disable_2fa(request):
     from django_otp.plugins.otp_totp.models import TOTPDevice
-    if request.method == 'POST':
+
+    if request.method == "POST":
         form = OTPTokenForm(request.POST)
         if form.is_valid():
             device = TOTPDevice.objects.filter(user=request.user, confirmed=True).first()
-            if device and device.verify_token(form.cleaned_data['token']):
+            if device and device.verify_token(form.cleaned_data["token"]):
                 TOTPDevice.objects.filter(user=request.user).delete()
-                messages.success(request, '2FA desactivado.')
-                return redirect('profile')
-            messages.error(request, 'Código incorrecto.')
+                messages.success(request, "2FA desactivado.")
+                return redirect("profile")
+            messages.error(request, "Código incorrecto.")
     else:
         form = OTPTokenForm()
-    return render(request, 'users/2fa_disable.html', {'form': form})
+    return render(request, "users/2fa_disable.html", {"form": form})
 
 
 def verify_2fa(request):
     from django.contrib.auth import SESSION_KEY
     from django_otp.plugins.otp_totp.models import TOTPDevice
+
     if SESSION_KEY in request.session:
-        return redirect('dashboard')
+        return redirect("dashboard")
 
-    pending_uid = request.session.get('_2fa_pending_uid')
+    pending_uid = request.session.get("_2fa_pending_uid")
     if not pending_uid:
-        return redirect('login')
+        return redirect("login")
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = OTPTokenForm(request.POST)
         if form.is_valid():
             try:
                 user = User.objects.get(pk=pending_uid)
             except User.DoesNotExist:
-                return redirect('login')
+                return redirect("login")
             device = TOTPDevice.objects.filter(user=user, confirmed=True).first()
-            if device and device.verify_token(form.cleaned_data['token']):
-                login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-                del request.session['_2fa_pending_uid']
-                return redirect('dashboard')
-            messages.error(request, 'Código incorrecto.')
+            if device and device.verify_token(form.cleaned_data["token"]):
+                login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+                del request.session["_2fa_pending_uid"]
+                return redirect("dashboard")
+            messages.error(request, "Código incorrecto.")
     else:
         form = OTPTokenForm()
-    return render(request, 'users/2fa_verify.html', {'form': form})
+    return render(request, "users/2fa_verify.html", {"form": form})

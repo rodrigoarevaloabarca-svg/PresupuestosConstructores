@@ -5,30 +5,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('budgets', '0004_add_public_token'),
+        ("budgets", "0004_add_public_token"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='budgetitemlabor',
-            name='quantity',
-            field=models.DecimalField(decimal_places=2, default=1, max_digits=10, validators=[django.core.validators.MinValueValidator(0)], verbose_name='Cantidad / Horas'),
+            model_name="budgetitemlabor",
+            name="quantity",
+            field=models.DecimalField(decimal_places=2, default=1, max_digits=10, validators=[django.core.validators.MinValueValidator(0)], verbose_name="Cantidad / Horas"),
         ),
         migrations.AlterField(
-            model_name='budgetitemlabor',
-            name='unit_price',
-            field=models.DecimalField(decimal_places=0, max_digits=12, validators=[django.core.validators.MinValueValidator(0)], verbose_name='Precio Unitario'),
+            model_name="budgetitemlabor",
+            name="unit_price",
+            field=models.DecimalField(decimal_places=0, max_digits=12, validators=[django.core.validators.MinValueValidator(0)], verbose_name="Precio Unitario"),
         ),
         migrations.AlterField(
-            model_name='budgetitemmaterial',
-            name='quantity',
-            field=models.DecimalField(decimal_places=2, max_digits=10, validators=[django.core.validators.MinValueValidator(0)], verbose_name='Cantidad'),
+            model_name="budgetitemmaterial",
+            name="quantity",
+            field=models.DecimalField(decimal_places=2, max_digits=10, validators=[django.core.validators.MinValueValidator(0)], verbose_name="Cantidad"),
         ),
         migrations.AlterField(
-            model_name='budgetitemmaterial',
-            name='unit_price',
-            field=models.DecimalField(decimal_places=0, max_digits=12, validators=[django.core.validators.MinValueValidator(0)], verbose_name='Precio Unitario'),
+            model_name="budgetitemmaterial",
+            name="unit_price",
+            field=models.DecimalField(decimal_places=0, max_digits=12, validators=[django.core.validators.MinValueValidator(0)], verbose_name="Precio Unitario"),
         ),
     ]

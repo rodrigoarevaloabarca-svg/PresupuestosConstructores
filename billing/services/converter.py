@@ -6,10 +6,10 @@ from billing.services.sii_client import emit_boleta
 
 def budget_to_invoice(budget, tipo: int = 39) -> Invoice:
     """Convierte un presupuesto aceptado en una boleta/factura electrónica."""
-    if budget.status != 'aceptado':
-        raise ValidationError('Solo se pueden facturar presupuestos aceptados.')
-    if hasattr(budget, 'invoice') and budget.invoice is not None:
-        raise ValidationError('Este presupuesto ya fue facturado.')
+    if budget.status != "aceptado":
+        raise ValidationError("Solo se pueden facturar presupuestos aceptados.")
+    if hasattr(budget, "invoice") and budget.invoice is not None:
+        raise ValidationError("Este presupuesto ya fue facturado.")
     invoice = Invoice.objects.create(
         contractor=budget.contractor,
         budget=budget,
@@ -36,12 +36,12 @@ def budget_to_invoice(budget, tipo: int = 39) -> Invoice:
 
     try:
         result = emit_boleta(invoice)
-        invoice.sii_track_id = result['track_id']
-        invoice.pdf_url = result['pdf_url']
-        invoice.xml_url = result['xml_url']
+        invoice.sii_track_id = result["track_id"]
+        invoice.pdf_url = result["pdf_url"]
+        invoice.xml_url = result["xml_url"]
         invoice.save()
     except Exception:
-        invoice.status = 'pending'
+        invoice.status = "pending"
         invoice.save()
 
     return invoice

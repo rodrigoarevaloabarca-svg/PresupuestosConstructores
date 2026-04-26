@@ -1,6 +1,6 @@
 from django.db import transaction
 
-EDITABLE_STATUSES = {'borrador'}
+EDITABLE_STATUSES = {"borrador"}
 
 
 def create_new_version(budget):
@@ -14,7 +14,7 @@ def create_new_version(budget):
             parent=budget.parent or budget,
             version=(budget.version + 1),
             title=budget.title,
-            status='borrador',
+            status="borrador",
             validity_days=budget.validity_days,
             payment_terms=budget.payment_terms,
             notes=budget.notes,
@@ -22,13 +22,21 @@ def create_new_version(budget):
         )
         for item in budget.material_items.all():
             BudgetItemMaterial.objects.create(
-                budget=new_budget, name=item.name, unit=item.unit,
-                quantity=item.quantity, unit_price=item.unit_price, order=item.order,
+                budget=new_budget,
+                name=item.name,
+                unit=item.unit,
+                quantity=item.quantity,
+                unit_price=item.unit_price,
+                order=item.order,
             )
         for item in budget.labor_items.all():
             BudgetItemLabor.objects.create(
-                budget=new_budget, name=item.name, unit=item.unit,
-                quantity=item.quantity, unit_price=item.unit_price, order=item.order,
+                budget=new_budget,
+                name=item.name,
+                unit=item.unit,
+                quantity=item.quantity,
+                unit_price=item.unit_price,
+                order=item.order,
             )
     return new_budget
 

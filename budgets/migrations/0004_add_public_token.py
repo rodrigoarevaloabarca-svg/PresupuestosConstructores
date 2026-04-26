@@ -5,20 +5,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('budgets', '0003_initial'),
+        ("budgets", "0003_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='BudgetPublicToken',
+            name="BudgetPublicToken",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('token', models.CharField(max_length=64, unique=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('views', models.PositiveIntegerField(default=0)),
-                ('budget', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='public_token', to='budgets.budget')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("token", models.CharField(max_length=64, unique=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("views", models.PositiveIntegerField(default=0)),
+                ("budget", models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name="public_token", to="budgets.budget")),
             ],
         ),
     ]

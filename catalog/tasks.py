@@ -6,8 +6,15 @@ from celery import shared_task
 logger = logging.getLogger(__name__)
 
 QUERIES = [
-    'cemento', 'cañería', 'cable eléctrico', 'pintura',
-    'llave paso', 'tomacorriente', 'teja', 'perno', 'silicon',
+    "cemento",
+    "cañería",
+    "cable eléctrico",
+    "pintura",
+    "llave paso",
+    "tomacorriente",
+    "teja",
+    "perno",
+    "silicon",
 ]
 
 
@@ -31,11 +38,11 @@ def scrape_all_retailers(self):
         results = await asyncio.gather(*tasks, return_exceptions=True)
         for scraper, result in zip(scrapers, results, strict=False):
             if isinstance(result, Exception):
-                logger.error('[%s] scrape failed: %s', scraper.retailer_slug, result)
+                logger.error("[%s] scrape failed: %s", scraper.retailer_slug, result)
                 continue
             count = scraper.upsert_products(result)
             total += count
-            logger.info('[%s] %d upserted', scraper.retailer_slug, count)
+            logger.info("[%s] %d upserted", scraper.retailer_slug, count)
 
     try:
         asyncio.run(run())
@@ -43,10 +50,10 @@ def scrape_all_retailers(self):
         raise self.retry(exc=exc, countdown=60 * 10) from exc
 
     if total < 50:
-        logger.error('Scraper returned only %d products — possible breakage', total)
+        logger.error("Scraper returned only %d products — possible breakage", total)
 
     # Desactivar productos con más de 60 días sin actualizar
     cutoff = timezone.now() - timedelta(days=60)
     RetailerProduct.objects.filter(last_scraped__lt=cutoff).update(is_active=False)
 
-    return f'{total} products upserted'
+    return f"{total} products upserted"
