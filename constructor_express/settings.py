@@ -138,7 +138,6 @@ AUTH_PASSWORD_VALIDATORS = [
 LANGUAGE_CODE = "es-cl"
 TIME_ZONE = "America/Santiago"
 USE_I18N = True
-USE_L10N = True
 USE_TZ = True
 USE_THOUSAND_SEPARATOR = True
 
@@ -146,7 +145,14 @@ STATIC_URL = "/static/"
 # Solo incluir STATICFILES_DIRS si la carpeta existe
 STATICFILES_DIRS = [BASE_DIR / "static"] if (BASE_DIR / "static").exists() else []
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"

@@ -506,7 +506,7 @@ def budget_public_sign(request, token):
 
     sha256 = hashlib.sha256(png_bytes).hexdigest()
     ip = request.META.get("REMOTE_ADDR", "")
-    ua = request.META.get("HTTP_USER_AGENT", "")
+    ua = request.headers.get("user-agent", "")
 
     sig = BudgetSignature(budget=budget, hash_sha256=sha256, ip=ip, user_agent=ua)
     sig.signature_png.save(f"firma-{budget.number}.png", ContentFile(png_bytes), save=False)

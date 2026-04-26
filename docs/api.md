@@ -1,12 +1,12 @@
 # Constructor Express — Documentación de API REST
 
-**Base URL:** `https://constructorexpress.cl/api/v1`  
-**Autenticación:** JWT Bearer token en header `Authorization: Bearer <token>`  
-**Formato:** JSON  
-**Throttling:** 1 000 req/hora por usuario autenticado · 100 req/hora anónimo  
-**Paginación:** `?page=N` — 20 resultados por página  
+**Base URL:** `https://constructorexpress.cl/api/v1`
+**Autenticación:** JWT Bearer token en header `Authorization: Bearer <token>`
+**Formato:** JSON
+**Throttling:** 1 000 req/hora por usuario autenticado · 100 req/hora anónimo
+**Paginación:** `?page=N` — 20 resultados por página
 
-> **Swagger UI interactivo:** `/api/v1/docs/`  
+> **Swagger UI interactivo:** `/api/v1/docs/`
 > **Schema OpenAPI (JSON):** `/api/v1/schema/`
 
 ---
