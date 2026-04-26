@@ -1,6 +1,6 @@
 from django.db import models, transaction
-from users.models import User
 
+from users.models import User
 
 TIPO_DTE_CHOICES = [
     (33, 'Factura Electrónica'),

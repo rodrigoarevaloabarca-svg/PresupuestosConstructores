@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Budget, BudgetItemMaterial, BudgetItemLabor
+
+from .models import Budget, BudgetItemLabor, BudgetItemMaterial
+
 
 class MaterialInline(admin.TabularInline):
     model = BudgetItemMaterial

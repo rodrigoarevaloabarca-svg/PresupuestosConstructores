@@ -1,24 +1,25 @@
-from django.contrib import admin
-from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from users.landing_view import landing_view
-from constructor_express.health import healthz
-
-# API imports
-from budgets.api_views import BudgetListAPIView, BudgetDetailAPIView, dashboard_stats_api
-from budgets.api.views import BudgetViewSet
-from clients.api_views import ClientListAPIView, ClientDetailAPIView
-from catalog.api_views import ProductListAPIView, ProductDetailAPIView
-from catalog.api.views import ProductSuggestionsView
-from users.webhooks import mercadopago_webhook
-
-# JWT
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenBlacklistView
-from users.serializers import ContractorTokenObtainPairView
+from django.contrib import admin
+from django.urls import include, path
 
 # OpenAPI
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+
+# JWT
+from rest_framework_simplejwt.views import TokenBlacklistView, TokenRefreshView
+
+from budgets.api.views import BudgetViewSet
+
+# API imports
+from budgets.api_views import BudgetDetailAPIView, BudgetListAPIView, dashboard_stats_api
+from catalog.api.views import ProductSuggestionsView
+from catalog.api_views import ProductDetailAPIView, ProductListAPIView
+from clients.api_views import ClientDetailAPIView, ClientListAPIView
+from constructor_express.health import healthz
+from users.landing_view import landing_view
+from users.serializers import ContractorTokenObtainPairView
+from users.webhooks import mercadopago_webhook
 
 urlpatterns = [
     # ── Público ────────────────────────────────────────────────

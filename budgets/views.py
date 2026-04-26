@@ -1,24 +1,26 @@
+import contextlib
 import re
 import secrets
 from decimal import Decimal, InvalidOperation
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.conf import settings
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Sum, F, Q, Value, DecimalField
+from django.db.models import DecimalField, F, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django_ratelimit.decorators import ratelimit
 
-from .models import Budget, BudgetItemMaterial, BudgetItemLabor, BudgetPublicToken, BudgetAttachment
-from .forms import BudgetForm
 from clients.models import Client
 from common.tenant import get_tenant_object_or_404
 from users.plan_guard import PlanGuard
+
+from .forms import BudgetForm
+from .models import Budget, BudgetAttachment, BudgetItemLabor, BudgetItemMaterial, BudgetPublicToken
 
 
 @login_required
@@ -112,7 +114,7 @@ def budget_detail(request, pk):
 def budget_edit(request, pk):
     budget = get_tenant_object_or_404(Budget, request, pk=pk)
 
-    from .services.versioning import should_create_version, create_new_version
+    from .services.versioning import create_new_version, should_create_version
     if request.method == 'GET' and should_create_version(budget):
         new_version = create_new_version(budget)
         messages.info(request, f'✅ Nueva versión v{new_version.version} creada. Editando la nueva versión en borrador.')
@@ -225,7 +227,7 @@ def _save_line_items(request, budget, prefix, model, default_unit):
     prices = request.POST.getlist(f'{prefix}_price[]')
     for i, name in enumerate(names):
         if name.strip():
-            try:
+            with contextlib.suppress(ValueError, IndexError):
                 model.objects.create(
                     budget=budget,
                     name=name.strip(),
@@ -234,8 +236,6 @@ def _save_line_items(request, budget, prefix, model, default_unit):
                     unit_price=_parse_decimal(prices[i]) if i < len(prices) and prices[i] else Decimal('0'),
                     order=i,
                 )
-            except (ValueError, IndexError):
-                pass
 
 
 @login_required
@@ -271,8 +271,8 @@ def budget_pdf(request, pk):
     context = {'budget': budget, 'profile': profile}
 
     try:
-        from weasyprint import HTML, CSS
         from django.template.loader import render_to_string
+        from weasyprint import CSS, HTML
 
         html_string = render_to_string('budgets/pdf_template.html', context)
         html = HTML(
@@ -450,7 +450,9 @@ def budget_public_sign(request, token):
     """Recibe la firma PNG en base64 del cliente y acepta el presupuesto."""
     import base64
     import hashlib
+
     from django.core.files.base import ContentFile
+
     from .models import BudgetSignature
 
     public_token = get_object_or_404(
@@ -515,6 +517,7 @@ def budget_to_invoice_view(request, pk):
         return redirect('budget_detail', pk=pk)
 
     from django.core.exceptions import ValidationError
+
     from billing.services.converter import budget_to_invoice
     try:
         invoice = budget_to_invoice(budget)

@@ -1,3 +1,4 @@
+import contextlib
 import logging
 
 from celery import shared_task
@@ -26,10 +27,8 @@ def send_budget_email(budget, recipient_email, request=None):
     """Dispara el envío de email vía Celery (sync en tests)."""
     public_url = None
     if request and hasattr(budget, 'public_token'):
-        try:
+        with contextlib.suppress(Exception):
             public_url = request.build_absolute_uri(budget.public_token.get_public_url())
-        except Exception:
-            pass
     send_budget_email_task.delay(budget.pk, recipient_email, public_url)
     return True
 

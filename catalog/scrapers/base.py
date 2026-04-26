@@ -41,8 +41,8 @@ class BaseRetailerScraper(ABC):
 
     def upsert_products(self, products: list[dict]) -> int:
         """Guarda o actualiza los productos en RetailerProduct. Retorna cantidad upserted."""
+
         from catalog.models import RetailerProduct
-        from django.utils import timezone
 
         count = 0
         for p in products:

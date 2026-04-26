@@ -1,4 +1,5 @@
 from django.db import models
+
 from users.models import User
 
 UNIT_CHOICES = [
@@ -68,10 +69,10 @@ class RetailerProduct(models.Model):
     """Caché de precios de ferreterías externas (Sodimac, Easy, Imperial)."""
     retailer = models.CharField('Ferretería', max_length=20, choices=RETAILER_CHOICES)
     name = models.CharField('Nombre', max_length=500)
-    sku = models.CharField('SKU', max_length=100, blank=True, null=True)
+    sku = models.CharField('SKU', max_length=100, blank=True, default='')
     price_clp = models.DecimalField('Precio CLP', max_digits=12, decimal_places=0)
     url = models.URLField('URL', max_length=1000)
-    category = models.CharField('Categoría', max_length=200, blank=True, null=True)
+    category = models.CharField('Categoría', max_length=200, blank=True, default='')
     last_scraped = models.DateTimeField('Última actualización', auto_now=True)
     is_active = models.BooleanField('Activo', default=True)
 

@@ -6,5 +6,6 @@ class CatalogConfig(AppConfig):
 
     def ready(self):
         from auditlog.registry import auditlog
+
         from catalog.models import Product
         auditlog.register(Product)

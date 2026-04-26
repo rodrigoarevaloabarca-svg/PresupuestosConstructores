@@ -1,5 +1,6 @@
-from .models import ContractorProfile
 from django.conf import settings
+
+from .models import ContractorProfile
 
 
 def contractor_profile(request):

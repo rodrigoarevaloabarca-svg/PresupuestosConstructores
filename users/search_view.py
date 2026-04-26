@@ -1,8 +1,9 @@
-from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from clients.models import Client
-from catalog.models import Product
+from django.shortcuts import render
+
 from budgets.models import Budget
+from catalog.models import Product
+from clients.models import Client
 
 
 @login_required

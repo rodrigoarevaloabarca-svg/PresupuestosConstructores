@@ -1,6 +1,7 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, SetPasswordForm
-from .models import User, ContractorProfile, validate_rut
+from django.contrib.auth.forms import AuthenticationForm, SetPasswordForm, UserCreationForm
+
+from .models import ContractorProfile, User, validate_rut
 
 
 class RegisterForm(UserCreationForm):

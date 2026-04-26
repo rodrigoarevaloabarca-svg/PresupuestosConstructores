@@ -1,5 +1,6 @@
 import httpx
 from bs4 import BeautifulSoup
+
 from .base import BaseRetailerScraper
 
 SEARCH_URL = 'https://www.imperial.cl/search?q={query}'

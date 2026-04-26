@@ -1,4 +1,5 @@
 import httpx
+
 from .base import BaseRetailerScraper
 
 SEARCH_URL = (

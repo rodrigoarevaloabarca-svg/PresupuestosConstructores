@@ -6,5 +6,6 @@ class ClientsConfig(AppConfig):
 
     def ready(self):
         from auditlog.registry import auditlog
+
         from clients.models import Client
         auditlog.register(Client)

@@ -1,10 +1,11 @@
-from django.test import TestCase, Client as TestClient
-from django.urls import reverse
 from django.conf import settings
+from django.test import Client as TestClient
+from django.test import TestCase
+from django.urls import reverse
 
-from users.models import User, ContractorProfile
 from clients.models import Client
 from clients.serializers import ClientSerializer
+from users.models import ContractorProfile, User
 
 
 def make_user(email='user@test.cl', password='pass123', with_profile=True):

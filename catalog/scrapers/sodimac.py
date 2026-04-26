@@ -1,4 +1,5 @@
 import httpx
+
 from .base import BaseRetailerScraper
 
 SEARCH_URL = 'https://www.sodimac.com/sodimac-cl/search?Ntt={query}&No=0&Nrpp=48&content='

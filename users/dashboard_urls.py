@@ -1,4 +1,5 @@
 from django.urls import path
+
 from . import dashboard_views, reports_view, search_view
 
 urlpatterns = [

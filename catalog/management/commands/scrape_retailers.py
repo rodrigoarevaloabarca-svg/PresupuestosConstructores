@@ -1,9 +1,11 @@
 import asyncio
 import logging
+
 from django.core.management.base import BaseCommand
-from catalog.scrapers.sodimac import SodimacScraper
+
 from catalog.scrapers.easy import EasyScraper
 from catalog.scrapers.imperial import ImperialScraper
+from catalog.scrapers.sodimac import SodimacScraper
 
 logger = logging.getLogger(__name__)
 

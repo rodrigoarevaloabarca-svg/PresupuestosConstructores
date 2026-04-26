@@ -1,9 +1,11 @@
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.utils import timezone
-from django.db.models import Sum, F, Q, Value, DecimalField, Count
-from django.db.models.functions import Coalesce, TruncMonth
 from datetime import timedelta
+
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count, DecimalField, F, Q, Sum, Value
+from django.db.models.functions import Coalesce, TruncMonth
+from django.shortcuts import render
+from django.utils import timezone
+
 from budgets.models import Budget
 
 

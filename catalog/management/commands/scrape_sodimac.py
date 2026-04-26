@@ -1,5 +1,7 @@
 import asyncio
+
 from django.core.management.base import BaseCommand
+
 from catalog.scrapers.sodimac import SodimacScraper
 
 QUERIES = [

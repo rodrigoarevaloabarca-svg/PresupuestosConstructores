@@ -1,4 +1,5 @@
 import os
+
 from django.core.exceptions import ValidationError
 
 ALLOWED_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp'}
@@ -22,5 +23,5 @@ def validate_image_upload(file):
         img = Image.open(file)
         img.verify()
         file.seek(0)
-    except Exception:
-        raise ValidationError('El archivo no es una imagen válida.')
+    except Exception as exc:
+        raise ValidationError('El archivo no es una imagen válida.') from exc

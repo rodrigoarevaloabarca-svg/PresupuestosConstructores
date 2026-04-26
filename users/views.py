@@ -1,22 +1,24 @@
 import logging
 
-from django.shortcuts import render, redirect
 from django.conf import settings
-from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib import messages
+from django.contrib.auth import login, logout, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.shortcuts import redirect, render
 from django.utils.encoding import force_str
 from django.utils.http import url_has_allowed_host_and_scheme, urlsafe_base64_decode
 from django_ratelimit.decorators import ratelimit
+
 from .email_utils import send_password_reset_email
 from .forms import (
-    RegisterForm,
     LoginForm,
-    ProfileForm,
-    PasswordResetRequestForm,
-    PasswordResetConfirmForm,
     OTPTokenForm,
+    PasswordResetConfirmForm,
+    PasswordResetRequestForm,
+    ProfileForm,
+    RegisterForm,
 )
 from .models import ContractorProfile, User
 
@@ -32,7 +34,7 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, f'¡Bienvenido a Constructor Express! Tu cuenta ha sido creada.')
+            messages.success(request, '¡Bienvenido a Constructor Express! Tu cuenta ha sido creada.')
             return redirect('dashboard')
     else:
         form = RegisterForm()
@@ -56,8 +58,7 @@ def login_view(request):
             if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
                 return redirect(next_url)
             return redirect('dashboard')
-        else:
-            messages.error(request, 'Correo o contraseña incorrectos.')
+        messages.error(request, 'Correo o contraseña incorrectos.')
     else:
         form = LoginForm()
     return render(request, 'users/login.html', {'form': form})
@@ -95,8 +96,7 @@ def profile_view(request):
     return render(request, 'users/profile.html', {'form': form, 'profile': profile})
 
 
-from django.contrib.auth import update_session_auth_hash
-from django.contrib.auth.forms import PasswordChangeForm
+
 
 
 @login_required
@@ -108,8 +108,7 @@ def change_password_view(request):
             update_session_auth_hash(request, user)
             messages.success(request, '✅ Contraseña actualizada correctamente.')
             return redirect('profile')
-        else:
-            messages.error(request, 'Por favor corrige los errores del formulario.')
+        messages.error(request, 'Por favor corrige los errores del formulario.')
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'users/change_password.html', {'form': form})
@@ -201,10 +200,11 @@ def cancel_subscription(_request):
 
 @login_required
 def enable_2fa(request):
-    from django_otp.plugins.otp_totp.models import TOTPDevice
+    import io
+
     import qrcode
     import qrcode.image.svg
-    import io
+    from django_otp.plugins.otp_totp.models import TOTPDevice
 
     device = TOTPDevice.objects.filter(user=request.user, confirmed=True).first()
     if device:
@@ -255,8 +255,8 @@ def disable_2fa(request):
 
 
 def verify_2fa(request):
-    from django_otp.plugins.otp_totp.models import TOTPDevice
     from django.contrib.auth import SESSION_KEY
+    from django_otp.plugins.otp_totp.models import TOTPDevice
     if SESSION_KEY in request.session:
         return redirect('dashboard')
 

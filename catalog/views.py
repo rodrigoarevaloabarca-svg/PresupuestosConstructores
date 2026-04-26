@@ -1,11 +1,18 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
+import csv
+import io
+import itertools
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
-from django.http import JsonResponse
-from .models import Product
-from .forms import ProductForm
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+
 from common.tenant import get_tenant_object_or_404
 from users.plan_guard import PlanGuard
+
+from .forms import ProductForm
+from .models import Product
 
 
 @login_required
@@ -75,11 +82,7 @@ def product_search_api(request):
     return JsonResponse({'results': list(products)})
 
 
-import csv
-import io
-import itertools
-from decimal import Decimal, InvalidOperation
-from django.http import HttpResponse
+
 
 MAX_CSV_ROWS = 5000
 
@@ -107,10 +110,10 @@ def product_export_csv(request):
     """Exporta el catálogo completo a CSV."""
     response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
     response['Content-Disposition'] = 'attachment; filename="catalogo_productos.csv"'
-    
+
     writer = csv.writer(response)
     writer.writerow(['Nombre', 'Descripción', 'Categoría', 'Unidad', 'Precio Costo', 'Precio Venta', 'SKU'])
-    
+
     products = Product.objects.filter(contractor=request.user, is_active=True)
     for p in products:
         writer.writerow([
@@ -137,10 +140,10 @@ def product_import_csv(request):
         return redirect('product_import_csv')
 
     # Map display names back to values
-    UNIT_MAP = {v.lower(): k for k, v in dict(Product._meta.get_field('unit').choices).items()}
-    CAT_MAP  = {v.lower(): k for k, v in dict(Product._meta.get_field('category').choices).items()}
-    UNIT_MAP.update({k: k for k in UNIT_MAP.values()})
-    CAT_MAP.update({k: k for k in CAT_MAP.values()})
+    unit_map = {v.lower(): k for k, v in dict(Product._meta.get_field('unit').choices).items()}
+    cat_map = {v.lower(): k for k, v in dict(Product._meta.get_field('category').choices).items()}
+    unit_map.update({k: k for k in unit_map.values()})
+    cat_map.update({k: k for k in cat_map.values()})
 
     created = 0
     errors = []
@@ -164,8 +167,8 @@ def product_import_csv(request):
                     contractor=request.user,
                     name=name,
                     description=row.get('Descripción', '').strip(),
-                    category=CAT_MAP.get(cat_raw, 'otro'),
-                    unit=UNIT_MAP.get(unit_raw, 'un'),
+                    category=cat_map.get(cat_raw, 'otro'),
+                    unit=unit_map.get(unit_raw, 'un'),
                     cost_price=_parse_csv_price(row.get('Precio Costo', '0')),
                     sale_price=_parse_csv_price(row.get('Precio Venta', '0')),
                     sku=row.get('SKU', '').strip(),

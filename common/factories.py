@@ -1,10 +1,10 @@
 import factory
 from factory.django import DjangoModelFactory
 
-from users.models import User, ContractorProfile
-from clients.models import Client
+from budgets.models import Budget, BudgetItemLabor, BudgetItemMaterial
 from catalog.models import Product
-from budgets.models import Budget, BudgetItemMaterial, BudgetItemLabor
+from clients.models import Client
+from users.models import ContractorProfile, User
 
 
 class UserFactory(DjangoModelFactory):

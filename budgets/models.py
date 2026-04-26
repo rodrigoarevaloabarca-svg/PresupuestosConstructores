@@ -1,12 +1,14 @@
+import contextlib
+from datetime import timedelta
+
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.utils import timezone
-from datetime import timedelta
-from users.models import User
-from clients.models import Client
-from catalog.models import Product, UNIT_CHOICES
-from budgets.managers import BudgetQuerySet
 
+from budgets.managers import BudgetQuerySet
+from catalog.models import UNIT_CHOICES, Product
+from clients.models import Client
+from users.models import User
 
 STATUS_CHOICES = [
     ('borrador', 'Borrador'),
@@ -96,10 +98,8 @@ class Budget(models.Model):
                 )
                 self.number = (last.number + 1) if last else 1
         if not self.payment_terms:
-            try:
+            with contextlib.suppress(AttributeError):
                 self.payment_terms = self.contractor.profile.payment_terms
-            except AttributeError:
-                pass
         super().save(*args, **kwargs)
 
 

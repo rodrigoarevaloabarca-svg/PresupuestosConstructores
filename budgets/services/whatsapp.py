@@ -35,4 +35,4 @@ def send_budget_whatsapp_task(self, budget_id, phone, public_url):
         logger.info('WhatsApp enviado budget=%s sid=%s', budget_id, message.sid)
     except Exception as exc:
         logger.error('Error WhatsApp budget=%s: %s', budget_id, exc)
-        raise self.retry(exc=exc)
+        raise self.retry(exc=exc) from exc

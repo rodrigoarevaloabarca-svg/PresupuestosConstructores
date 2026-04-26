@@ -1,8 +1,10 @@
 from rest_framework import generics
 from rest_framework.exceptions import PermissionDenied
+
+from users.plan_guard import PlanGuard
+
 from .models import Product
 from .serializers import ProductSerializer
-from users.plan_guard import PlanGuard
 
 
 class ProductListAPIView(generics.ListCreateAPIView):

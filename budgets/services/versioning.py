@@ -1,12 +1,11 @@
 from django.db import transaction
 
-
 EDITABLE_STATUSES = {'borrador'}
 
 
 def create_new_version(budget):
     """Duplica un presupuesto en estado no-borrador y retorna la nueva versión."""
-    from budgets.models import Budget, BudgetItemMaterial, BudgetItemLabor
+    from budgets.models import Budget, BudgetItemLabor, BudgetItemMaterial
 
     with transaction.atomic():
         new_budget = Budget.objects.create(

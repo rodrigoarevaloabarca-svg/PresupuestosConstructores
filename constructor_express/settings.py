@@ -1,6 +1,9 @@
-from pathlib import Path
 import os
 import sys
+from datetime import timedelta
+from pathlib import Path
+
+from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
 
 env_path = Path(__file__).resolve().parent.parent / '.env.production'
@@ -310,7 +313,8 @@ TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
 TWILIO_WHATSAPP_FROM = os.environ.get('TWILIO_WHATSAPP_FROM', 'whatsapp:+14155238886')
 
 # ─── JWT (SimpleJWT) ─────────────────────────────────────────────────────────
-from datetime import timedelta
+
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
@@ -332,7 +336,7 @@ SII_RUT_EMISOR = os.environ.get('SII_RUT_EMISOR', '')
 SII_ENV = os.environ.get('SII_ENV', 'sandbox')
 
 # ─── Celery Beat ─────────────────────────────────────────────────────────────
-from celery.schedules import crontab
+
 CELERY_BEAT_SCHEDULE = {
     'scrape-retailers-weekly': {
         'task': 'catalog.tasks.scrape_all_retailers',

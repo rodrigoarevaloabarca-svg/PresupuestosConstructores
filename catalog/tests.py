@@ -1,12 +1,13 @@
-import io
 import csv
+import io
 
 from django.conf import settings
-from django.test import TestCase, Client as TestClient
+from django.test import Client as TestClient
+from django.test import TestCase
 from django.urls import reverse
 
-from users.models import User, ContractorProfile
 from catalog.models import Product
+from users.models import ContractorProfile, User
 
 
 def make_user(email='cat@test.cl', password='pass123'):

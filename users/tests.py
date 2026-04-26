@@ -1,10 +1,11 @@
 from unittest.mock import patch
 
-from django.test import TestCase, Client as TestClient
+from django.core.exceptions import ValidationError
+from django.test import Client as TestClient
+from django.test import TestCase
 from django.urls import reverse
 
-from users.models import User, ContractorProfile, validate_rut
-from django.core.exceptions import ValidationError
+from users.models import ContractorProfile, User, validate_rut
 
 
 def make_user(email='u@test.cl', password='pass123', with_profile=True):

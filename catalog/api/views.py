@@ -1,15 +1,15 @@
 from django.db.models import Q
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
+from django_ratelimit.decorators import ratelimit
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from catalog.models import Product, RetailerProduct
 from catalog.api.serializers import (
     CatalogProductSuggestionSerializer,
     RetailerProductSuggestionSerializer,
 )
+from catalog.models import Product, RetailerProduct
 
 MAX_RESULTS = 5
 

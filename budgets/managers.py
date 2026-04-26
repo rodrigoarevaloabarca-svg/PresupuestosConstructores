@@ -1,8 +1,6 @@
 from django.db import models
-from django.db.models import Sum, F, Value, Subquery, OuterRef
+from django.db.models import DecimalField, F, OuterRef, Subquery, Sum, Value
 from django.db.models.functions import Coalesce, TruncMonth
-from django.db.models import DecimalField
-
 
 _DECIMAL = DecimalField(max_digits=14, decimal_places=2)
 
@@ -11,7 +9,7 @@ class BudgetQuerySet(models.QuerySet):
 
     def with_totals(self):
         """Anota _subtotal_materials y _subtotal_labor con Subquery (sin cartesian join)."""
-        from .models import BudgetItemMaterial, BudgetItemLabor
+        from .models import BudgetItemLabor, BudgetItemMaterial
 
         mat_sum = (
             BudgetItemMaterial.objects
@@ -44,7 +42,6 @@ class BudgetQuerySet(models.QuerySet):
 
     def client_lifetime_value(self, user):
         """Retorna CLV por cliente (suma de presupuestos aceptados)."""
-        from clients.models import Client
         return (
             self.for_user(user)
             .filter(status='aceptado')
@@ -77,9 +74,10 @@ class BudgetQuerySet(models.QuerySet):
 
     def acceptance_rate(self, user, months=3):
         """Tasa de aceptación en los últimos N meses (aceptados / (aceptados + rechazados))."""
-        from django.utils import timezone
         from datetime import timedelta
+
         from django.db.models import Count, Q
+        from django.utils import timezone
         cutoff = timezone.now() - timedelta(days=months * 31)
         agg = (
             self.for_user(user)
@@ -97,8 +95,9 @@ class BudgetQuerySet(models.QuerySet):
         Retorna los ingresos aceptados agrupados por mes (últimos N meses).
         Uso: Budget.objects.revenue_by_month(user, months=6)
         """
-        from django.utils import timezone
         from datetime import timedelta
+
+        from django.utils import timezone
         cutoff = timezone.now() - timedelta(days=months * 31)
         return (
             self.for_user(user)

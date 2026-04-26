@@ -1,5 +1,6 @@
 import asyncio
 import logging
+
 from celery import shared_task
 
 logger = logging.getLogger(__name__)
@@ -12,12 +13,14 @@ QUERIES = [
 
 @shared_task(bind=True, max_retries=2)
 def scrape_all_retailers(self):
-    from catalog.scrapers.sodimac import SodimacScraper
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from catalog.models import RetailerProduct
     from catalog.scrapers.easy import EasyScraper
     from catalog.scrapers.imperial import ImperialScraper
-    from catalog.models import RetailerProduct
-    from django.utils import timezone
-    from datetime import timedelta
+    from catalog.scrapers.sodimac import SodimacScraper
 
     scrapers = [SodimacScraper(), EasyScraper(), ImperialScraper()]
     total = 0
@@ -26,7 +29,7 @@ def scrape_all_retailers(self):
         nonlocal total
         tasks = [s.search_many(QUERIES) for s in scrapers]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        for scraper, result in zip(scrapers, results):
+        for scraper, result in zip(scrapers, results, strict=False):
             if isinstance(result, Exception):
                 logger.error('[%s] scrape failed: %s', scraper.retailer_slug, result)
                 continue
@@ -37,7 +40,7 @@ def scrape_all_retailers(self):
     try:
         asyncio.run(run())
     except Exception as exc:
-        raise self.retry(exc=exc, countdown=60 * 10)
+        raise self.retry(exc=exc, countdown=60 * 10) from exc
 
     if total < 50:
         logger.error('Scraper returned only %d products — possible breakage', total)

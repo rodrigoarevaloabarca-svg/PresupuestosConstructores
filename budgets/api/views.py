@@ -1,8 +1,9 @@
-from rest_framework import viewsets, permissions
-from drf_spectacular.utils import extend_schema_view, extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework import permissions, viewsets
 
 from budgets.models import Budget
-from .serializers import BudgetWriteSerializer, BudgetReadSerializer
+
+from .serializers import BudgetReadSerializer, BudgetWriteSerializer
 
 
 @extend_schema_view(

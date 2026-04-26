@@ -1,10 +1,12 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Client
-from .forms import ClientForm
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect, render
+
 from common.tenant import get_tenant_object_or_404
 from users.plan_guard import PlanGuard
+
+from .forms import ClientForm
+from .models import Client
 
 
 @login_required

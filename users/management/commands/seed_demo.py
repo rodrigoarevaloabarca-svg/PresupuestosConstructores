@@ -14,10 +14,10 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        from users.models import User, ContractorProfile
-        from clients.models import Client
+        from budgets.models import Budget, BudgetItemLabor, BudgetItemMaterial
         from catalog.models import Product
-        from budgets.models import Budget, BudgetItemMaterial, BudgetItemLabor
+        from clients.models import Client
+        from users.models import ContractorProfile, User
 
         email = 'demo@constructorexpress.cl'
 
@@ -205,6 +205,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('🎉 DEMO CREADO EXITOSAMENTE'))
         self.stdout.write(self.style.SUCCESS('='*50))
         self.stdout.write(f'  📧 Email:      {email}')
-        self.stdout.write(f'  🔑 Contraseña: Demo1234!')
-        self.stdout.write(f'  🌐 URL:        http://localhost:8000')
+        self.stdout.write('  🔑 Contraseña: Demo1234!')
+        self.stdout.write('  🌐 URL:        http://localhost:8000')
         self.stdout.write(self.style.SUCCESS('='*50) + '\n')

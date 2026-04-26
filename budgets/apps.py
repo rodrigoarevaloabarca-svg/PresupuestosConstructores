@@ -6,7 +6,8 @@ class BudgetsConfig(AppConfig):
 
     def ready(self):
         from auditlog.registry import auditlog
-        from budgets.models import Budget, BudgetItemMaterial, BudgetItemLabor
+
+        from budgets.models import Budget, BudgetItemLabor, BudgetItemMaterial
         auditlog.register(Budget)
         auditlog.register(BudgetItemMaterial)
         auditlog.register(BudgetItemLabor)

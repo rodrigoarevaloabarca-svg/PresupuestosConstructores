@@ -1,14 +1,16 @@
 from unittest.mock import patch
 
 from django.conf import settings
-from django.test import TestCase, Client as TestClient
+from django.test import Client as TestClient
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from users.models import User, ContractorProfile
-from clients.models import Client
 from catalog.models import Product
-from .models import Budget, BudgetItemMaterial, BudgetItemLabor, BudgetPublicToken
+from clients.models import Client
+from users.models import ContractorProfile, User
+
+from .models import Budget, BudgetItemLabor, BudgetItemMaterial, BudgetPublicToken
 
 
 def make_user(email='test@test.cl', password='pass123'):
@@ -56,7 +58,6 @@ class BudgetModelTest(TestCase):
         self.assertEqual(self.budget.total, 119000)
 
     def test_budget_valid_until(self):
-        from datetime import timedelta
         delta = self.budget.valid_until - self.budget.created_at
         self.assertAlmostEqual(delta.days, 15, delta=1)
 
@@ -232,7 +233,6 @@ class BudgetEmailTest(TestCase):
         self.tc.login(username='email@test.cl', password='pass123')
 
     def test_budget_send_email_success(self):
-        from django.core import mail
         with patch('budgets.email_utils.EmailMultiAlternatives.send', return_value=1):
             self.tc.post(reverse('budget_send_email', args=[self.budget.pk]))
         # Budget status cambió a enviado

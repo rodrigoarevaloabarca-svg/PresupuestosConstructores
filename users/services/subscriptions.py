@@ -1,4 +1,3 @@
-from django.utils.timezone import now
 
 
 def has_active_subscription(user) -> bool:

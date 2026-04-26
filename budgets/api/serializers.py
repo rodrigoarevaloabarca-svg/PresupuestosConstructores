@@ -1,8 +1,7 @@
 from django.db import transaction
 from rest_framework import serializers
 
-from budgets.models import Budget, BudgetItemMaterial, BudgetItemLabor
-from clients.models import Client
+from budgets.models import Budget, BudgetItemLabor, BudgetItemMaterial
 
 
 class BudgetItemMaterialSerializer(serializers.ModelSerializer):

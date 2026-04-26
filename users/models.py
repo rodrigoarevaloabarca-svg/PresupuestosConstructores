@@ -1,8 +1,10 @@
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-from django.core.exceptions import ValidationError
-from users.validators import validate_image_upload
 import re
+
+from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
+from django.db import models
+
+from users.validators import validate_image_upload
 
 
 def validate_rut(value):

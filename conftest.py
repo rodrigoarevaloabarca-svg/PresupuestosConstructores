@@ -1,7 +1,7 @@
 import pytest
 from django.test import Client as DjangoClient
 
-from common.factories import UserFactory, ContractorProfileFactory, ClientFactory
+from common.factories import ContractorProfileFactory, UserFactory
 
 
 @pytest.fixture
