@@ -23,8 +23,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install pre-commit
-      - run: pre-commit run --all-files
+      - run: pip install pre-commit detect-secrets
+      - run: detect-secrets scan > .secrets.baseline
+      - run: SKIP=detect-secrets pre-commit run --all-files
 
   test:
     name: Tests
