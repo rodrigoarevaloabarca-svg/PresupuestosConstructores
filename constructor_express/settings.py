@@ -26,7 +26,7 @@ _raw_secret = os.environ.get("SECRET_KEY", "")
 if not _raw_secret:
     # Permitir defaults de dev si: DEBUG=True, test, o management command
     if DEBUG or _TESTING or _IS_MANAGEMENT_CMD:
-        SECRET_KEY = "dev-only-insecure-key"
+        SECRET_KEY = "dev-only-insecure-key"  # pragma: allowlist secret
     else:
         raise ImproperlyConfigured("SECRET_KEY required in production (set the SECRET_KEY environment variable)")
 else:

@@ -47,7 +47,7 @@ jobs:
           --health-retries 5
 
     env:
-      SECRET_KEY: ci-secret-key-not-used-in-prod
+      SECRET_KEY: ci-secret-key-not-used-in-prod  # pragma: allowlist secret
       DEBUG: "True"
       DB_NAME: constructor_express_db
       DB_USER: ce_user

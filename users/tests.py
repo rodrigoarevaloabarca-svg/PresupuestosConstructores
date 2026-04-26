@@ -8,7 +8,7 @@ from django.urls import reverse
 from users.models import ContractorProfile, User, validate_rut
 
 
-def make_user(email="u@test.cl", password="pass123", with_profile=True):
+def make_user(email="u@test.cl", password="pass123", with_profile=True):  # pragma: allowlist secret
     u = User.objects.create_user(username=email, email=email, password=password)
     if with_profile:
         ContractorProfile.objects.create(user=u, company_name="Empresa Test", rut="12345678-9", phone="999")
@@ -53,7 +53,7 @@ class RegisterViewTest(TestCase):
             {
                 "email": "nuevo@test.cl",
                 "username": "nuevo@test.cl",
-                "password1": "Segura1234!",
+                "password1": "Segura1234!",  # pragma: allowlist secret
                 "password2": "Segura1234!",
                 "company_name": "Mi Empresa",
                 "rut": "12345678-9",
@@ -324,7 +324,7 @@ class PasswordResetFlowTest(TestCase):
         r = self.tc.post(
             reverse("password_reset_confirm", args=[uidb64, token]),
             {
-                "new_password1": "NuevaClave9876!",
+                "new_password1": "NuevaClave9876!",  # pragma: allowlist secret
                 "new_password2": "NuevaClave9876!",
             },
         )
@@ -338,7 +338,7 @@ class PasswordResetFlowTest(TestCase):
             reverse("password_reset_confirm", args=[uidb64, token]),
             {
                 "new_password1": "NuevaClave9876!",
-                "new_password2": "Otra9876!",
+                "new_password2": "Otra9876!",  # pragma: allowlist secret
             },
         )
         self.assertEqual(r.status_code, 200)

@@ -91,7 +91,7 @@ La aplicación queda disponible en **http://localhost:8000**.
 
 Credenciales del usuario demo creado por `seed_demo`:
 - Email: `demo@constructorexpress.cl`
-- Contraseña: `Demo1234!`
+- Contraseña: `Demo1234!` <!-- pragma: allowlist secret -->
 
 > **Nota:** Si la variable de entorno `DB_NAME` no está definida, Django usa automáticamente SQLite (`db.sqlite3`). No es necesario configurar nada más para desarrollo.
 

@@ -13,7 +13,7 @@ from users.models import ContractorProfile, User
 from .models import Budget, BudgetItemLabor, BudgetItemMaterial, BudgetPublicToken
 
 
-def make_user(email="test@test.cl", password="pass123"):
+def make_user(email="test@test.cl", password="pass123"):  # pragma: allowlist secret
     u = User.objects.create_user(username=email, email=email, password=password)
     ContractorProfile.objects.create(user=u, company_name="Test SA", rut="12345678-9", phone="999")
     return u

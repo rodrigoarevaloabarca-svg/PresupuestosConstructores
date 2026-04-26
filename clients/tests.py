@@ -8,7 +8,7 @@ from clients.serializers import ClientSerializer
 from users.models import ContractorProfile, User
 
 
-def make_user(email="user@test.cl", password="pass123", with_profile=True):
+def make_user(email="user@test.cl", password="pass123", with_profile=True):  # pragma: allowlist secret
     u = User.objects.create_user(username=email, email=email, password=password)
     if with_profile:
         ContractorProfile.objects.create(user=u, company_name="Empresa", rut="12345678-9", phone="999")

@@ -34,7 +34,7 @@ class Command(BaseCommand):
         user = User.objects.create_user(
             username="demo_gonzalez",
             email=email,
-            password="Demo1234!",
+            password="Demo1234!",  # pragma: allowlist secret
             plan="pro",
         )
 

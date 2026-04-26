@@ -23,7 +23,7 @@ POST /api/v1/auth/token/
 ```json
 {
   "email": "demo@constructorexpress.cl",
-  "password": "Demo1234!"
+  "password": "Demo1234!" # pragma: allowlist secret
 }
 ```
 
