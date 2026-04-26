@@ -11,7 +11,7 @@ from users.models import ContractorProfile, User
 
 
 def make_user(email="cat@test.cl", password="pass123"):  # pragma: allowlist secret
-    u = User.objects.create_user(username=email, email=email, password=password)
+    u = User.objects.create_user(username=email, email=email, password=password)  # pragma: allowlist secret
     ContractorProfile.objects.create(user=u, company_name="Empresa", rut="12345678-9", phone="999")
     return u
 
@@ -24,7 +24,7 @@ class ProductCRUDTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user()
-        self.tc.login(username="cat@test.cl", password="pass123")
+        self.tc.login(username="cat@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_product_list_ok(self):
         r = self.tc.get(reverse("product_list"))
@@ -84,7 +84,7 @@ class ProductMultiTenantTest(TestCase):
         self.user_a = make_user("pa@test.cl")
         self.user_b = make_user("pb@test.cl")
         self.product_b = make_product(self.user_b, "De B")
-        self.tc.login(username="pa@test.cl", password="pass123")
+        self.tc.login(username="pa@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_list_only_shows_own(self):
         make_product(self.user_a, "De A")
@@ -123,7 +123,7 @@ class ProductPlanLimitTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user("planlim@test.cl")
-        self.tc.login(username="planlim@test.cl", password="pass123")
+        self.tc.login(username="planlim@test.cl", password="pass123")  # pragma: allowlist secret
         limit = settings.PLAN_FREE_MAX_PRODUCTS
         for i in range(limit):
             make_product(self.user, name=f"P{i}")
@@ -153,7 +153,7 @@ class ProductCSVTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user("csv@test.cl")
-        self.tc.login(username="csv@test.cl", password="pass123")
+        self.tc.login(username="csv@test.cl", password="pass123")  # pragma: allowlist secret
 
     def _make_csv(self, rows):
         buf = io.StringIO()

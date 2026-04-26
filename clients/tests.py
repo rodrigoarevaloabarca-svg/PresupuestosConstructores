@@ -9,7 +9,7 @@ from users.models import ContractorProfile, User
 
 
 def make_user(email="user@test.cl", password="pass123", with_profile=True):  # pragma: allowlist secret
-    u = User.objects.create_user(username=email, email=email, password=password)
+    u = User.objects.create_user(username=email, email=email, password=password)  # pragma: allowlist secret
     if with_profile:
         ContractorProfile.objects.create(user=u, company_name="Empresa", rut="12345678-9", phone="999")
     return u
@@ -84,7 +84,7 @@ class ClientMultiTenantTest(TestCase):
         self.user_a = make_user("a@test.cl")
         self.user_b = make_user("b@test.cl")
         self.client_b = Client.objects.create(contractor=self.user_b, name="De B", phone="1")
-        self.tc.login(username="a@test.cl", password="pass123")
+        self.tc.login(username="a@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_user_a_cannot_see_client_of_b(self):
         r = self.tc.get(reverse("client_detail", args=[self.client_b.pk]))
@@ -116,7 +116,7 @@ class ClientPlanLimitTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user("limit@test.cl")
-        self.tc.login(username="limit@test.cl", password="pass123")
+        self.tc.login(username="limit@test.cl", password="pass123")  # pragma: allowlist secret
         limit = settings.PLAN_FREE_MAX_CLIENTS
         for i in range(limit):
             Client.objects.create(contractor=self.user, name=f"C{i}", phone="1")
@@ -158,7 +158,7 @@ class ClientAPITest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user("api@test.cl")
-        self.tc.login(username="api@test.cl", password="pass123")
+        self.tc.login(username="api@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_api_list_empty(self):
         r = self.tc.get("/api/v1/clientes/")

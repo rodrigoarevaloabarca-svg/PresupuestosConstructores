@@ -22,15 +22,15 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 _TESTING = "test" in sys.argv
 _IS_MANAGEMENT_CMD = len(sys.argv) > 0 and "manage.py" in sys.argv[0]
 
-_raw_secret = os.environ.get("SECRET_KEY", "")
+_raw_secret = os.environ.get("SECRET_KEY", "")  # pragma: allowlist secret
 if not _raw_secret:
     # Permitir defaults de dev si: DEBUG=True, test, o management command
     if DEBUG or _TESTING or _IS_MANAGEMENT_CMD:
         SECRET_KEY = "dev-only-insecure-key"  # pragma: allowlist secret
     else:
-        raise ImproperlyConfigured("SECRET_KEY required in production (set the SECRET_KEY environment variable)")
+        raise ImproperlyConfigured("SECRET_KEY required in production (set the SECRET_KEY environment variable)")  # pragma: allowlist secret
 else:
-    SECRET_KEY = _raw_secret
+    SECRET_KEY = _raw_secret  # pragma: allowlist secret
 
 _raw_hosts = os.environ.get("ALLOWED_HOSTS", "")
 if not _raw_hosts:
@@ -110,7 +110,7 @@ if os.environ.get("DB_NAME"):
             "ENGINE": "django.db.backends.postgresql",
             "NAME": os.environ.get("DB_NAME"),
             "USER": os.environ.get("DB_USER"),
-            "PASSWORD": os.environ.get("DB_PASS"),
+            "PASSWORD": os.environ.get("DB_PASS"),  # pragma: allowlist secret
             "HOST": os.environ.get("DB_HOST"),
             "PORT": "5432",
         }
@@ -129,10 +129,10 @@ LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/"
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},  # pragma: allowlist secret
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},  # pragma: allowlist secret
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},  # pragma: allowlist secret
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},  # pragma: allowlist secret
 ]
 
 LANGUAGE_CODE = "es-cl"
@@ -173,9 +173,9 @@ else:
     EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
     EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True") == "True"
     EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
-    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")  # pragma: allowlist secret
 
-PASSWORD_RESET_TIMEOUT = 60 * 60 * 24
+PASSWORD_RESET_TIMEOUT = 60 * 60 * 24  # pragma: allowlist secret
 
 # Django REST Framework
 REST_FRAMEWORK = {

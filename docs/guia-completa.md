@@ -110,12 +110,12 @@ cp .env.example .env.production
 
 | Variable | Ejemplo | Descripción |
 |----------|---------|-------------|
-| `SECRET_KEY` | `django-insecure-...` | Clave secreta Django (mín. 50 chars, aleatoria) |
+| `SECRET_KEY` | `django-insecure-...` | Clave secreta Django (mín. 50 chars, aleatoria) | <!-- pragma: allowlist secret -->
 | `DEBUG` | `False` | Nunca `True` en producción |
 | `ALLOWED_HOSTS` | `tudominio.cl,www.tudominio.cl` | Dominios separados por coma |
 | `POSTGRES_DB` | `constructor_express_db` | Nombre de la base de datos |
 | `POSTGRES_USER` | `ce_user` | Usuario de PostgreSQL |
-| `POSTGRES_PASSWORD` | `clave-segura` | Contraseña de PostgreSQL |
+| `POSTGRES_PASSWORD` | `clave-segura` | Contraseña de PostgreSQL | <!-- pragma: allowlist secret -->
 
 ### Variables de servicios externos (opcionales)
 
@@ -136,7 +136,7 @@ cp .env.example .env.production
 | `SENTRY_DSN` | DSN de Sentry para monitoreo de errores |
 | `SENTRY_ENV` | Nombre del entorno en Sentry (ej: `production`) |
 
-> **Truco:** En desarrollo nunca es necesario crear `.env.production`. Django detecta que no hay `DB_NAME` y usa SQLite con una `SECRET_KEY` de desarrollo automáticamente.
+> **Truco:** En desarrollo nunca es necesario crear `.env.production`. Django detecta que no hay `DB_NAME` y usa SQLite con una `SECRET_KEY` de desarrollo automáticamente. <!-- pragma: allowlist secret -->
 
 ---
 
@@ -147,7 +147,7 @@ Docker Compose levanta cuatro servicios: PostgreSQL, Redis, la aplicación web (
 ```bash
 # 1. Copiar y configurar variables de entorno
 cp .env.example .env.production
-# Editar .env.production: SECRET_KEY y POSTGRES_PASSWORD son obligatorios
+# Editar .env.production: SECRET_KEY y POSTGRES_PASSWORD son obligatorios <!-- pragma: allowlist secret -->
 
 # 2. Construir imágenes e iniciar servicios
 docker-compose up --build

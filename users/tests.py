@@ -9,7 +9,7 @@ from users.models import ContractorProfile, User, validate_rut
 
 
 def make_user(email="u@test.cl", password="pass123", with_profile=True):  # pragma: allowlist secret
-    u = User.objects.create_user(username=email, email=email, password=password)
+    u = User.objects.create_user(username=email, email=email, password=password)  # pragma: allowlist secret
     if with_profile:
         ContractorProfile.objects.create(user=u, company_name="Empresa Test", rut="12345678-9", phone="999")
     return u
@@ -69,8 +69,8 @@ class RegisterViewTest(TestCase):
             {
                 "email": "bad@test.cl",
                 "username": "bad@test.cl",
-                "password1": "Segura1234!",
-                "password2": "Segura1234!",
+                "password1": "Segura1234!",  # pragma: allowlist secret
+                "password2": "Segura1234!",  # pragma: allowlist secret
                 "company_name": "X",
                 "rut": "INVALIDO",
                 "phone": "999",
@@ -89,11 +89,11 @@ class LoginViewTest(TestCase):
         self.user = make_user()
 
     def test_login_success(self):
-        r = self.tc.post(reverse("login"), {"username": "u@test.cl", "password": "pass123"})
+        r = self.tc.post(reverse("login"), {"username": "u@test.cl", "password": "pass123"})  # pragma: allowlist secret
         self.assertRedirects(r, reverse("dashboard"))
 
     def test_login_bad_credentials(self):
-        r = self.tc.post(reverse("login"), {"username": "u@test.cl", "password": "wrong"})
+        r = self.tc.post(reverse("login"), {"username": "u@test.cl", "password": "wrong"})  # pragma: allowlist secret
         self.assertEqual(r.status_code, 200)
         self.assertFalse(r.wsgi_request.user.is_authenticated)
 
@@ -109,7 +109,7 @@ class LogoutTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user()
-        self.tc.login(username="u@test.cl", password="pass123")  # pragma: allowlist secret
+        self.tc.login(username="u@test.cl", password="pass123")  # pragma: allowlist secret  # pragma: allowlist secret
 
     def test_logout_post(self):
         r = self.tc.post(reverse("logout"))
@@ -127,7 +127,7 @@ class ProfileViewTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user()
-        self.tc.login(username="u@test.cl", password="pass123")
+        self.tc.login(username="u@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_profile_get(self):
         r = self.tc.get(reverse("profile"))
@@ -163,7 +163,7 @@ class ContextProcessorTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user()
-        self.tc.login(username="u@test.cl", password="pass123")
+        self.tc.login(username="u@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_profile_in_context(self):
         r = self.tc.get(reverse("dashboard"))
@@ -188,7 +188,7 @@ class DashboardViewTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user()
-        self.tc.login(username="u@test.cl", password="pass123")
+        self.tc.login(username="u@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_dashboard_ok(self):
         r = self.tc.get(reverse("dashboard"))
@@ -208,7 +208,7 @@ class ReportsViewTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user()
-        self.tc.login(username="u@test.cl", password="pass123")
+        self.tc.login(username="u@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_reports_ok(self):
         r = self.tc.get(reverse("reports"))
@@ -228,7 +228,7 @@ class SearchViewTest(TestCase):
         self.tc = TestClient()
         self.user_a = make_user("sa@test.cl")
         self.user_b = make_user("sb@test.cl")
-        self.tc.login(username="sa@test.cl", password="pass123")
+        self.tc.login(username="sa@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_search_requires_login(self):
         self.tc.logout()
@@ -324,26 +324,26 @@ class PasswordResetFlowTest(TestCase):
         r = self.tc.post(
             reverse("password_reset_confirm", args=[uidb64, token]),
             {
-                "new_password1": "NuevaClave9876!",  # pragma: allowlist secret
-                "new_password2": "NuevaClave9876!",  # pragma: allowlist secret
+                "new_password1": "NuevaClave9876!",  # pragma: allowlist secret  # pragma: allowlist secret
+                "new_password2": "NuevaClave9876!",  # pragma: allowlist secret  # pragma: allowlist secret
             },
         )
         self.assertRedirects(r, reverse("password_reset_complete"))
         self.user.refresh_from_db()
-        self.assertTrue(self.user.check_password("NuevaClave9876!"))
+        self.assertTrue(self.user.check_password("NuevaClave9876!"))  # pragma: allowlist secret
 
     def test_confirm_mismatched_passwords_rejected(self):
         uidb64, token = self._generate_token(self.user)
         r = self.tc.post(
             reverse("password_reset_confirm", args=[uidb64, token]),
             {
-                "new_password1": "NuevaClave9876!",
+                "new_password1": "NuevaClave9876!",  # pragma: allowlist secret
                 "new_password2": "Otra9876!",  # pragma: allowlist secret
             },
         )
         self.assertEqual(r.status_code, 200)
         self.user.refresh_from_db()
-        self.assertFalse(self.user.check_password("NuevaClave9876!"))
+        self.assertFalse(self.user.check_password("NuevaClave9876!"))  # pragma: allowlist secret
 
     def test_confirm_invalid_token_rejects(self):
         uidb64, _ = self._generate_token(self.user)
@@ -364,8 +364,8 @@ class PasswordResetFlowTest(TestCase):
         self.tc.post(
             reverse("password_reset_confirm", args=[uidb64, token]),
             {
-                "new_password1": "NuevaClave9876!",
-                "new_password2": "NuevaClave9876!",
+                "new_password1": "NuevaClave9876!",  # pragma: allowlist secret
+                "new_password2": "NuevaClave9876!",  # pragma: allowlist secret
             },
         )
         # Reusar el mismo token tras cambiar la password debe fallar

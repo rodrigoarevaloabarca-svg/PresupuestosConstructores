@@ -52,7 +52,7 @@ jobs:
       DEBUG: "True"
       DB_NAME: constructor_express_db
       DB_USER: ce_user
-      DB_PASS: testpass
+      DB_PASS: testpass  # pragma: allowlist secret
       DB_HOST: localhost
 
     steps:

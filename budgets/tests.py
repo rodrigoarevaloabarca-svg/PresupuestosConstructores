@@ -14,7 +14,7 @@ from .models import Budget, BudgetItemLabor, BudgetItemMaterial, BudgetPublicTok
 
 
 def make_user(email="test@test.cl", password="pass123"):  # pragma: allowlist secret
-    u = User.objects.create_user(username=email, email=email, password=password)
+    u = User.objects.create_user(username=email, email=email, password=password)  # pragma: allowlist secret
     ContractorProfile.objects.create(user=u, company_name="Test SA", rut="12345678-9", phone="999")
     return u
 
@@ -111,7 +111,7 @@ class BudgetEditTest(TestCase):
         self.client_obj = Client.objects.create(contractor=self.user, name="C", phone="1")
         self.budget = make_budget(self.user, self.client_obj)
         BudgetItemMaterial.objects.create(budget=self.budget, name="Viejo", unit="un", quantity=1, unit_price=100)
-        self.tc.login(username="edit@test.cl", password="pass123")
+        self.tc.login(username="edit@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_budget_edit_replaces_items(self):
         self.tc.post(
@@ -141,7 +141,7 @@ class BudgetDeleteTest(TestCase):
         self.budget = make_budget(self.user, self.client_obj)
         BudgetItemMaterial.objects.create(budget=self.budget, name="Mat", unit="un", quantity=1, unit_price=100)
         BudgetPublicToken.objects.create(budget=self.budget)
-        self.tc.login(username="del@test.cl", password="pass123")
+        self.tc.login(username="del@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_budget_delete_cascades(self):
         pk = self.budget.pk
@@ -159,7 +159,7 @@ class BudgetDuplicateTest(TestCase):
         self.original = make_budget(self.user, self.client_obj, "Original")
         BudgetItemMaterial.objects.create(budget=self.original, name="Mat", unit="un", quantity=1, unit_price=100)
         BudgetItemLabor.objects.create(budget=self.original, name="Mano", unit="gl", quantity=1, unit_price=200)
-        self.tc.login(username="dup@test.cl", password="pass123")
+        self.tc.login(username="dup@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_budget_duplicate_copies_items(self):
         self.tc.post(reverse("budget_duplicate", args=[self.original.pk]))
@@ -185,7 +185,7 @@ class BudgetStatusTest(TestCase):
         self.user = make_user("status@test.cl")
         self.client_obj = Client.objects.create(contractor=self.user, name="C", phone="1")
         self.budget = make_budget(self.user, self.client_obj)
-        self.tc.login(username="status@test.cl", password="pass123")
+        self.tc.login(username="status@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_budget_status_transitions(self):
         self.tc.post(reverse("budget_update_status", args=[self.budget.pk]), {"status": "enviado"})
@@ -206,7 +206,7 @@ class BudgetPDFTest(TestCase):
         self.user = make_user("pdf@test.cl")
         self.client_obj = Client.objects.create(contractor=self.user, name="C", phone="1")
         self.budget = make_budget(self.user, self.client_obj)
-        self.tc.login(username="pdf@test.cl", password="pass123")
+        self.tc.login(username="pdf@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_budget_pdf_returns_pdf(self):
         mock_pdf = b"%PDF-fake"
@@ -223,7 +223,7 @@ class BudgetEmailTest(TestCase):
         self.user = make_user("email@test.cl")
         self.client_obj = Client.objects.create(contractor=self.user, name="C", phone="1", email="cliente@test.cl")
         self.budget = make_budget(self.user, self.client_obj)
-        self.tc.login(username="email@test.cl", password="pass123")
+        self.tc.login(username="email@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_budget_send_email_success(self):
         with patch("budgets.email_utils.EmailMultiAlternatives.send", return_value=1):
@@ -267,7 +267,7 @@ class BudgetPublicViewTest(TestCase):
         self.assertEqual(r.status_code, 404)
 
     def test_budget_generate_link_regenerates_token(self):
-        self.tc.login(username="pub@test.cl", password="pass123")
+        self.tc.login(username="pub@test.cl", password="pass123")  # pragma: allowlist secret
         original_token = self.token_obj.token
         self.tc.post(reverse("budget_generate_link", args=[self.budget.pk]), {"regenerate": "1"})
         self.token_obj.refresh_from_db()
@@ -283,7 +283,7 @@ class BudgetAPITest(TestCase):
         self.other_client = Client.objects.create(contractor=self.other, name="D", phone="1")
         make_budget(self.user, self.client_obj, "Propio")
         make_budget(self.other, self.other_client, "Ajeno")
-        self.tc.login(username="api@test.cl", password="pass123")
+        self.tc.login(username="api@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_api_list_only_returns_own_budgets(self):
         r = self.tc.get("/api/v1/presupuestos/")
@@ -322,7 +322,7 @@ class APITest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user("apigeneral@test.cl")
-        self.tc.login(username="apigeneral@test.cl", password="pass123")
+        self.tc.login(username="apigeneral@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_stats_api(self):
         r = self.tc.get("/api/v1/stats/")

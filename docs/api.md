@@ -485,8 +485,8 @@ import httpx
 
 BASE = "https://constructorexpress.cl/api/v1"
 
-def get_token(email, password):
-    r = httpx.post(f"{BASE}/auth/token/", json={"email": email, "password": password})
+def get_token(email, password):  # pragma: allowlist secret
+    r = httpx.post(f"{BASE}/auth/token/", json={"email": email, "password": password})  # pragma: allowlist secret
     return r.json()["access"]
 
 token = get_token("demo@constructorexpress.cl", "Demo1234!")
@@ -500,11 +500,11 @@ presupuestos = httpx.get(f"{BASE}/presupuestos/", headers=headers).json()
 // JavaScript / Node
 const BASE = 'https://constructorexpress.cl/api/v1';
 
-async function getToken(email, password) {
+async function getToken(email, password) { // pragma: allowlist secret
   const res = await fetch(`${BASE}/auth/token/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password }), // pragma: allowlist secret
   });
   return (await res.json()).access;
 }
