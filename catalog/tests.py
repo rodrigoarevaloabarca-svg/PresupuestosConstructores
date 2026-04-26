@@ -10,7 +10,7 @@ from catalog.models import Product
 from users.models import ContractorProfile, User
 
 
-def make_user(email="cat@test.cl", password="pass123"):
+def make_user(email="cat@test.cl", password="pass123"):  # pragma: allowlist secret
     u = User.objects.create_user(username=email, email=email, password=password)
     ContractorProfile.objects.create(user=u, company_name="Empresa", rut="12345678-9", phone="999")
     return u

@@ -67,7 +67,7 @@ class BudgetViewTest(TestCase):
         self.tc = TestClient()
         self.user = make_user("vtest@test.cl")
         self.client_obj = Client.objects.create(contractor=self.user, name="Cliente", phone="999")
-        self.tc.login(username="vtest@test.cl", password="pass123")
+        self.tc.login(username="vtest@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_budget_list_requires_login(self):
         self.tc.logout()

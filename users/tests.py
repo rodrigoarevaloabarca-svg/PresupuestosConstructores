@@ -54,7 +54,7 @@ class RegisterViewTest(TestCase):
                 "email": "nuevo@test.cl",
                 "username": "nuevo@test.cl",
                 "password1": "Segura1234!",  # pragma: allowlist secret
-                "password2": "Segura1234!",
+                "password2": "Segura1234!",  # pragma: allowlist secret
                 "company_name": "Mi Empresa",
                 "rut": "12345678-9",
                 "phone": "999",
@@ -109,7 +109,7 @@ class LogoutTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user()
-        self.tc.login(username="u@test.cl", password="pass123")
+        self.tc.login(username="u@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_logout_post(self):
         r = self.tc.post(reverse("logout"))
@@ -325,7 +325,7 @@ class PasswordResetFlowTest(TestCase):
             reverse("password_reset_confirm", args=[uidb64, token]),
             {
                 "new_password1": "NuevaClave9876!",  # pragma: allowlist secret
-                "new_password2": "NuevaClave9876!",
+                "new_password2": "NuevaClave9876!",  # pragma: allowlist secret
             },
         )
         self.assertRedirects(r, reverse("password_reset_complete"))

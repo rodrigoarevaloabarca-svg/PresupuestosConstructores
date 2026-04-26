@@ -19,7 +19,7 @@ class ClientCRUDViewTest(TestCase):
     def setUp(self):
         self.tc = TestClient()
         self.user = make_user()
-        self.tc.login(username="user@test.cl", password="pass123")
+        self.tc.login(username="user@test.cl", password="pass123")  # pragma: allowlist secret
 
     def test_client_list_ok(self):
         r = self.tc.get(reverse("client_list"))

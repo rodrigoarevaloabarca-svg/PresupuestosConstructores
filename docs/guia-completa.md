@@ -477,7 +477,7 @@ La documentación completa está en [docs/api.md](api.md).
 # Obtener token de acceso
 curl -X POST http://localhost:8000/api/v1/auth/token/ \
   -H "Content-Type: application/json" \
-  -d '{"email": "demo@constructorexpress.cl", "password": "Demo1234!"}'
+  -d '{"email": "demo@constructorexpress.cl", "password": "Demo1234!"}' <!-- pragma: allowlist secret -->
 
 # Respuesta
 {
