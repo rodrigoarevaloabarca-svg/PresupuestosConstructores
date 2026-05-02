@@ -58,7 +58,10 @@
     <div class="card">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-base font-bold text-slate-700">📦 Materiales</h2>
-        <button type="button" onclick="addMaterialRow()" class="btn-secondary text-xs py-2 px-3">+ Agregar material</button>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="openCalc()" class="btn-secondary text-xs py-2 px-3">🧮 Calcular materiales</button>
+          <button type="button" onclick="addMaterialRow()" class="btn-secondary text-xs py-2 px-3">+ Agregar material</button>
+        </div>
       </div>
 
       <!-- Search -->
@@ -200,6 +203,48 @@
     </div>
   </div>
 </form>
+<!-- Modal Calculadora de Materiales -->
+<div id="calc-modal" class="fixed inset-0 z-50 hidden">
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeCalc()"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 shrink-0">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">🧮 Calculadora de Materiales</h3>
+          <p class="text-xs text-slate-400 mt-0.5">Ingresa las medidas y agrega los materiales al presupuesto</p>
+        </div>
+        <button onclick="closeCalc()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="px-6 py-4 space-y-4 overflow-y-auto flex-1">
+        <div>
+          <label class="form-label">Tipo de trabajo</label>
+          <select id="calc-recipe" class="form-input" onchange="loadRecipeInputs()">
+            <option value="">— Seleccionar tipo de trabajo —</option>
+          </select>
+        </div>
+        <div id="calc-inputs" class="space-y-3"></div>
+        <div id="calc-preview" class="hidden">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Materiales a agregar</span>
+            <div class="flex-1 h-px bg-slate-100"></div>
+          </div>
+          <div id="calc-preview-list" class="space-y-1.5"></div>
+          <p class="text-xs text-slate-400 mt-2">Los precios quedarán en $0 — puedes editarlos luego en el presupuesto.</p>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 px-6 py-4 border-t border-slate-100 shrink-0">
+        <button type="button" onclick="closeCalc()" class="btn-secondary">Cancelar</button>
+        <button type="button" id="calc-apply-btn" onclick="applyCalc()" class="btn-primary" disabled>Agregar al presupuesto</button>
+      </div>
+
+    </div>
+  </div>
+</div>
 {% endblock %}
 {% block extra_js %}
 <script>
@@ -320,4 +365,5 @@ document.querySelectorAll('.material-row, .labor-row').forEach(row => {
 recalc();
 </script>
 <script src="{% static 'budgets/js/product_autocomplete.js' %}"></script>
+<script src="{% static 'budgets/js/calculadora.js' %}"></script>
 {% endblock %}
