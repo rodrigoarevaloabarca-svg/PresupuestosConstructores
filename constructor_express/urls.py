@@ -52,4 +52,11 @@ urlpatterns = [
     path("api/v1/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger_ui"),
     # ── Webhooks externos ──────────────────────────────────────
     path("api/webhooks/mercadopago/", mercadopago_webhook, name="webhook_mercadopago"),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    from django.views.static import serve
+
+    urlpatterns += [path("media/<path:path>", serve, {"document_root": settings.MEDIA_ROOT})]
