@@ -1,17 +1,34 @@
-# Constructor Express — Documentación de API REST
+# Constructor Express — API REST
 
 **Base URL:** `https://constructorexpress.cl/api/v1`
-**Autenticación:** JWT Bearer token en header `Authorization: Bearer <token>`
-**Formato:** JSON
-**Throttling:** 1 000 req/hora por usuario autenticado · 100 req/hora anónimo
-**Paginación:** `?page=N` — 20 resultados por página
+**Autenticacion:** JWT Bearer token en header `Authorization: Bearer <token>`
+**Formato de datos:** JSON
+**Throttling:** 1.000 req/hora (autenticado) · 100 req/hora (anonimo)
+**Paginacion:** `?page=N` — 20 resultados por pagina
 
 > **Swagger UI interactivo:** `/api/v1/docs/`
 > **Schema OpenAPI (JSON):** `/api/v1/schema/`
 
 ---
 
-## Autenticación JWT
+## Indice
+
+- [Autenticacion JWT](#autenticacion-jwt)
+- [Dashboard](#dashboard)
+- [Presupuestos](#presupuestos)
+- [Clientes](#clientes)
+- [Productos (catalogo propio)](#productos-catalogo-propio)
+- [Sugerencias (autocomplete)](#sugerencias-autocomplete)
+- [Webhooks](#webhooks)
+- [Codigos de estado](#codigos-de-estado)
+- [Multi-tenancy](#multi-tenancy)
+- [Versionado de presupuestos](#versionado-de-presupuestos)
+- [Firma digital](#firma-digital)
+- [Clientes SDK](#clientes-sdk)
+
+---
+
+## Autenticacion JWT
 
 ### Obtener tokens
 
@@ -22,7 +39,7 @@ POST /api/v1/auth/token/
 **Body:**
 ```json
 {
-  "email": "demo@constructorexpress.cl",
+  "email": "demo@constructorexpress.cl", # pragma: allowlist secret
   "password": "Demo1234!" # pragma: allowlist secret
 }
 ```
@@ -38,7 +55,21 @@ POST /api/v1/auth/token/
 }
 ```
 
-El token `access` expira en **1 hora**. El `refresh` en **7 días**.
+| Campo | Descripcion |
+|-------|-------------|
+| `access` | Token de acceso — incluir en cada request como `Authorization: Bearer <access>` |
+| `refresh` | Token de renovacion — usar para obtener un nuevo `access` |
+| `contractor_id` | ID del contratista autenticado |
+| `is_pro` | `true` si el usuario tiene plan Pro activo |
+
+El token `access` expira en **1 hora**. El `refresh` expira en **7 dias**.
+
+```bash
+# Ejemplo con curl
+curl -X POST https://constructorexpress.cl/api/v1/auth/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"email": "tu@email.cl", "password": "tu-contrasena"}' # pragma: allowlist secret
+```
 
 ---
 
@@ -48,31 +79,47 @@ El token `access` expira en **1 hora**. El `refresh` en **7 días**.
 POST /api/v1/auth/refresh/
 ```
 
+**Body:**
 ```json
 { "refresh": "<refresh_token>" }
 ```
 
-**Respuesta 200:** `{ "access": "<nuevo_access_token>" }`
+**Respuesta 200:**
+```json
+{ "access": "<nuevo_access_token>" }
+```
 
 ---
 
-### Revocar (blacklist) refresh token
+### Revocar refresh token (logout API)
 
 ```
 POST /api/v1/auth/blacklist/
 ```
 
+**Body:**
 ```json
 { "refresh": "<refresh_token>" }
 ```
 
-**Respuesta 200:** `{}`
+**Respuesta 205:** `{}`
+
+Despues de revocar, el `refresh` queda en blacklist y no puede usarse para renovar el `access`.
+
+---
+
+### Usar el token en cada request
+
+```bash
+curl https://constructorexpress.cl/api/v1/presupuestos/ \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
 
 ---
 
 ## Dashboard
 
-### Estadísticas generales
+### Estadisticas generales
 
 ```
 GET /api/v1/stats/
@@ -93,11 +140,11 @@ GET /api/v1/stats/
 }
 ```
 
-| Campo | Tipo | Descripción |
+| Campo | Tipo | Descripcion |
 |-------|------|-------------|
-| `total_revenue` | int (CLP) | Ingresos de presupuestos aceptados |
-| `pending_revenue` | int (CLP) | Monto en presupuestos enviados |
-| `conversion_rate` | float (%) | aceptados / total × 100 |
+| `total_revenue` | int (CLP) | Suma de presupuestos aceptados |
+| `pending_revenue` | int (CLP) | Suma de presupuestos en estado `enviado` |
+| `conversion_rate` | float (%) | `aceptados / total * 100` |
 
 ---
 
@@ -108,30 +155,32 @@ GET /api/v1/stats/
 ```
 GET /api/v1/presupuestos/
 GET /api/v1/presupuestos/?status=enviado
+GET /api/v1/presupuestos/?status=borrador&page=2
 ```
 
-**Parámetros de query:**
+**Parametros de query:**
 
-| Param | Valores | Descripción |
-|-------|---------|-------------|
+| Parametro | Valores posibles | Descripcion |
+|-----------|-----------------|-------------|
 | `status` | `borrador` `enviado` `aceptado` `rechazado` `vencido` | Filtrar por estado |
-| `page` | int | Página de resultados |
+| `page` | int | Pagina de resultados (20 por pagina) |
 
 **Respuesta 200:**
 ```json
 {
   "count": 23,
-  "next": "https://…/api/v1/presupuestos/?page=2",
+  "next": "https://constructorexpress.cl/api/v1/presupuestos/?page=2",
   "previous": null,
   "results": [
     {
       "id": 7,
       "number": 7,
-      "title": "Reparación baño — Las Rosas",
-      "client_name": "María González",
+      "version": 1,
+      "title": "Reparacion bano — Las Rosas",
+      "client_name": "Maria Gonzalez",
       "status": "enviado",
       "status_display": "Enviado al Cliente",
-      "total": 252700,
+      "total": 300523,
       "created_at": "2026-04-10T14:32:00Z"
     }
   ]
@@ -152,21 +201,27 @@ GET /api/v1/presupuestos/{id}/
   "id": 7,
   "number": 7,
   "version": 1,
-  "title": "Reparación baño — Las Rosas",
-  "client_name": "María González",
+  "parent": null,
+  "title": "Reparacion bano — Las Rosas",
+  "client_name": "Maria Gonzalez",
   "status": "enviado",
   "status_display": "Enviado al Cliente",
   "tax_percent": "19.00",
   "subtotal_materials": 122700,
   "subtotal_labor": 130000,
-  "tax_amount": 47823,
-  "total": 300523,
+  "subtotal": 252700,
+  "tax_amount": 47973,
+  "total": 300673,
+  "validity_days": 15,
   "valid_until": "2026-04-25",
+  "payment_terms": "50% anticipo, 50% a la entrega",
+  "notes": "Incluye materiales y mano de obra",
   "created_at": "2026-04-10T14:32:00Z",
+  "sent_at": "2026-04-11T09:00:00Z",
   "material_items": [
     {
       "id": 12,
-      "name": "Grifería mezcladora",
+      "name": "Griferia mezcladora monocomando",
       "unit": "un",
       "unit_display": "Unidad",
       "quantity": "1.00",
@@ -177,7 +232,7 @@ GET /api/v1/presupuestos/{id}/
   "labor_items": [
     {
       "id": 8,
-      "name": "Instalación completa de baño",
+      "name": "Instalacion completa de bano",
       "unit": "gl",
       "unit_display": "Global",
       "quantity": "1.00",
@@ -190,46 +245,48 @@ GET /api/v1/presupuestos/{id}/
 
 ---
 
-### CRUD completo de presupuestos (write)
+### CRUD completo de presupuestos
 
-El ViewSet de escritura permite crear y modificar presupuestos **incluyendo sus ítems** en una sola request.
+El ViewSet de escritura permite crear y modificar presupuestos **incluyendo sus items** en una sola request.
 
-#### Listar / crear
+#### Listar con CRUD
 
 ```
 GET  /api/v1/presupuestos/write/
+```
+
+#### Crear presupuesto
+
+```
 POST /api/v1/presupuestos/write/
 ```
 
-#### Detalle / actualizar / eliminar
-
-```
-GET    /api/v1/presupuestos/write/{id}/
-PUT    /api/v1/presupuestos/write/{id}/
-PATCH  /api/v1/presupuestos/write/{id}/
-DELETE /api/v1/presupuestos/write/{id}/
-```
-
-**Body de creación (POST):**
+**Body:**
 ```json
 {
   "client": 3,
-  "title": "Instalación eléctrica bodega",
+  "title": "Instalacion electrica bodega",
   "tax_percent": "19.00",
   "validity_days": 15,
   "payment_terms": "50% anticipo, 50% a la entrega",
-  "notes": "Incluye materiales",
+  "notes": "Incluye materiales y mano de obra",
   "material_items": [
     {
       "name": "Cable 2.5mm THHN",
       "unit": "ml",
       "quantity": "50.00",
       "unit_price": 890
+    },
+    {
+      "name": "Caja derivacion",
+      "unit": "un",
+      "quantity": "3.00",
+      "unit_price": 2200
     }
   ],
   "labor_items": [
     {
-      "name": "Mano de obra eléctrica",
+      "name": "Mano de obra electrica",
       "unit": "gl",
       "quantity": "1.00",
       "unit_price": 180000
@@ -240,17 +297,26 @@ DELETE /api/v1/presupuestos/write/{id}/
 
 **Respuesta 201:** el presupuesto creado en formato detalle.
 
-> El campo `number` se asigna automáticamente (secuencial por contratista). No incluirlo en el body.
+> El `number` se asigna automaticamente (secuencial por contratista). No incluirlo en el body.
 
----
+#### Actualizar / eliminar
+
+```
+GET    /api/v1/presupuestos/write/{id}/
+PUT    /api/v1/presupuestos/write/{id}/
+PATCH  /api/v1/presupuestos/write/{id}/
+DELETE /api/v1/presupuestos/write/{id}/
+```
+
+Un `PUT` o `PATCH` sobre un presupuesto en estado `enviado`, `aceptado` o `rechazado` crea automaticamente una nueva version (ver [Versionado de presupuestos](#versionado-de-presupuestos)).
 
 **Errores comunes:**
 
-| Código | Motivo |
+| Codigo | Motivo |
 |--------|--------|
-| `400` | Datos inválidos (cliente no existe, precio negativo, etc.) |
-| `403` | Sin permisos o límite de plan gratuito alcanzado |
-| `404` | Presupuesto no existe o pertenece a otro contratista |
+| `400` | Datos invalidos (cliente no existe, precio negativo, etc.) |
+| `403` | Sin permisos o limite del plan gratuito alcanzado |
+| `404` | Presupuesto no encontrado o pertenece a otro contratista |
 
 ---
 
@@ -260,10 +326,11 @@ DELETE /api/v1/presupuestos/write/{id}/
 
 ```
 GET  /api/v1/clientes/
+GET  /api/v1/clientes/?page=2
 POST /api/v1/clientes/
 ```
 
-**Body (POST):**
+**Body de creacion:**
 ```json
 {
   "name": "Pedro Soto Construcciones",
@@ -272,7 +339,7 @@ POST /api/v1/clientes/
   "email": "pedro@soto.cl",
   "address": "Av. Apoquindo 1234, Las Condes",
   "city": "Santiago",
-  "notes": "Referido por María González"
+  "notes": "Referido por Maria Gonzalez"
 }
 ```
 
@@ -286,15 +353,13 @@ POST /api/v1/clientes/
   "email": "pedro@soto.cl",
   "address": "Av. Apoquindo 1234, Las Condes",
   "city": "Santiago",
-  "notes": "Referido por María González",
+  "notes": "Referido por Maria Gonzalez",
   "budget_count": 0,
   "created_at": "2026-04-18T10:00:00Z"
 }
 ```
 
-**403** si el plan gratuito ya tiene 10 clientes.
-
----
+> `403` si el plan gratuito ya tiene 10 clientes.
 
 ### Detalle / editar / eliminar
 
@@ -307,9 +372,9 @@ DELETE /api/v1/clientes/{id}/
 
 ---
 
-## Productos (catálogo propio)
+## Productos (catalogo propio)
 
-### Listar / crear
+### Listar / buscar / crear
 
 ```
 GET  /api/v1/productos/
@@ -317,17 +382,17 @@ GET  /api/v1/productos/?q=cemento
 POST /api/v1/productos/
 ```
 
-**Parámetros de query:**
+**Parametros de query:**
 
-| Param | Descripción |
-|-------|-------------|
-| `q` | Búsqueda por nombre (icontains) |
+| Parametro | Descripcion |
+|-----------|-------------|
+| `q` | Busqueda por nombre (`icontains`) |
 
-**Body (POST):**
+**Body de creacion:**
 ```json
 {
   "name": "Cemento Portland 25kg",
-  "description": "Bolsa de 25kg marca Melón",
+  "description": "Bolsa de 25kg marca Melon",
   "category": "materiales",
   "unit": "bls",
   "cost_price": 4200,
@@ -336,13 +401,35 @@ POST /api/v1/productos/
 }
 ```
 
-**Categorías disponibles:** `materiales` `herramientas` `electricidad` `gasfiteria` `ceramica` `pintura` `madera` `otro`
+**Categorias disponibles:**
 
-**Unidades disponibles:** `un` `m2` `m3` `ml` `kg` `lt` `hr` `gl` `bls` `pk`
+| Valor | Descripcion |
+|-------|-------------|
+| `materiales` | Materiales de construccion |
+| `herramientas` | Herramientas |
+| `electricidad` | Materiales electricos |
+| `gasfiteria` | Materiales de gasfiteria |
+| `ceramica` | Ceramica y baldosas |
+| `pintura` | Pintura y accesorios |
+| `madera` | Maderas y tableros |
+| `otro` | Otros |
 
-**403** si el plan gratuito ya tiene 20 productos.
+**Unidades disponibles:**
 
----
+| Valor | Descripcion |
+|-------|-------------|
+| `un` | Unidad |
+| `m2` | Metro cuadrado |
+| `m3` | Metro cubico |
+| `ml` | Metro lineal |
+| `kg` | Kilogramo |
+| `lt` | Litro |
+| `hr` | Hora |
+| `gl` | Global |
+| `bls` | Bolsa |
+| `pk` | Pack |
+
+> `403` si el plan gratuito ya tiene 20 productos.
 
 ### Detalle / editar / eliminar
 
@@ -355,9 +442,9 @@ DELETE /api/v1/productos/{id}/
 
 ---
 
-## Sugerencias de productos (ferreterías)
+## Sugerencias (autocomplete)
 
-Endpoint de autocompletado que combina el catálogo propio del contratista con precios en tiempo real de ferreterías externas (Sodimac, Easy, Imperial).
+Endpoint de autocompletado que combina el catalogo propio del contratista (prioridad) con precios de ferreterias externas (Sodimac, Easy, Imperial).
 
 ```
 GET /api/v1/productos/sugerencias/?q=cemento
@@ -366,15 +453,16 @@ GET /api/v1/productos/sugerencias/?q=cemento&limit=8
 
 **Throttle:** 60 req/min por usuario.
 
-**Parámetros de query:**
+**Parametros de query:**
 
-| Param | Tipo | Default | Descripción |
-|-------|------|---------|-------------|
-| `q` | string | — | Término de búsqueda (mín. 3 caracteres) |
-| `limit` | int | 10 | Máximo de resultados (tope: 20) |
+| Parametro | Tipo | Default | Descripcion |
+|-----------|------|---------|-------------|
+| `q` | string | — | Termino de busqueda (minimo 3 caracteres) |
+| `limit` | int | 10 | Maximo de resultados (tope: 20) |
 
-**Respuesta 200:** Si `q` tiene ≤ 2 caracteres retorna `[]`.
+Si `q` tiene 2 caracteres o menos, retorna `[]` directamente sin consultar la BD.
 
+**Respuesta 200:**
 ```json
 [
   {
@@ -385,13 +473,13 @@ GET /api/v1/productos/sugerencias/?q=cemento&limit=8
   },
   {
     "source": "sodimac",
-    "name": "Cemento Portland 25kg Melón",
+    "name": "Cemento Portland 25kg Melon",
     "price": 4990,
     "url": "https://www.sodimac.com/sodimac-cl/product/..."
   },
   {
     "source": "easy",
-    "name": "Cemento Melón 25kg",
+    "name": "Cemento Melon 25kg",
     "price": 5290,
     "url": "https://www.easy.cl/..."
   },
@@ -407,14 +495,16 @@ GET /api/v1/productos/sugerencias/?q=cemento&limit=8
 **Campos por fuente:**
 
 | Campo | `catalog` | `sodimac` / `easy` / `imperial` |
-|-------|-----------|----------------------------------|
+|-------|:---------:|:-------------------------------:|
 | `source` | `"catalog"` | nombre del retailer |
-| `name` | ✅ | ✅ |
+| `name` | Si | Si |
 | `price` | precio venta (CLP) | precio de referencia (CLP) |
-| `unit` | ✅ | ❌ |
-| `url` | ❌ | ✅ |
+| `unit` | Si | No |
+| `url` | No | Si |
 
-> Los precios de ferretería son de **referencia** — el maestro debe ajustar su margen antes de usar en el presupuesto.
+> Los precios de ferreteria son de **referencia**. El maestro debe ajustar su margen antes de usarlos en el presupuesto.
+
+Los resultados de ferreteria provienen del caché semanal (`RetailerProduct`). Se actualizan cada domingo a las 3 AM via Celery Beat.
 
 ---
 
@@ -426,94 +516,190 @@ GET /api/v1/productos/sugerencias/?q=cemento&limit=8
 POST /api/webhooks/mercadopago/
 ```
 
-Endpoint para recibir notificaciones de pago de MercadoPago. Valida firma HMAC con `MP_WEBHOOK_SECRET`. No requiere autenticación JWT.
+Recibe notificaciones de pago de MercadoPago. Valida la firma HMAC con `MP_WEBHOOK_SECRET`. **No requiere autenticacion JWT.**
+
+Al recibir una notificacion de pago exitosa, activa automaticamente el plan Pro del contratista correspondiente.
 
 ---
 
-## Códigos de estado
+## Codigos de estado
 
-| Código | Significado |
+| Codigo | Significado |
 |--------|-------------|
 | `200` | OK |
-| `201` | Recurso creado |
-| `204` | Eliminado sin contenido |
-| `400` | Request inválida (ver campo `detail` o errores por campo) |
+| `201` | Recurso creado exitosamente |
+| `204` | Eliminado (sin contenido en respuesta) |
+| `205` | Operacion exitosa sin contenido (ej: blacklist) |
+| `400` | Request invalida — ver campo `detail` o errores por campo |
 | `401` | No autenticado — token faltante o expirado |
-| `403` | Sin permisos o límite de plan alcanzado |
-| `404` | Recurso no encontrado o de otro contratista |
+| `403` | Sin permisos o limite del plan gratuito alcanzado |
+| `404` | Recurso no encontrado o pertenece a otro contratista |
 | `429` | Throttle excedido |
+
+**Formato de error estandar:**
+```json
+{
+  "detail": "No se encontro el recurso."
+}
+```
+
+**Formato de error de validacion:**
+```json
+{
+  "material_items": [
+    {
+      "unit_price": ["Este campo es obligatorio."]
+    }
+  ],
+  "client": ["Este campo no puede ser nulo."]
+}
+```
 
 ---
 
 ## Multi-tenancy
 
-Todos los recursos están **aislados por contratista**. Un token JWT solo permite ver y modificar los datos del contratista que se autenticó. El backend filtra siempre por `contractor=request.user` — no existe forma de acceder a datos de otro usuario.
+Todos los recursos estan **aislados por contratista**. Un token JWT solo permite acceder y modificar los datos del contratista autenticado. El backend filtra siempre por `contractor=request.user`.
+
+Intentar acceder a un recurso de otro contratista devuelve `404`, no `403`, para no revelar la existencia del recurso.
 
 ---
 
 ## Versionado de presupuestos
 
-Cuando se edita un presupuesto en estado `enviado`, `aceptado` o `rechazado`, el sistema **crea automáticamente una nueva versión** (v2, v3…) en estado `borrador`, preservando la versión original intacta.
+Cuando se edita un presupuesto en estado `enviado`, `aceptado` o `rechazado`, el sistema **crea automaticamente una nueva version** (v2, v3...) en estado `borrador`, preservando el original intacto.
 
-Los campos relevantes en la respuesta:
-
+**Ejemplo — presupuesto #7 editado mientras esta enviado:**
 ```json
 {
   "id": 12,
   "number": 7,
   "version": 2,
   "parent": 7,
+  "status": "borrador",
   ...
 }
 ```
 
-`number` identifica el presupuesto; `version` identifica la revisión.
+`number` identifica el presupuesto (constante en todas las versiones). `version` identifica la revision. `parent` apunta al `id` de la version anterior.
+
+Los presupuestos en estado `borrador` se editan directamente sin crear version nueva.
 
 ---
 
 ## Firma digital
 
-El cliente puede aceptar un presupuesto firmando en la vista pública. La firma se almacena como PNG + hash SHA-256 + IP + user-agent. No hay endpoint REST para esto — ocurre en la vista pública HTML (`/presupuestos/ver/<token>/firmar/`).
+La firma digital ocurre en la **vista publica HTML**, no via API REST. Flujo:
+
+1. El contratista genera un link publico: `GET /presupuestos/{id}/link/`
+2. El cliente abre `/presupuestos/ver/<token>/` sin necesidad de cuenta
+3. Si el presupuesto esta en estado `enviado`, el cliente ve el canvas de firma
+4. El cliente firma y hace POST a `/presupuestos/ver/<token>/firmar/` (rate limit: 3/hora por IP)
+5. El sistema guarda la firma como PNG + SHA-256 + IP + user-agent
+6. El presupuesto pasa automaticamente a `aceptado`
+
+Los tokens de link publico expiran a los 30 dias y pueden revocarse manualmente.
 
 ---
 
-## Clientes SDK recomendados
+## Clientes SDK
+
+### Python (httpx)
 
 ```python
-# Python
 import httpx
 
 BASE = "https://constructorexpress.cl/api/v1"
 
-def get_token(email, password):  # pragma: allowlist secret
-    r = httpx.post(f"{BASE}/auth/token/", json={"email": email, "password": password})  # pragma: allowlist secret
+def get_token(email: str, password: str) -> str:
+    r = httpx.post(f"{BASE}/auth/token/", json={"email": email, "password": password})
+    r.raise_for_status()
     return r.json()["access"]
 
 token = get_token("demo@constructorexpress.cl", "Demo1234!")
 headers = {"Authorization": f"Bearer {token}"}
 
-# Listar presupuestos
-presupuestos = httpx.get(f"{BASE}/presupuestos/", headers=headers).json()
+# Listar presupuestos enviados
+presupuestos = httpx.get(
+    f"{BASE}/presupuestos/",
+    headers=headers,
+    params={"status": "enviado"}
+).json()
+
+# Crear presupuesto
+nuevo = httpx.post(
+    f"{BASE}/presupuestos/write/",
+    headers=headers,
+    json={
+        "client": 1,
+        "title": "Instalacion bano",
+        "tax_percent": "19.00",
+        "validity_days": 15,
+        "material_items": [
+            {"name": "Griferia monocomando", "unit": "un", "quantity": "1.00", "unit_price": 45000}
+        ],
+        "labor_items": [
+            {"name": "Instalacion", "unit": "gl", "quantity": "1.00", "unit_price": 80000}
+        ]
+    }
+).json()
+
+print(f"Presupuesto #{nuevo['number']} creado. Total: ${nuevo['total']:,}")
 ```
 
+### JavaScript / Node.js
+
 ```javascript
-// JavaScript / Node
 const BASE = 'https://constructorexpress.cl/api/v1';
 
-async function getToken(email, password) { // pragma: allowlist secret
+async function getToken(email, password) {
   const res = await fetch(`${BASE}/auth/token/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }), // pragma: allowlist secret
+    body: JSON.stringify({ email, password }),
   });
+  if (!res.ok) throw new Error(`Auth fallida: ${res.status}`);
   return (await res.json()).access;
 }
 
 const token = await getToken('demo@constructorexpress.cl', 'Demo1234!');
-const headers = { Authorization: `Bearer ${token}` };
+const headers = {
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json',
+};
 
-// Sugerencias de productos
+// Listar clientes
+const clientes = await fetch(`${BASE}/clientes/`, { headers }).then(r => r.json());
+console.log(`${clientes.count} clientes encontrados`);
+
+// Autocompletado de materiales
 const sugerencias = await fetch(
-  `${BASE}/productos/sugerencias/?q=cemento`, { headers }
+  `${BASE}/productos/sugerencias/?q=cemento&limit=5`,
+  { headers }
 ).then(r => r.json());
+
+sugerencias.forEach(s => {
+  const origen = s.source === 'catalog' ? 'Mi catalogo' : s.source;
+  console.log(`[${origen}] ${s.name} — $${s.price.toLocaleString('es-CL')}`);
+});
+```
+
+### curl (referencia rapida)
+
+```bash
+BASE="https://constructorexpress.cl/api/v1"
+
+# Obtener token
+TOKEN=$(curl -s -X POST "$BASE/auth/token/" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"demo@constructorexpress.cl","password":"Demo1234!"}' \ # pragma: allowlist secret
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access'])")
+
+# Listar presupuestos
+curl -s "$BASE/presupuestos/" \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
+
+# Ver sugerencias
+curl -s "$BASE/productos/sugerencias/?q=griferia" \
+  -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
 ```

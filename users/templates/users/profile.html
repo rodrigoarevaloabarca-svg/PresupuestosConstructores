@@ -1,77 +1,176 @@
 {% extends 'base.html' %}
 {% block title %}Mi Perfil — Constructor Express{% endblock %}
-{% block page_title %}Mi Perfil de Empresa{% endblock %}
+{% block page_title %}Perfil de Empresa{% endblock %}
 {% block content %}
-<div class="max-w-3xl">
-  <div class="card">
-    <form method="post" enctype="multipart/form-data" class="space-y-6">
-      {% csrf_token %}
-      <div class="grid grid-cols-2 gap-4">
-        <div class="col-span-2 sm:col-span-1">
-          <label class="form-label flex items-center gap-2"><i data-lucide="building-2" class="w-4 h-4"></i>Nombre de la empresa *</label>
-          <input type="text" name="company_name" value="{{ form.company_name.value|default:'' }}" class="form-input" required>
+<div class="max-w-3xl space-y-6">
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Identidad de la empresa -->
+    <div class="card mb-6">
+      <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:linear-gradient(135deg,#1d3461,#25407a)">
+          <i data-lucide="building-2" class="w-4 h-4 text-white"></i>
         </div>
         <div>
-          <label class="form-label flex items-center gap-2"><i data-lucide="id-card" class="w-4 h-4"></i>RUT *</label>
+          <h3 class="font-bold text-slate-800 text-sm">Identidad de la empresa</h3>
+          <p class="text-xs text-slate-400">Estos datos aparecen en tus presupuestos PDF</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="building-2" class="w-4 h-4"></i>Nombre de la empresa *
+          </label>
+          <input type="text" name="company_name" value="{{ form.company_name.value|default:'' }}" class="form-input" required
+                 placeholder="Ej: Gasfiter González o Juan González SpA">
+        </div>
+        <div>
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="id-card" class="w-4 h-4"></i>RUT *
+          </label>
           <input type="text" name="rut" value="{{ form.rut.value|default:'' }}" class="form-input" placeholder="12345678-9">
         </div>
         <div>
-          <label class="form-label flex items-center gap-2"><i data-lucide="briefcase" class="w-4 h-4"></i>Rubro</label>
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="briefcase" class="w-4 h-4"></i>Rubro
+          </label>
           <select name="rubro" class="form-input">
-            {% for val, label in form.rubro.field.choices %}<option value="{{ val }}" {% if form.rubro.value == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            {% for val, label in form.rubro.field.choices %}
+              <option value="{{ val }}" {% if form.rubro.value == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
           </select>
         </div>
-        <div>
-          <label class="form-label flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i>Teléfono</label>
-          <input type="text" name="phone" value="{{ form.phone.value|default:'' }}" class="form-input">
+      </div>
+    </div>
+
+    <!-- Contacto -->
+    <div class="card mb-6">
+      <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:linear-gradient(135deg,#0ea5e9,#0284c7)">
+          <i data-lucide="phone" class="w-4 h-4 text-white"></i>
         </div>
         <div>
-          <label class="form-label flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i>Ciudad</label>
-          <input type="text" name="city" value="{{ form.city.value|default:'' }}" class="form-input">
+          <h3 class="font-bold text-slate-800 text-sm">Información de contacto</h3>
+          <p class="text-xs text-slate-400">Visible en el link público que recibe el cliente</p>
         </div>
-        <div class="col-span-2">
-          <label class="form-label flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i>Dirección</label>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="phone" class="w-4 h-4"></i>Teléfono
+          </label>
+          <input type="text" name="phone" value="{{ form.phone.value|default:'' }}" class="form-input" placeholder="+56 9 1234 5678">
+        </div>
+        <div>
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4"></i>Ciudad
+          </label>
+          <input type="text" name="city" value="{{ form.city.value|default:'' }}" class="form-input" placeholder="Santiago">
+        </div>
+        <div class="sm:col-span-2">
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-4 h-4"></i>Dirección
+          </label>
           <input type="text" name="address" value="{{ form.address.value|default:'' }}" class="form-input">
         </div>
-        <div>
-          <label class="form-label flex items-center gap-2"><i data-lucide="globe" class="w-4 h-4"></i>Sitio web</label>
-          <input type="url" name="website" value="{{ form.website.value|default:'' }}" class="form-input" placeholder="https://...">
+        <div class="sm:col-span-2">
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="globe" class="w-4 h-4"></i>Sitio web
+          </label>
+          <input type="url" name="website" value="{{ form.website.value|default:'' }}" class="form-input" placeholder="https://tuempresa.cl">
+        </div>
+      </div>
+    </div>
+
+    <!-- Marca e identidad visual -->
+    <div class="card mb-6">
+      <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:linear-gradient(135deg,#e07a1f,#f59e3a)">
+          <i data-lucide="palette" class="w-4 h-4 text-white"></i>
         </div>
         <div>
-          <label class="form-label flex items-center gap-2"><i data-lucide="palette" class="w-4 h-4"></i>Color de marca</label>
+          <h3 class="font-bold text-slate-800 text-sm">Marca e identidad visual</h3>
+          <p class="text-xs text-slate-400">Logo y colores que aparecen en tus PDFs y links públicos</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="palette" class="w-4 h-4"></i>Color de marca
+          </label>
           <div class="flex gap-3 items-center">
-            <input type="color" name="brand_color" value="{{ form.brand_color.value|default:'#1e40af' }}" class="h-11 w-16 cursor-pointer rounded-lg border border-slate-200">
-            <span class="text-sm text-slate-500">Color en tu PDF</span>
+            <input type="color" name="brand_color" value="{{ form.brand_color.value|default:'#1e40af' }}"
+                   class="h-11 w-16 cursor-pointer rounded-lg border border-slate-200">
+            <span class="text-sm text-slate-500">Se usa en el encabezado del PDF y en el link del cliente</span>
           </div>
         </div>
-        <div class="col-span-2">
-          <label class="form-label flex items-center gap-2"><i data-lucide="image" class="w-4 h-4"></i>Logo de la empresa</label>
+        <div>
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="image" class="w-4 h-4"></i>Logo de la empresa
+          </label>
           {% if profile.logo %}
-            <div class="flex items-center gap-4 mb-2">
-              <img src="{{ profile.logo.url }}" class="h-16 w-auto rounded-lg border border-slate-200 object-contain">
-              <span class="text-sm text-slate-500">Logo actual</span>
-            </div>
+          <div class="flex items-center gap-3 mb-2">
+            <img src="{{ profile.logo.url }}" class="h-12 w-auto rounded-lg border border-slate-200 object-contain bg-white p-1" alt="Logo actual">
+            <span class="text-xs text-slate-400">Logo actual</span>
+          </div>
           {% endif %}
-          <input type="file" name="logo" accept="image/*" class="form-input py-2">
+          <input type="file" name="logo" accept="image/*" class="form-input py-2 text-sm">
+          <p class="text-xs text-slate-400 mt-1">PNG o JPG recomendado. Se mostrará en el PDF.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuración de presupuestos -->
+    <div class="card mb-6">
+      <div class="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+        <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+             style="background:linear-gradient(135deg,#10b981,#059669)">
+          <i data-lucide="file-text" class="w-4 h-4 text-white"></i>
         </div>
         <div>
-          <label class="form-label flex items-center gap-2"><i data-lucide="calendar" class="w-4 h-4"></i>Validez del presupuesto (días)</label>
-          <input type="number" name="budget_validity_days" value="{{ form.budget_validity_days.value|default:15 }}" class="form-input" min="1" max="365">
-        </div>
-        <div class="col-span-2">
-          <label class="form-label flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i>Condiciones de pago por defecto</label>
-          <textarea name="payment_terms" rows="3" class="form-input">{{ form.payment_terms.value|default:'' }}</textarea>
-        </div>
-        <div class="col-span-2">
-          <label class="form-label flex items-center gap-2"><i data-lucide="sticky-note" class="w-4 h-4"></i>Notas por defecto en presupuesto</label>
-          <textarea name="notes_template" rows="2" class="form-input">{{ form.notes_template.value|default:'' }}</textarea>
+          <h3 class="font-bold text-slate-800 text-sm">Configuración de presupuestos</h3>
+          <p class="text-xs text-slate-400">Valores por defecto que se aplican a cada nuevo presupuesto</p>
         </div>
       </div>
-      <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-        <a href="{% url 'dashboard' %}" class="btn-secondary">Cancelar</a>
-        <button type="submit" class="btn-primary">Guardar cambios</button>
+      <div class="space-y-4">
+        <div class="max-w-xs">
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="calendar" class="w-4 h-4"></i>Validez del presupuesto (días)
+          </label>
+          <input type="number" name="budget_validity_days" value="{{ form.budget_validity_days.value|default:15 }}"
+                 class="form-input" min="1" max="365">
+          <p class="text-xs text-slate-400 mt-1">Días desde la fecha de emisión hasta el vencimiento</p>
+        </div>
+        <div>
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="credit-card" class="w-4 h-4"></i>Condiciones de pago por defecto
+          </label>
+          <textarea name="payment_terms" rows="3" class="form-input"
+                    placeholder="Ej: 50% al inicio, 50% al término de la obra">{{ form.payment_terms.value|default:'' }}</textarea>
+        </div>
+        <div>
+          <label class="form-label flex items-center gap-2">
+            <i data-lucide="sticky-note" class="w-4 h-4"></i>Notas por defecto
+          </label>
+          <textarea name="notes_template" rows="2" class="form-input"
+                    placeholder="Ej: Precios sujetos a variación de materiales">{{ form.notes_template.value|default:'' }}</textarea>
+        </div>
       </div>
-    </form>
-  </div>
+    </div>
+
+    <div class="flex justify-end gap-3 pt-2">
+      <a href="{% url 'dashboard' %}" class="btn-secondary">Cancelar</a>
+      <button type="submit" class="btn-primary">
+        <i data-lucide="save" class="w-4 h-4"></i>
+        Guardar cambios
+      </button>
+    </div>
+  </form>
+
 </div>
 {% endblock %}

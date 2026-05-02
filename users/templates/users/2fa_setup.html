@@ -4,26 +4,53 @@
 
 {% block content %}
 <div class="max-w-md mx-auto space-y-6">
+
+  <!-- Info card -->
+  <div class="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
+    <i data-lucide="shield-check" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+    <span>
+      La autenticación en dos pasos añade una capa adicional de seguridad a tu cuenta.
+      Necesitarás tu teléfono cada vez que inicies sesión.
+    </span>
+  </div>
+
   <div class="card">
-    <h2 class="text-base font-bold text-slate-800 mb-2">Escanea el código QR</h2>
-    <p class="text-sm text-slate-500 mb-4">Usa Google Authenticator, Authy o 1Password para escanear:</p>
-    <div class="flex justify-center mb-4 p-4 bg-white rounded-xl border border-slate-100">
+    <h2 class="font-bold text-slate-800 mb-1">Paso 1 — Escanea el código QR</h2>
+    <p class="text-sm text-slate-500 mb-4">
+      Abre <strong>Google Authenticator</strong>, <strong>Authy</strong> o <strong>1Password</strong> en tu teléfono y escanea el siguiente código:
+    </p>
+    <div class="flex justify-center mb-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
       {{ qr_svg|safe }}
     </div>
-    <p class="text-xs text-slate-400 mb-6 text-center">Clave manual: <code class="font-mono bg-slate-100 px-2 py-0.5 rounded">{{ device.key }}</code></p>
+    <p class="text-xs text-center text-slate-400 mb-6">
+      ¿No puedes escanear? Ingresa la clave manualmente:
+      <code class="font-mono bg-slate-100 text-slate-700 px-2 py-0.5 rounded block mt-1 break-all text-center">{{ device.key }}</code>
+    </p>
 
-    <form method="post">
-      {% csrf_token %}
-      <label class="form-label">Código de 6 dígitos para confirmar</label>
-      {{ form.token }}
-      {% if form.token.errors %}
-        <p class="text-red-500 text-xs mt-1">{{ form.token.errors.0 }}</p>
-      {% endif %}
-      <button type="submit" class="btn-primary w-full mt-4">
-        <i data-lucide="shield-check" class="w-4 h-4"></i>
-        Activar 2FA
-      </button>
-    </form>
+    <div class="border-t border-slate-100 pt-4">
+      <h3 class="font-bold text-slate-800 mb-1 text-sm">Paso 2 — Confirma el código</h3>
+      <p class="text-xs text-slate-500 mb-3">Ingresa el código de 6 dígitos generado por tu aplicación autenticadora:</p>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-4">
+          <label class="form-label">Código de verificación</label>
+          {{ form.token }}
+          {% if form.token.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ form.token.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn-primary w-full">
+          <i data-lucide="shield-check" class="w-4 h-4"></i>
+          Activar autenticación en dos pasos
+        </button>
+      </form>
+    </div>
   </div>
+
+  <a href="{% url 'profile' %}" class="text-sm text-slate-400 hover:text-slate-600 flex items-center gap-1.5 justify-center">
+    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+    Volver al perfil sin activar
+  </a>
+
 </div>
 {% endblock %}

@@ -1,23 +1,128 @@
 {% extends "base.html" %}
-{% block title %}Información — Constructor Express{% endblock %}
-{% block page_title %}Información de Cuenta{% endblock %}
+{% block title %}Cuenta y Plan — Constructor Express{% endblock %}
+{% block page_title %}Cuenta y Plan{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto">
-  <div class="card text-center py-12">
-    <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-         style="background:linear-gradient(135deg,#1d3461,#25407a)">
-      <i data-lucide="hard-hat" class="w-8 h-8 text-white"></i>
+<div class="max-w-3xl space-y-6">
+
+  <!-- Plan actual -->
+  <div class="card overflow-hidden">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 mb-5 border-b border-slate-100">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+             style="background:linear-gradient(135deg,#1d3461,#25407a)">
+          <i data-lucide="hard-hat" class="w-7 h-7 text-white"></i>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-0.5">Plan actual</p>
+          <h2 class="text-2xl font-black text-slate-800 leading-none">Constructor Express</h2>
+          <p class="text-sm text-emerald-600 font-semibold mt-1 flex items-center gap-1.5">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            Completamente gratuito · Sin tarjeta de crédito
+          </p>
+        </div>
+      </div>
+      <div class="text-right flex-shrink-0">
+        <p class="text-3xl font-black text-slate-800">$0</p>
+        <p class="text-xs text-slate-400">por mes, para siempre</p>
+      </div>
     </div>
-    <h2 class="text-xl font-black text-slate-800 mb-3">Constructor Express es 100% gratuito</h2>
-    <p class="text-slate-500 text-sm max-w-sm mx-auto mb-8">
-      Presupuestos ilimitados, clientes ilimitados y catálogo completo.
-      Sin suscripciones, sin tarjeta de crédito, sin letra chica.
+
+    <p class="text-sm text-slate-500 leading-relaxed">
+      Acceso completo a todas las funcionalidades de la plataforma sin costo alguno.
+      Sin límites de tiempo, sin suscripciones, sin letra chica.
     </p>
-    <a href="{% url 'dashboard' %}" class="btn-primary">
-      <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-      Volver al Dashboard
-    </a>
   </div>
+
+  <!-- Funcionalidades incluidas -->
+  <div class="card">
+    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+      <i data-lucide="star" class="w-4 h-4 text-amber-500"></i>
+      Funcionalidades incluidas
+    </h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {% for feature in features %}
+      <div class="flex items-center gap-2.5 text-sm text-slate-600">
+        <i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>
+        {{ feature }}
+      </div>
+      {% empty %}
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Presupuestos PDF con tu logo y marca</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Firma digital del cliente</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Link público para el cliente</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Envío por email con PDF adjunto</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Historial de cambios auditado</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Catálogo propio de materiales</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Precios en tiempo real de ferreterías</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Gestión completa de clientes</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Importación masiva por CSV</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Reportes y analíticas</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>Autenticación en dos pasos (2FA)</div>
+      <div class="flex items-center gap-2.5 text-sm text-slate-600"><i data-lucide="check" class="w-4 h-4 text-emerald-500 flex-shrink-0"></i>API REST con JWT</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Acciones de cuenta -->
+  <div class="card">
+    <h3 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+      <i data-lucide="settings" class="w-4 h-4 text-slate-500"></i>
+      Gestión de cuenta
+    </h3>
+    <div class="space-y-2">
+      <a href="{% url 'profile' %}"
+         class="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors group">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
+            <i data-lucide="building-2" class="w-4 h-4 text-blue-600"></i>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-slate-700">Perfil de empresa</p>
+            <p class="text-xs text-slate-400">Logo, RUT, datos de contacto y marca</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors"></i>
+      </a>
+
+      <a href="{% url 'change_password' %}"
+         class="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors group">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center">
+            <i data-lucide="key-round" class="w-4 h-4 text-amber-600"></i>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-slate-700">Cambiar contraseña</p>
+            <p class="text-xs text-slate-400">Actualiza las credenciales de acceso</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors"></i>
+      </a>
+
+      <a href="{% url 'enable_2fa' %}"
+         class="flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors group">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+          </div>
+          <div>
+            <p class="text-sm font-semibold text-slate-700">Autenticación en dos pasos</p>
+            <p class="text-xs text-slate-400">Protege tu cuenta con 2FA (Google Authenticator)</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-right" class="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Info -->
+  <div class="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-700">
+    <i data-lucide="info" class="w-4 h-4 flex-shrink-0 mt-0.5"></i>
+    <span>
+      Constructor Express es un proyecto desarrollado en Chile para apoyar a pequeños contratistas.
+      Si tienes consultas o sugerencias, escríbenos a
+      <a href="mailto:soporte@constructorexpress.cl" class="font-semibold underline hover:no-underline">soporte@constructorexpress.cl</a>.
+    </span>
+  </div>
+
 </div>
 {% endblock %}

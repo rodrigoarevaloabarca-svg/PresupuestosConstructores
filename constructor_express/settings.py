@@ -6,14 +6,23 @@ from pathlib import Path
 from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
 
-env_path = Path(__file__).resolve().parent.parent / ".env.production"
-if env_path.exists():
-    with open(env_path, encoding="utf-8") as f:
+
+def _load_env_file(path, override=False):
+    if not path.exists():
+        return
+    with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line and not line.startswith("#") and "=" in line:
                 key, val = line.split("=", 1)
-                os.environ.setdefault(key.strip(), val.strip())
+                key, val = key.strip(), val.strip()
+                if override or key not in os.environ:
+                    os.environ[key] = val
+
+
+_base = Path(__file__).resolve().parent.parent
+_load_env_file(_base / ".env.production")
+_load_env_file(_base / ".env.local", override=True)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

@@ -1,69 +1,27 @@
 {% extends 'base.html' %}
 {% load budget_filters %}
-{% block title %}Presupuesto #{{ budget.number }} — Constructor Express
-  <!-- Public link card -->
-  {% if budget.public_token %}
-  <div class="card bg-gradient-to-r from-slate-800 to-slate-900 border-0 text-white mt-5">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <p class="font-bold mb-1 flex items-center gap-2">
-          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-          Link público generado
-        </p>
-        <p class="text-slate-400 text-xs mb-3">Comparte este link con tu cliente. No requiere cuenta.</p>
-        <div class="flex items-center gap-2">
-          <code id="public-url" class="text-xs bg-slate-700 text-blue-300 px-3 py-1.5 rounded-lg font-mono break-all">{{ request.scheme }}://{{ request.get_host }}{% url 'budget_public' budget.public_token.token %}</code>
-        </div>
-        <p class="text-slate-500 text-xs mt-2">Visto {{ budget.public_token.views }} vez{% if budget.public_token.views != 1 %}ces{% endif %} por el cliente</p>
-        <p class="text-slate-500 text-xs mt-1">Expira: {{ budget.public_token.expires_at|date:"d/m/Y" }}{% if budget.public_token.is_revoked %} — <span class="text-red-400 font-semibold">REVOCADO</span>{% endif %}</p>
-      </div>
-      <div class="flex-shrink-0 flex flex-col gap-2">
-        <button onclick="copyLink()" class="btn-primary text-xs py-2">📋 Copiar link</button>
-        <form method="post" action="{% url 'budget_generate_link' budget.pk %}" onsubmit="return confirm('¿Regenerar el link? El link anterior dejará de funcionar.')">
-          {% csrf_token %}
-          <input type="hidden" name="regenerate" value="1">
-          <button type="submit" class="btn-ghost text-xs py-2 text-slate-400 w-full">🔄 Regenerar</button>
-        </form>
-        <form method="post" action="{% url 'budget_revoke_link' budget.pk %}" onsubmit="return confirm('¿Revocar el link? El cliente no podrá acceder más.')">
-          {% csrf_token %}
-          <button type="submit" class="btn-ghost text-xs py-2 text-red-400 w-full">🚫 Revocar link</button>
-        </form>
-      </div>
-    </div>
-  </div>
-  {% else %}
-  <div class="mt-5 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
-    <div>
-      <p class="text-sm font-semibold text-slate-700">Compartir presupuesto con cliente</p>
-      <p class="text-xs text-slate-400">Genera un link público para que tu cliente pueda ver el presupuesto.</p>
-    </div>
-    <form method="post" action="{% url 'budget_generate_link' budget.pk %}" class="flex-shrink-0">
-      {% csrf_token %}
-      <button type="submit" class="btn-secondary text-xs">🔗 Generar link</button>
-    </form>
-  </div>
-  {% endif %}
-{% endblock %}
+{% block title %}Presupuesto #{{ budget.number }} — Constructor Express{% endblock %}
 {% block page_title %}Presupuesto #{{ budget.number }} — {{ budget.title|truncatechars:40 }}{% endblock %}
 {% block page_actions %}
   <a href="{% url 'budget_pdf' budget.pk %}" target="_blank" class="btn-secondary">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+    <i data-lucide="printer" class="w-4 h-4"></i>
     Exportar PDF
   </a>
   <form method="post" action="{% url 'budget_generate_link' budget.pk %}" class="inline">
     {% csrf_token %}
     <button type="submit" class="btn-ghost" title="Generar link para cliente">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+      <i data-lucide="link" class="w-4 h-4"></i>
       Compartir
     </button>
   </form>
   <a href="{% url 'budget_edit' budget.pk %}" class="btn-primary">
-    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+    <i data-lucide="pencil" class="w-4 h-4"></i>
     Editar
   </a>
 {% endblock %}
 {% block content %}
 <div class="space-y-5">
+
   <!-- Status Bar -->
   <div class="card flex flex-wrap gap-4 items-center justify-between py-4">
     <div class="flex items-center gap-3">
@@ -77,7 +35,10 @@
       </span>
       <span class="text-sm text-slate-500">Válido hasta <strong>{{ budget.valid_until|date:"d/m/Y" }}</strong></span>
       {% if budget.is_expired and budget.status != 'aceptado' %}
-        <span class="badge bg-red-100 text-red-600">⚠ Vencido</span>
+        <span class="badge bg-red-100 text-red-600 flex items-center gap-1">
+          <i data-lucide="alert-triangle" class="w-3 h-3"></i>
+          Vencido
+        </span>
       {% endif %}
     </div>
     <form method="post" action="{% url 'budget_update_status' budget.pk %}" class="flex items-center gap-2">
@@ -93,16 +54,82 @@
     </form>
   </div>
 
+  <!-- Public link card -->
+  {% if budget.public_token %}
+  <div class="card bg-gradient-to-r from-slate-800 to-slate-900 border-0 text-white">
+    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+      <div class="flex-1 min-w-0">
+        <p class="font-bold mb-1 flex items-center gap-2">
+          <i data-lucide="link" class="w-4 h-4 text-blue-400"></i>
+          Link público generado
+        </p>
+        <p class="text-slate-400 text-xs mb-3">Comparte este link con tu cliente. No requiere cuenta.</p>
+        <div class="flex items-center gap-2 mb-2">
+          <code id="public-url" class="text-xs bg-slate-700 text-blue-300 px-3 py-1.5 rounded-lg font-mono break-all">{{ request.scheme }}://{{ request.get_host }}{% url 'budget_public' budget.public_token.token %}</code>
+        </div>
+        <p class="text-slate-500 text-xs">Visto {{ budget.public_token.views }} vez{% if budget.public_token.views != 1 %}ces{% endif %} · Expira: {{ budget.public_token.expires_at|date:"d/m/Y" }}{% if budget.public_token.is_revoked %} · <span class="text-red-400 font-semibold">REVOCADO</span>{% endif %}</p>
+      </div>
+      <div class="flex-shrink-0 flex flex-col gap-2 min-w-36">
+        <button onclick="copyLink()" class="btn-primary text-xs py-2">
+          <i data-lucide="clipboard" class="w-3.5 h-3.5"></i>
+          Copiar link
+        </button>
+        <form method="post" action="{% url 'budget_generate_link' budget.pk %}" onsubmit="return confirm('¿Regenerar el link? El link anterior dejará de funcionar.')">
+          {% csrf_token %}
+          <input type="hidden" name="regenerate" value="1">
+          <button type="submit" class="btn-ghost text-xs py-2 text-slate-400 w-full">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            Regenerar
+          </button>
+        </form>
+        <form method="post" action="{% url 'budget_revoke_link' budget.pk %}" onsubmit="return confirm('¿Revocar el link? El cliente no podrá acceder más.')">
+          {% csrf_token %}
+          <button type="submit" class="btn-ghost text-xs py-2 text-red-400 w-full">
+            <i data-lucide="x-circle" class="w-3.5 h-3.5"></i>
+            Revocar link
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-4">
+    <div>
+      <p class="text-sm font-semibold text-slate-700">Compartir presupuesto con tu cliente</p>
+      <p class="text-xs text-slate-400 mt-0.5">Genera un link público para que el cliente pueda ver el presupuesto y firmarlo digitalmente.</p>
+    </div>
+    <form method="post" action="{% url 'budget_generate_link' budget.pk %}" class="flex-shrink-0">
+      {% csrf_token %}
+      <button type="submit" class="btn-secondary text-xs">
+        <i data-lucide="link" class="w-3.5 h-3.5"></i>
+        Generar link
+      </button>
+    </form>
+  </div>
+  {% endif %}
+
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-    <!-- Left -->
+    <!-- Left column -->
     <div class="space-y-4">
       <div class="card">
         <h3 class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Cliente</h3>
         <p class="font-bold text-slate-800 text-base">{{ budget.client.name }}</p>
         {% if budget.client.rut %}<p class="text-sm text-slate-500 mt-1">RUT: {{ budget.client.rut }}</p>{% endif %}
-        {% if budget.client.phone %}<p class="text-sm text-slate-500">📞 {{ budget.client.phone }}</p>{% endif %}
-        {% if budget.client.email %}<p class="text-sm text-slate-500">✉ {{ budget.client.email }}</p>{% endif %}
-        {% if budget.client.address %}<p class="text-sm text-slate-500">📍 {{ budget.client.address }}{% if budget.client.city %}, {{ budget.client.city }}{% endif %}</p>{% endif %}
+        {% if budget.client.phone %}
+        <p class="text-sm text-slate-500 flex items-center gap-1.5 mt-1">
+          <i data-lucide="phone" class="w-3.5 h-3.5 flex-shrink-0"></i>{{ budget.client.phone }}
+        </p>
+        {% endif %}
+        {% if budget.client.email %}
+        <p class="text-sm text-slate-500 flex items-center gap-1.5 mt-1">
+          <i data-lucide="mail" class="w-3.5 h-3.5 flex-shrink-0"></i>{{ budget.client.email }}
+        </p>
+        {% endif %}
+        {% if budget.client.address %}
+        <p class="text-sm text-slate-500 flex items-center gap-1.5 mt-1">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5 flex-shrink-0"></i>{{ budget.client.address }}{% if budget.client.city %}, {{ budget.client.city }}{% endif %}
+        </p>
+        {% endif %}
         <div class="mt-3 pt-3 border-t border-slate-100">
           <a href="{% url 'client_detail' budget.client.pk %}" class="text-xs text-blue-600 hover:underline">Ver ficha del cliente →</a>
         </div>
@@ -154,7 +181,7 @@
       </div>
     </div>
 
-    <!-- Right -->
+    <!-- Right column -->
     <div class="lg:col-span-2 space-y-4">
       <div class="card">
         <h2 class="font-bold text-slate-800 text-lg mb-1">{{ budget.title }}</h2>
@@ -164,7 +191,9 @@
 
         {% if budget.material_items.all %}
         <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 mt-5 flex items-center gap-2">
-          <span class="w-5 h-5 bg-blue-100 rounded flex items-center justify-center text-xs">📦</span>
+          <span class="w-5 h-5 bg-blue-100 rounded flex items-center justify-center">
+            <i data-lucide="package" class="w-3 h-3 text-blue-600"></i>
+          </span>
           Materiales y Suministros
         </h4>
         <div class="overflow-x-auto rounded-xl border border-slate-100">
@@ -201,7 +230,9 @@
 
         {% if budget.labor_items.all %}
         <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3 mt-6 flex items-center gap-2">
-          <span class="w-5 h-5 bg-amber-100 rounded flex items-center justify-center text-xs">🔨</span>
+          <span class="w-5 h-5 bg-amber-100 rounded flex items-center justify-center">
+            <i data-lucide="hammer" class="w-3 h-3 text-amber-600"></i>
+          </span>
           Mano de Obra
         </h4>
         <div class="overflow-x-auto rounded-xl border border-slate-100">
@@ -247,16 +278,24 @@
       <!-- Actions footer -->
       <div class="flex flex-wrap gap-3">
         <a href="{% url 'budget_pdf' budget.pk %}" target="_blank" class="btn-primary">
-          🖨️ Exportar PDF
+          <i data-lucide="printer" class="w-4 h-4"></i>
+          Exportar PDF
         </a>
         <a href="{% url 'budget_edit' budget.pk %}" class="btn-secondary">
-          ✏️ Editar presupuesto
+          <i data-lucide="pencil" class="w-4 h-4"></i>
+          Editar presupuesto
         </a>
         <button onclick="openEmailModal()" class="btn-secondary">
-          📧 Enviar por email
+          <i data-lucide="mail" class="w-4 h-4"></i>
+          Enviar por email
         </button>
+        <a href="{% url 'budget_history' budget.pk %}" class="btn-ghost">
+          <i data-lucide="history" class="w-4 h-4"></i>
+          Historial
+        </a>
         <a href="{% url 'budget_delete' budget.pk %}" class="btn-danger">
-          🗑️ Eliminar
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
+          Eliminar
         </a>
       </div>
     </div>
@@ -266,7 +305,6 @@
 
 {% block extra_js %}
 <script>
-
 function openEmailModal() {
   document.getElementById('email-modal').classList.remove('hidden');
   document.getElementById('email-modal').classList.add('flex');
@@ -282,41 +320,47 @@ function copyLink() {
   const url = document.getElementById('public-url')?.textContent?.trim();
   if (url) {
     navigator.clipboard.writeText(url).then(() => {
-      const btn = event.target;
-      const orig = btn.textContent;
-      btn.textContent = '✅ Copiado!';
-      setTimeout(() => btn.textContent = orig, 2000);
+      const btn = event.target.closest('button');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5"></i> Copiado';
+      lucide.createIcons();
+      setTimeout(() => { btn.innerHTML = orig; lucide.createIcons(); }, 2000);
     });
   }
 }
 </script>
 
-  <!-- Email Modal -->
-  <div id="email-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.5)">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-bold text-slate-800 text-lg">📧 Enviar por Email</h3>
-        <button onclick="closeEmailModal()" class="text-slate-400 hover:text-slate-600 p-1">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+<!-- Email Modal -->
+<div id="email-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,0.5)">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+        <i data-lucide="mail" class="w-5 h-5 text-blue-600"></i>
+        Enviar por Email
+      </h3>
+      <button onclick="closeEmailModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+    <p class="text-sm text-slate-500 mb-4">
+      Se enviará el presupuesto <strong>#{{ budget.number }}</strong> con PDF adjunto al siguiente correo:
+    </p>
+    <form method="post" action="{% url 'budget_send_email' budget.pk %}">
+      {% csrf_token %}
+      <div class="mb-4">
+        <label class="form-label">Email del cliente</label>
+        <input type="email" name="email" value="{{ budget.client.email }}"
+               class="form-input" placeholder="cliente@ejemplo.cl" required>
+        <p class="text-xs text-slate-400 mt-1">Pre-cargado desde la ficha del cliente.</p>
+      </div>
+      <div class="flex gap-3 justify-end">
+        <button type="button" onclick="closeEmailModal()" class="btn-secondary">Cancelar</button>
+        <button type="submit" class="btn-primary">
+          <i data-lucide="send" class="w-4 h-4"></i>
+          Enviar ahora
         </button>
       </div>
-      <p class="text-sm text-slate-500 mb-4">
-        Se enviará el presupuesto <strong>#{{ budget.number }}</strong> al siguiente correo:
-      </p>
-      <form method="post" action="{% url 'budget_send_email' budget.pk %}">
-        {% csrf_token %}
-        <div class="mb-4">
-          <label class="form-label">Email del cliente</label>
-          <input type="email" name="email" value="{{ budget.client.email }}"
-                 class="form-input" placeholder="cliente@ejemplo.cl" required>
-          <p class="text-xs text-slate-400 mt-1">Pre-cargado desde la ficha del cliente.</p>
-        </div>
-        <div class="flex gap-3 justify-end">
-          <button type="button" onclick="closeEmailModal()" class="btn-secondary">Cancelar</button>
-          <button type="submit" class="btn-primary">📤 Enviar ahora</button>
-        </div>
-      </form>
-    </div>
+    </form>
   </div>
-
+</div>
 {% endblock %}

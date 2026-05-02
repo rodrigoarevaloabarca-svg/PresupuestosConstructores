@@ -2,8 +2,14 @@
 {% block title %}Importar Productos{% endblock %}
 {% block page_title %}Importar Productos desde CSV{% endblock %}
 {% block page_actions %}
-  <a href="{% url 'product_export_csv' %}" class="btn-secondary">⬇ Descargar plantilla CSV</a>
-  <a href="{% url 'product_list' %}" class="btn-secondary">← Volver</a>
+  <a href="{% url 'product_export_csv' %}" class="btn-secondary">
+    <i data-lucide="download" class="w-4 h-4"></i>
+    Descargar plantilla CSV
+  </a>
+  <a href="{% url 'product_list' %}" class="btn-secondary">
+    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+    Volver
+  </a>
 {% endblock %}
 {% block content %}
 <div class="max-w-2xl space-y-6">
@@ -40,7 +46,10 @@
       </div>
       <div class="flex justify-end gap-3">
         <a href="{% url 'product_list' %}" class="btn-secondary">Cancelar</a>
-        <button type="submit" class="btn-primary">⬆ Importar productos</button>
+        <button type="submit" class="btn-primary">
+          <i data-lucide="upload" class="w-4 h-4"></i>
+          Importar productos
+        </button>
       </div>
     </form>
   </div>
