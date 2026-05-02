@@ -358,6 +358,14 @@ document.addEventListener('click', e => {
 
 document.querySelector('[name=tax_percent]')?.addEventListener('input', recalc);
 
+// Pre-fill desde calculadora standalone
+(function () {
+  const raw = sessionStorage.getItem('calc_prefill');
+  if (!raw) return;
+  sessionStorage.removeItem('calc_prefill');
+  try { JSON.parse(raw).forEach(i => addMaterialRow(i.name, i.unit, i.qty, 0)); } catch (e) {}
+})();
+
 // Init existing rows
 document.querySelectorAll('.material-row, .labor-row').forEach(row => {
   row.querySelectorAll('input[type=number]').forEach(i => i.addEventListener('input', recalc));

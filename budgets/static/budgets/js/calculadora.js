@@ -159,17 +159,18 @@ const RECIPES = [
 ];
 
 function openCalc() {
-  document.getElementById('calc-modal').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  const modal = document.getElementById('calc-modal');
+  if (modal) { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 }
 
 function closeCalc() {
-  document.getElementById('calc-modal').classList.add('hidden');
-  document.body.style.overflow = '';
+  const modal = document.getElementById('calc-modal');
+  if (modal) { modal.classList.add('hidden'); document.body.style.overflow = ''; }
   document.getElementById('calc-recipe').value = '';
   document.getElementById('calc-inputs').innerHTML = '';
   document.getElementById('calc-preview').classList.add('hidden');
-  document.getElementById('calc-apply-btn').disabled = true;
+  const btn = document.getElementById('calc-apply-btn');
+  if (btn) btn.disabled = true;
 }
 
 function loadRecipeInputs() {
@@ -238,12 +239,17 @@ function applyCalc() {
     values[inp.id] = parseFloat(document.getElementById(`calc-${inp.id}`)?.value) || 0;
   });
 
-  recipe.items(values).forEach(item => addMaterialRow(item.name, item.unit, item.qty, 0));
-  closeCalc();
+  const items = recipe.items(values);
+
+  if (typeof window.onCalcApply === 'function') {
+    window.onCalcApply(items);
+  } else if (typeof addMaterialRow === 'function') {
+    items.forEach(item => addMaterialRow(item.name, item.unit, item.qty, 0));
+    closeCalc();
+  }
 }
 
-// Populate select grouped by rubro
-(function () {
+function populateRecipeSelect() {
   const sel = document.getElementById('calc-recipe');
   const groups = {};
   RECIPES.forEach(r => {
@@ -261,6 +267,45 @@ function applyCalc() {
     });
     sel.appendChild(og);
   });
-})();
+}
+
+async function fetchCustomRecipes() {
+  try {
+    const res = await fetch('/api/v1/calculadora/recetas/');
+    if (!res.ok) return;
+    const custom = await res.json();
+    if (!custom.length) return;
+
+    const sel = document.getElementById('calc-recipe');
+    const og = document.createElement('optgroup');
+    og.label = '⭐ Mis recetas';
+    custom.forEach(r => {
+      RECIPES.push({
+        id: `custom_${r.id}`,
+        name: r.name,
+        rubro: r.rubro,
+        icon: r.icon,
+        inputs: [{ id: 'value', label: r.input_label, unit: r.input_unit, placeholder: r.input_placeholder || `Ej: 20` }],
+        items(v) {
+          return r.items.map(item => ({
+            name: item.name,
+            unit: item.unit,
+            qty: Math.max(1, Math.ceil(v.value * parseFloat(item.factor)))
+          }));
+        }
+      });
+      const opt = document.createElement('option');
+      opt.value = `custom_${r.id}`;
+      opt.textContent = `${r.icon} ${r.name}`;
+      og.appendChild(opt);
+    });
+    sel.insertBefore(og, sel.querySelector('optgroup'));
+  } catch (e) {
+    // Fallo silencioso — las recetas predefinidas siempre están disponibles
+  }
+}
+
+populateRecipeSelect();
+fetchCustomRecipes();
 
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCalc(); });

@@ -22,4 +22,10 @@ urlpatterns = [
     path("plantillas/", views.budget_template_list, name="budget_template_list"),
     path("<int:pk>/guardar-plantilla/", views.budget_save_as_template, name="budget_save_as_template"),
     path("ver/<str:token>/firmar/", views.budget_public_sign, name="budget_public_sign"),
+    # Calculadora
+    path("calculadora/", views.calculadora_view, name="calculadora"),
+    path("calculadora/recetas/", views.recipe_list, name="recipe_list"),
+    path("calculadora/recetas/crear/", views.recipe_create, name="recipe_create"),
+    path("calculadora/recetas/<int:pk>/editar/", views.recipe_edit, name="recipe_edit"),
+    path("calculadora/recetas/<int:pk>/eliminar/", views.recipe_delete, name="recipe_delete"),
 ]

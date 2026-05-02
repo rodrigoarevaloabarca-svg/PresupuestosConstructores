@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Calculadora de Materiales — Constructor Express{% endblock %}
+{% block page_title %}Calculadora de Materiales{% endblock %}
+{% block page_actions %}
+  <a href="{% url 'recipe_list' %}" class="btn-secondary">
+    <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+    Mis recetas
+  </a>
+{% endblock %}
+{% block content %}
+<div class="max-w-2xl space-y-6">
+
+  <div class="card">
+    <p class="text-sm text-slate-500 mb-6">Selecciona el tipo de trabajo, ingresa las medidas y obtén la lista de materiales necesarios. Puedes agregar el resultado directamente a un presupuesto.</p>
+
+    <div class="space-y-4">
+      <div>
+        <label class="form-label">Tipo de trabajo</label>
+        <select id="calc-recipe" class="form-input" onchange="loadRecipeInputs()">
+          <option value="">— Seleccionar tipo de trabajo —</option>
+        </select>
+      </div>
+      <div id="calc-inputs" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <div id="calc-preview" class="card hidden">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-bold text-slate-800">Materiales necesarios</h3>
+      <span id="calc-recipe-label" class="text-xs text-slate-400"></span>
+    </div>
+    <div id="calc-preview-list" class="space-y-2 mb-6"></div>
+    <p class="text-xs text-slate-400 mb-4">Los precios quedarán en $0 — los editas directamente en el presupuesto.</p>
+    <div class="flex gap-3">
+      <button type="button" onclick="calcCrearPresupuesto()" id="calc-apply-btn" class="btn-primary" disabled>
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Crear presupuesto con estos materiales
+      </button>
+      <button type="button" onclick="calcReset()" class="btn-secondary">Limpiar</button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'budgets/js/calculadora.js' %}"></script>
+<script>
+window.onCalcApply = function(items) {
+  sessionStorage.setItem('calc_prefill', JSON.stringify(items));
+  window.location.href = "{% url 'budget_create' %}";
+};
+
+function calcCrearPresupuesto() {
+  applyCalc();
+}
+
+function calcReset() {
+  document.getElementById('calc-recipe').value = '';
+  document.getElementById('calc-inputs').innerHTML = '';
+  document.getElementById('calc-preview').classList.add('hidden');
+  document.getElementById('calc-apply-btn').disabled = true;
+}
+</script>
+{% endblock %}

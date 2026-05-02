@@ -10,7 +10,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import DecimalField, F, Q, Sum, Value
 from django.db.models.functions import Coalesce
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django_ratelimit.decorators import ratelimit
@@ -20,7 +20,7 @@ from common.tenant import get_tenant_object_or_404
 from users.plan_guard import PlanGuard
 
 from .forms import BudgetForm
-from .models import Budget, BudgetAttachment, BudgetItemLabor, BudgetItemMaterial, BudgetPublicToken
+from .models import RECIPE_RUBROS, Budget, BudgetAttachment, BudgetItemLabor, BudgetItemMaterial, BudgetPublicToken, MaterialRecipe, MaterialRecipeItem
 
 
 @login_required
@@ -551,3 +551,126 @@ def budget_to_invoice_view(request, pk):
     except Exception as e:
         messages.error(request, f"Error al emitir boleta: {e}")
     return redirect("budget_detail", pk=pk)
+
+
+# ─── Calculadora de Materiales ────────────────────────────────────────────────
+
+
+@login_required
+def calculadora_view(request):
+    return render(request, "budgets/calculadora.html")
+
+
+@login_required
+def api_custom_recipes(request):
+    recipes = MaterialRecipe.objects.filter(contractor=request.user, is_active=True).prefetch_related("items")
+    return JsonResponse([r.to_api_dict() for r in recipes], safe=False)
+
+
+@login_required
+def recipe_list(request):
+    recipes = MaterialRecipe.objects.filter(contractor=request.user, is_active=True).prefetch_related("items")
+    return render(request, "budgets/recipe_list.html", {"recipes": recipes})
+
+
+def _save_recipe(request, recipe=None):
+    from catalog.models import UNIT_CHOICES as UC
+
+    errors = []
+    name = request.POST.get("name", "").strip()
+    rubro = request.POST.get("rubro", "").strip()
+    icon = request.POST.get("icon", "📦").strip() or "📦"
+    input_label = request.POST.get("input_label", "").strip()
+    input_unit = request.POST.get("input_unit", "").strip()
+    input_placeholder = request.POST.get("input_placeholder", "").strip()
+
+    if not name:
+        errors.append("El nombre es obligatorio.")
+    if not rubro:
+        errors.append("La categoría es obligatoria.")
+    if not input_label:
+        errors.append("La etiqueta de medida es obligatoria.")
+    if not input_unit:
+        errors.append("La unidad de medida es obligatoria.")
+
+    valid_units = {k for k, _ in UC}
+    names = request.POST.getlist("item_name[]")
+    units = request.POST.getlist("item_unit[]")
+    factors = request.POST.getlist("item_factor[]")
+
+    valid_items = []
+    for idx, (n, u, f) in enumerate(zip(names, units, factors, strict=False)):
+        n = n.strip()
+        if not n:
+            continue
+        if u not in valid_units:
+            errors.append(f"Ítem {idx + 1}: unidad inválida.")
+            continue
+        try:
+            factor = Decimal(f)
+            if factor <= 0:
+                raise ValueError
+        except (InvalidOperation, ValueError):
+            errors.append(f"Ítem {idx + 1}: el factor debe ser mayor que 0.")
+            continue
+        valid_items.append({"name": n, "unit": u, "factor": factor})
+
+    if not valid_items and not errors:
+        errors.append("Agrega al menos un material a la receta.")
+
+    if errors:
+        return errors
+
+    if recipe is None:
+        recipe = MaterialRecipe(contractor=request.user)
+
+    recipe.name = name
+    recipe.rubro = rubro
+    recipe.icon = icon
+    recipe.input_label = input_label
+    recipe.input_unit = input_unit
+    recipe.input_placeholder = input_placeholder
+    recipe.save()
+
+    recipe.items.all().delete()
+    MaterialRecipeItem.objects.bulk_create([MaterialRecipeItem(recipe=recipe, name=i["name"], unit=i["unit"], quantity_factor=i["factor"], order=pos) for pos, i in enumerate(valid_items)])
+    return []
+
+
+@login_required
+def recipe_create(request):
+    from catalog.models import UNIT_CHOICES as UC
+
+    if request.method == "POST":
+        errors = _save_recipe(request)
+        if not errors:
+            messages.success(request, "Receta creada correctamente.")
+            return redirect("recipe_list")
+        return render(request, "budgets/recipe_form.html", {"action": "Crear", "unit_choices": UC, "rubros": RECIPE_RUBROS, "errors": errors, "post": request.POST})
+    from catalog.models import UNIT_CHOICES as UC
+
+    return render(request, "budgets/recipe_form.html", {"action": "Crear", "unit_choices": UC, "rubros": RECIPE_RUBROS})
+
+
+@login_required
+def recipe_edit(request, pk):
+    from catalog.models import UNIT_CHOICES as UC
+
+    recipe = get_object_or_404(MaterialRecipe, pk=pk, contractor=request.user)
+    if request.method == "POST":
+        errors = _save_recipe(request, recipe)
+        if not errors:
+            messages.success(request, "Receta actualizada.")
+            return redirect("recipe_list")
+        return render(request, "budgets/recipe_form.html", {"action": "Editar", "recipe": recipe, "unit_choices": UC, "rubros": RECIPE_RUBROS, "errors": errors, "post": request.POST})
+    return render(request, "budgets/recipe_form.html", {"action": "Editar", "recipe": recipe, "unit_choices": UC, "rubros": RECIPE_RUBROS})
+
+
+@login_required
+def recipe_delete(request, pk):
+    recipe = get_object_or_404(MaterialRecipe, pk=pk, contractor=request.user)
+    if request.method == "POST":
+        recipe.delete()
+        messages.success(request, "Receta eliminada.")
+        return redirect("recipe_list")
+    return render(request, "budgets/recipe_confirm_delete.html", {"recipe": recipe})

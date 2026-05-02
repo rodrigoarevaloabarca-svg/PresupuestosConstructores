@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ action }} Receta — Constructor Express{% endblock %}
+{% block page_title %}{{ action }} Receta de Materiales{% endblock %}
+{% block content %}
+<form method="post" class="max-w-2xl space-y-6">
+  {% csrf_token %}
+
+  {% if errors %}
+  <div class="p-3 bg-red-50 border border-red-200 rounded-xl space-y-1">
+    {% for e in errors %}<p class="text-red-600 text-xs">· {{ e }}</p>{% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Datos de la receta -->
+  <div class="card space-y-4">
+    <h2 class="text-base font-bold text-slate-700 mb-2">Información de la receta</h2>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div class="col-span-2">
+        <label class="form-label">Nombre de la receta *</label>
+        <input type="text" name="name" value="{{ post.name|default:recipe.name|default:'' }}" class="form-input" required placeholder="Ej: Pintura de cielo interior">
+      </div>
+
+      <div>
+        <label class="form-label">Categoría *</label>
+        <input type="text" name="rubro" value="{{ post.rubro|default:recipe.rubro|default:'' }}" class="form-input" required
+               list="rubro-options" placeholder="Ej: Pintura">
+        <datalist id="rubro-options">
+          {% for r in rubros %}<option value="{{ r }}">{% endfor %}
+        </datalist>
+      </div>
+
+      <div>
+        <label class="form-label">Ícono</label>
+        <input type="text" name="icon" value="{{ post.icon|default:recipe.icon|default:'📦' }}" class="form-input" maxlength="10" placeholder="📦">
+      </div>
+    </div>
+
+    <div class="border-t border-slate-100 pt-4">
+      <p class="text-xs text-slate-500 mb-3">Define qué medida pedirá esta receta al contratista (ej. m², metros lineales, m³).</p>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="col-span-2">
+          <label class="form-label">Etiqueta de la medida *</label>
+          <input type="text" name="input_label" value="{{ post.input_label|default:recipe.input_label|default:'' }}" class="form-input" required placeholder="Ej: Superficie a pintar">
+        </div>
+        <div>
+          <label class="form-label">Unidad *</label>
+          <input type="text" name="input_unit" value="{{ post.input_unit|default:recipe.input_unit|default:'m²' }}" class="form-input" required placeholder="m²">
+        </div>
+        <div class="col-span-3">
+          <label class="form-label">Placeholder del input <span class="text-slate-400 font-normal">(opcional)</span></label>
+          <input type="text" name="input_placeholder" value="{{ post.input_placeholder|default:recipe.input_placeholder|default:'' }}" class="form-input" placeholder="Ej: 30">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ítems -->
+  <div class="card">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-base font-bold text-slate-700">Materiales de la receta</h2>
+        <p class="text-xs text-slate-400 mt-0.5">El factor indica la cantidad de material por cada unidad de medida ingresada.</p>
+      </div>
+      <button type="button" onclick="addItemRow()" class="btn-secondary text-xs py-2 px-3">+ Agregar material</button>
+    </div>
+
+    <div class="hidden sm:grid grid-cols-12 gap-2 mb-2 px-1">
+      <div class="col-span-5 text-xs font-semibold text-slate-500">Material</div>
+      <div class="col-span-3 text-xs font-semibold text-slate-500">Unidad</div>
+      <div class="col-span-3 text-xs font-semibold text-slate-500">Factor por unidad de medida</div>
+    </div>
+
+    <div id="item-rows" class="space-y-2">
+      {% if recipe %}
+        {% for item in recipe.items.all %}
+        <div class="item-row grid grid-cols-12 gap-2 items-center bg-slate-50 rounded-xl p-2">
+          <input type="text" name="item_name[]" value="{{ item.name }}" class="form-input col-span-12 sm:col-span-5 text-sm" placeholder="Ej: Pintura látex" required>
+          <select name="item_unit[]" class="form-input col-span-5 sm:col-span-3 text-sm">
+            {% for val, label in unit_choices %}
+            <option value="{{ val }}" {% if item.unit == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <input type="number" name="item_factor[]" value="{{ item.quantity_factor }}" class="form-input col-span-5 sm:col-span-3 text-sm" min="0.0001" step="0.0001" required placeholder="0.25">
+          <div class="col-span-2 sm:col-span-1 flex justify-end">
+            <button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+        {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="flex justify-end gap-3">
+    <a href="{% url 'recipe_list' %}" class="btn-secondary">Cancelar</a>
+    <button type="submit" class="btn-primary px-8">💾 Guardar Receta</button>
+  </div>
+</form>
+{% endblock %}
+{% block extra_js %}
+<script>
+const UNIT_OPTIONS = `{% for val, label in unit_choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}`;
+
+function addItemRow(name='', unit='un', factor='') {
+  const row = document.createElement('div');
+  row.className = 'item-row grid grid-cols-12 gap-2 items-center bg-slate-50 rounded-xl p-2';
+  row.innerHTML = `
+    <input type="text" name="item_name[]" value="${name}" class="form-input col-span-12 sm:col-span-5 text-sm" placeholder="Ej: Pintura látex" required>
+    <select name="item_unit[]" class="form-input col-span-5 sm:col-span-3 text-sm">${UNIT_OPTIONS}</select>
+    <input type="number" name="item_factor[]" value="${factor}" class="form-input col-span-5 sm:col-span-3 text-sm" min="0.0001" step="0.0001" required placeholder="0.25">
+    <div class="col-span-2 sm:col-span-1 flex justify-end">
+      <button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>`;
+  document.getElementById('item-rows').appendChild(row);
+  if (unit) row.querySelector('select').value = unit;
+  row.querySelector('input[type=text]').focus();
+}
+
+function removeRow(btn) { btn.closest('.item-row').remove(); }
+
+// Start with one empty row if creating new recipe
+if (!document.querySelector('.item-row')) addItemRow();
+</script>
+{% endblock %}

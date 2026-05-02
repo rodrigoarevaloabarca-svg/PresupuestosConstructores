@@ -10,6 +10,17 @@ from catalog.models import UNIT_CHOICES, Product
 from clients.models import Client
 from users.models import User
 
+RECIPE_RUBROS = [
+    "Pintura",
+    "Cerámica",
+    "Pisos",
+    "Construcción",
+    "Terminaciones",
+    "Gasfitería",
+    "Electricidad",
+    "Otro",
+]
+
 STATUS_CHOICES = [
     ("borrador", "Borrador"),
     ("enviado", "Enviado al Cliente"),
@@ -161,6 +172,52 @@ class BudgetAttachment(models.Model):
 
     def __str__(self):
         return self.filename
+
+
+class MaterialRecipe(models.Model):
+    contractor = models.ForeignKey(User, on_delete=models.CASCADE, related_name="recipes")
+    name = models.CharField("Nombre", max_length=200)
+    rubro = models.CharField("Categoría", max_length=50)
+    icon = models.CharField("Ícono", max_length=10, default="📦")
+    input_label = models.CharField("Etiqueta de medida", max_length=100, default="Superficie")
+    input_unit = models.CharField("Unidad de medida", max_length=20, default="m²")
+    input_placeholder = models.CharField("Placeholder", max_length=100, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["rubro", "name"]
+        verbose_name = "Receta de materiales"
+        verbose_name_plural = "Recetas de materiales"
+
+    def __str__(self):
+        return self.name
+
+    def to_api_dict(self):
+        return {
+            "id": self.pk,
+            "name": self.name,
+            "rubro": self.rubro,
+            "icon": self.icon,
+            "input_label": self.input_label,
+            "input_unit": self.input_unit,
+            "input_placeholder": self.input_placeholder,
+            "items": [{"name": i.name, "unit": i.unit, "factor": str(i.quantity_factor)} for i in self.items.all()],
+        }
+
+
+class MaterialRecipeItem(models.Model):
+    recipe = models.ForeignKey(MaterialRecipe, on_delete=models.CASCADE, related_name="items")
+    name = models.CharField("Material", max_length=200)
+    unit = models.CharField("Unidad", max_length=10, choices=UNIT_CHOICES, default="un")
+    quantity_factor = models.DecimalField("Factor por unidad", max_digits=8, decimal_places=4)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+
+    def __str__(self):
+        return self.name
 
 
 def _default_token_expiry():

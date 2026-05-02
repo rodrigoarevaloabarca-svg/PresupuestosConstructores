@@ -13,6 +13,7 @@ from budgets.api.views import BudgetViewSet
 
 # API imports
 from budgets.api_views import BudgetDetailAPIView, BudgetListAPIView, dashboard_stats_api
+from budgets.views import api_custom_recipes
 from catalog.api.views import ProductSuggestionsView
 from catalog.api_views import ProductDetailAPIView, ProductListAPIView
 from clients.api_views import ClientDetailAPIView, ClientListAPIView
@@ -33,6 +34,7 @@ urlpatterns = [
     path("presupuestos/", include("budgets.urls")),
     path("dashboard/", include("users.dashboard_urls")),
     # ── API REST v1 ────────────────────────────────────────────
+    path("api/v1/calculadora/recetas/", api_custom_recipes, name="api_custom_recipes"),
     path("api/v1/stats/", dashboard_stats_api, name="api_stats"),
     path("api/v1/presupuestos/", BudgetListAPIView.as_view(), name="api_budget_list"),
     path("api/v1/presupuestos/<int:pk>/", BudgetDetailAPIView.as_view(), name="api_budget_detail"),
