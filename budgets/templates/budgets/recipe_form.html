@@ -19,12 +19,12 @@
     <div class="grid grid-cols-2 gap-4">
       <div class="col-span-2">
         <label class="form-label">Nombre de la receta *</label>
-        <input type="text" name="name" value="{{ post.name|default:recipe.name|default:'' }}" class="form-input" required placeholder="Ej: Pintura de cielo interior">
+        <input type="text" name="name" value="{% if post %}{{ post.name }}{% elif recipe %}{{ recipe.name }}{% endif %}" class="form-input" required placeholder="Ej: Pintura de cielo interior">
       </div>
 
       <div>
         <label class="form-label">Categoría *</label>
-        <input type="text" name="rubro" value="{{ post.rubro|default:recipe.rubro|default:'' }}" class="form-input" required
+        <input type="text" name="rubro" value="{% if post %}{{ post.rubro }}{% elif recipe %}{{ recipe.rubro }}{% endif %}" class="form-input" required
                list="rubro-options" placeholder="Ej: Pintura">
         <datalist id="rubro-options">
           {% for r in rubros %}<option value="{{ r }}">{% endfor %}
@@ -33,7 +33,7 @@
 
       <div>
         <label class="form-label">Ícono</label>
-        <input type="text" name="icon" value="{{ post.icon|default:recipe.icon|default:'📦' }}" class="form-input" maxlength="10" placeholder="📦">
+        <input type="text" name="icon" value="{% if post %}{{ post.icon }}{% elif recipe %}{{ recipe.icon }}{% else %}📦{% endif %}" class="form-input" maxlength="10" placeholder="📦">
       </div>
     </div>
 
@@ -42,15 +42,15 @@
       <div class="grid grid-cols-3 gap-4">
         <div class="col-span-2">
           <label class="form-label">Etiqueta de la medida *</label>
-          <input type="text" name="input_label" value="{{ post.input_label|default:recipe.input_label|default:'' }}" class="form-input" required placeholder="Ej: Superficie a pintar">
+          <input type="text" name="input_label" value="{% if post %}{{ post.input_label }}{% elif recipe %}{{ recipe.input_label }}{% endif %}" class="form-input" required placeholder="Ej: Superficie a pintar">
         </div>
         <div>
           <label class="form-label">Unidad *</label>
-          <input type="text" name="input_unit" value="{{ post.input_unit|default:recipe.input_unit|default:'m²' }}" class="form-input" required placeholder="m²">
+          <input type="text" name="input_unit" value="{% if post %}{{ post.input_unit }}{% elif recipe %}{{ recipe.input_unit }}{% else %}m²{% endif %}" class="form-input" required placeholder="m²">
         </div>
         <div class="col-span-3">
           <label class="form-label">Placeholder del input <span class="text-slate-400 font-normal">(opcional)</span></label>
-          <input type="text" name="input_placeholder" value="{{ post.input_placeholder|default:recipe.input_placeholder|default:'' }}" class="form-input" placeholder="Ej: 30">
+          <input type="text" name="input_placeholder" value="{% if post %}{{ post.input_placeholder }}{% elif recipe %}{{ recipe.input_placeholder }}{% endif %}" class="form-input" placeholder="Ej: 30">
         </div>
       </div>
     </div>
@@ -73,7 +73,7 @@
     </div>
 
     <div id="item-rows" class="space-y-2">
-      {% if recipe %}
+      {% if recipe and recipe.pk %}
         {% for item in recipe.items.all %}
         <div class="item-row grid grid-cols-12 gap-2 items-center bg-slate-50 rounded-xl p-2">
           <input type="text" name="item_name[]" value="{{ item.name }}" class="form-input col-span-12 sm:col-span-5 text-sm" placeholder="Ej: Pintura látex" required>

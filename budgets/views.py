@@ -641,15 +641,14 @@ def _save_recipe(request, recipe=None):
 def recipe_create(request):
     from catalog.models import UNIT_CHOICES as UC
 
+    ctx = {"action": "Crear", "unit_choices": UC, "rubros": RECIPE_RUBROS}
     if request.method == "POST":
         errors = _save_recipe(request)
         if not errors:
             messages.success(request, "Receta creada correctamente.")
             return redirect("recipe_list")
-        return render(request, "budgets/recipe_form.html", {"action": "Crear", "unit_choices": UC, "rubros": RECIPE_RUBROS, "errors": errors, "post": request.POST})
-    from catalog.models import UNIT_CHOICES as UC
-
-    return render(request, "budgets/recipe_form.html", {"action": "Crear", "unit_choices": UC, "rubros": RECIPE_RUBROS})
+        ctx.update({"errors": errors, "post": request.POST})
+    return render(request, "budgets/recipe_form.html", ctx)
 
 
 @login_required

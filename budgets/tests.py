@@ -10,7 +10,7 @@ from catalog.models import Product
 from clients.models import Client
 from users.models import ContractorProfile, User
 
-from .models import Budget, BudgetItemLabor, BudgetItemMaterial, BudgetPublicToken
+from .models import Budget, BudgetItemLabor, BudgetItemMaterial, BudgetPublicToken, MaterialRecipe, MaterialRecipeItem
 
 
 def make_user(email="test@test.cl", password="pass123"):  # pragma: allowlist secret
@@ -364,3 +364,169 @@ class APITest(TestCase):
         )
         # Sin límites de plan — el presupuesto se crea
         self.assertEqual(Budget.objects.filter(contractor=self.user).count(), count_before + 1)
+
+
+def make_recipe(user, name="Receta test", rubro="Pintura"):
+    recipe = MaterialRecipe.objects.create(
+        contractor=user,
+        name=name,
+        rubro=rubro,
+        icon="🎨",
+        input_label="Superficie",
+        input_unit="m²",
+        input_placeholder="Ej: 20",
+    )
+    MaterialRecipeItem.objects.create(recipe=recipe, name="Pintura látex", unit="lt", quantity_factor="0.2500", order=0)
+    return recipe
+
+
+class RecipeModelTest(TestCase):
+    def setUp(self):
+        self.user = make_user("recmodel@test.cl")
+
+    def test_str(self):
+        recipe = make_recipe(self.user)
+        self.assertEqual(str(recipe), "Receta test")
+
+    def test_to_api_dict_structure(self):
+        recipe = make_recipe(self.user)
+        d = recipe.to_api_dict()
+        self.assertEqual(d["name"], "Receta test")
+        self.assertEqual(d["rubro"], "Pintura")
+        self.assertEqual(len(d["items"]), 1)
+        self.assertEqual(d["items"][0]["name"], "Pintura látex")
+        self.assertEqual(d["items"][0]["unit"], "lt")
+        self.assertEqual(d["items"][0]["factor"], "0.2500")
+
+
+class RecipeViewTest(TestCase):
+    def setUp(self):
+        self.tc = TestClient()
+        self.user = make_user("recview@test.cl")
+        self.tc.login(username="recview@test.cl", password="pass123")  # pragma: allowlist secret
+        self.recipe = make_recipe(self.user)
+
+    def test_calculadora_get(self):
+        r = self.tc.get(reverse("calculadora"))
+        self.assertEqual(r.status_code, 200)
+
+    def test_calculadora_requires_login(self):
+        self.tc.logout()
+        r = self.tc.get(reverse("calculadora"))
+        self.assertEqual(r.status_code, 302)
+
+    def test_recipe_list_ok(self):
+        r = self.tc.get(reverse("recipe_list"))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Receta test")
+
+    def test_api_custom_recipes_returns_own(self):
+        r = self.tc.get(reverse("api_custom_recipes"))
+        self.assertEqual(r.status_code, 200)
+        data = r.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["name"], "Receta test")
+        self.assertEqual(len(data[0]["items"]), 1)
+
+    def test_api_custom_recipes_requires_login(self):
+        self.tc.logout()
+        r = self.tc.get(reverse("api_custom_recipes"))
+        self.assertEqual(r.status_code, 302)
+
+    def test_api_does_not_return_other_users_recipes(self):
+        other = make_user("other_rec@test.cl")
+        make_recipe(other, name="Receta ajena")
+        r = self.tc.get(reverse("api_custom_recipes"))
+        names = [d["name"] for d in r.json()]
+        self.assertNotIn("Receta ajena", names)
+
+    def test_recipe_create_get(self):
+        r = self.tc.get(reverse("recipe_create"))
+        self.assertEqual(r.status_code, 200)
+
+    def test_recipe_create_post_valid(self):
+        r = self.tc.post(
+            reverse("recipe_create"),
+            {
+                "name": "Nueva receta",
+                "rubro": "Cerámica",
+                "icon": "🟫",
+                "input_label": "Superficie",
+                "input_unit": "m²",
+                "input_placeholder": "Ej: 20",
+                "item_name[]": ["Cerámica"],
+                "item_unit[]": ["m2"],
+                "item_factor[]": ["1.1"],
+            },
+        )
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(MaterialRecipe.objects.filter(contractor=self.user, name="Nueva receta").exists())
+
+    def test_recipe_create_post_invalid_no_name(self):
+        r = self.tc.post(
+            reverse("recipe_create"),
+            {"name": "", "rubro": "Cerámica", "input_label": "Superficie", "input_unit": "m²"},
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "obligatorio")
+
+    def test_recipe_create_post_invalid_no_items(self):
+        r = self.tc.post(
+            reverse("recipe_create"),
+            {"name": "Sin ítems", "rubro": "Pintura", "input_label": "Superficie", "input_unit": "m²"},
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "al menos un material")
+
+    def test_recipe_edit_post(self):
+        r = self.tc.post(
+            reverse("recipe_edit", args=[self.recipe.pk]),
+            {
+                "name": "Editada",
+                "rubro": "Pintura",
+                "icon": "🎨",
+                "input_label": "Área",
+                "input_unit": "m²",
+                "input_placeholder": "",
+                "item_name[]": ["Pintura nueva"],
+                "item_unit[]": ["lt"],
+                "item_factor[]": ["0.3"],
+            },
+        )
+        self.assertEqual(r.status_code, 302)
+        self.recipe.refresh_from_db()
+        self.assertEqual(self.recipe.name, "Editada")
+        self.assertEqual(self.recipe.items.count(), 1)
+        self.assertEqual(self.recipe.items.first().name, "Pintura nueva")
+
+    def test_recipe_delete_post(self):
+        pk = self.recipe.pk
+        r = self.tc.post(reverse("recipe_delete", args=[pk]))
+        self.assertEqual(r.status_code, 302)
+        self.assertFalse(MaterialRecipe.objects.filter(pk=pk).exists())
+
+    def test_cannot_edit_other_users_recipe(self):
+        other = make_user("other_edit@test.cl")
+        other_recipe = make_recipe(other, name="Ajena")
+        r = self.tc.post(
+            reverse("recipe_edit", args=[other_recipe.pk]),
+            {
+                "name": "Hackeado",
+                "rubro": "Pintura",
+                "input_label": "Superficie",
+                "input_unit": "m²",
+                "item_name[]": ["X"],
+                "item_unit[]": ["un"],
+                "item_factor[]": ["1"],
+            },
+        )
+        self.assertEqual(r.status_code, 404)
+        other_recipe.refresh_from_db()
+        self.assertEqual(other_recipe.name, "Ajena")
+
+    def test_cannot_delete_other_users_recipe(self):
+        other = make_user("other_del@test.cl")
+        other_recipe = make_recipe(other, name="Ajena del")
+        r = self.tc.post(reverse("recipe_delete", args=[other_recipe.pk]))
+        self.assertEqual(r.status_code, 404)
+        self.assertTrue(MaterialRecipe.objects.filter(pk=other_recipe.pk).exists())

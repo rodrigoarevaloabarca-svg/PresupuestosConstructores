@@ -58,9 +58,9 @@
     <div class="card">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-base font-bold text-slate-700">📦 Materiales</h2>
-        <div class="flex items-center gap-2">
-          <button type="button" onclick="openCalc()" class="btn-secondary text-xs py-2 px-3">🧮 Calcular materiales</button>
-          <button type="button" onclick="addMaterialRow()" class="btn-secondary text-xs py-2 px-3">+ Agregar material</button>
+        <div class="flex items-center gap-2 flex-wrap justify-end">
+          <button type="button" onclick="openCalc()" class="btn-secondary text-xs py-2 px-3">🧮 Calcular</button>
+          <button type="button" onclick="addMaterialRow()" class="btn-secondary text-xs py-2 px-3">+ Agregar</button>
         </div>
       </div>
 
@@ -96,8 +96,8 @@
               <option value="bls" {% if item.unit == 'bls' %}selected{% endif %}>Bolsa</option>
               <option value="pk" {% if item.unit == 'pk' %}selected{% endif %}>Pack</option>
             </select>
-            <input type="number" name="mat_qty[]" value="{{ item.quantity|floatformat:'2u' }}" class="form-input col-span-3 sm:col-span-2 text-sm mat-qty" min="0" step="0.01" required>
-            <input type="number" name="mat_price[]" value="{{ item.unit_price|floatformat:'0u' }}" class="form-input col-span-3 sm:col-span-2 text-sm mat-price" min="0" step="1" required>
+            <input type="number" name="mat_qty[]" value="{{ item.quantity|floatformat:'2u' }}" class="form-input col-span-3 sm:col-span-2 text-sm mat-qty" min="0" step="0.01" required placeholder="Cant.">
+            <input type="number" name="mat_price[]" value="{{ item.unit_price|floatformat:'0u' }}" class="form-input col-span-3 sm:col-span-2 text-sm mat-price" min="0" step="1" required placeholder="Precio">
             <div class="col-span-10 sm:col-span-1 text-right">
               <span class="font-mono text-xs font-bold text-slate-700 row-total">$0</span>
             </div>
@@ -140,8 +140,8 @@
               <option value="m2" {% if item.unit == 'm2' %}selected{% endif %}>m²</option>
               <option value="ml" {% if item.unit == 'ml' %}selected{% endif %}>Metro lineal</option>
             </select>
-            <input type="number" name="lab_qty[]" value="{{ item.quantity|floatformat:'2u' }}" class="form-input col-span-3 sm:col-span-2 text-sm lab-qty" min="0" step="0.5">
-            <input type="number" name="lab_price[]" value="{{ item.unit_price|floatformat:'0u' }}" class="form-input col-span-3 sm:col-span-2 text-sm lab-price" min="0" step="1">
+            <input type="number" name="lab_qty[]" value="{{ item.quantity|floatformat:'2u' }}" class="form-input col-span-3 sm:col-span-2 text-sm lab-qty" min="0" step="0.5" placeholder="Cant.">
+            <input type="number" name="lab_price[]" value="{{ item.unit_price|floatformat:'0u' }}" class="form-input col-span-3 sm:col-span-2 text-sm lab-price" min="0" step="1" placeholder="Precio">
             <div class="col-span-10 sm:col-span-1 text-right">
               <span class="font-mono text-xs font-bold text-amber-700 row-total">$0</span>
             </div>
@@ -259,8 +259,8 @@ function addMaterialRow(name='', unit='un', qty=1, price=0){
   row.innerHTML = `
     <input type="text" name="mat_name[]" value="${name}" class="form-input col-span-12 sm:col-span-5 text-sm" placeholder="Descripción" required>
     <select name="mat_unit[]" class="form-input col-span-6 sm:col-span-2 text-sm">${UNIT_OPTIONS}</select>
-    <input type="number" name="mat_qty[]" value="${qty}" class="form-input col-span-3 sm:col-span-2 text-sm mat-qty" min="0" step="0.01">
-    <input type="number" name="mat_price[]" value="${price}" class="form-input col-span-3 sm:col-span-2 text-sm mat-price" min="0" step="1">
+    <input type="number" name="mat_qty[]" value="${qty}" class="form-input col-span-3 sm:col-span-2 text-sm mat-qty" min="0" step="0.01" placeholder="Cant.">
+    <input type="number" name="mat_price[]" value="${price}" class="form-input col-span-3 sm:col-span-2 text-sm mat-price" min="0" step="1" placeholder="Precio">
     <div class="col-span-10 sm:col-span-1 text-right"><span class="font-mono text-xs font-bold text-slate-700 row-total">$0</span></div>
     <div class="col-span-2 flex justify-end">
       <button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors">
@@ -279,8 +279,8 @@ function addLaborRow(){
   row.innerHTML = `
     <input type="text" name="lab_name[]" value="" class="form-input col-span-12 sm:col-span-5 text-sm" placeholder="Ej: Instalación eléctrica" required>
     <select name="lab_unit[]" class="form-input col-span-6 sm:col-span-2 text-sm">${LABOR_UNITS}</select>
-    <input type="number" name="lab_qty[]" value="1" class="form-input col-span-3 sm:col-span-2 text-sm lab-qty" min="0" step="0.5">
-    <input type="number" name="lab_price[]" value="0" class="form-input col-span-3 sm:col-span-2 text-sm lab-price" min="0" step="1">
+    <input type="number" name="lab_qty[]" value="1" class="form-input col-span-3 sm:col-span-2 text-sm lab-qty" min="0" step="0.5" placeholder="Cant.">
+    <input type="number" name="lab_price[]" value="0" class="form-input col-span-3 sm:col-span-2 text-sm lab-price" min="0" step="1" placeholder="Precio">
     <div class="col-span-10 sm:col-span-1 text-right"><span class="font-mono text-xs font-bold text-amber-700 row-total">$0</span></div>
     <div class="col-span-2 flex justify-end">
       <button type="button" onclick="removeRow(this)" class="text-red-400 hover:text-red-600 p-1 rounded-lg hover:bg-red-50 transition-colors">
