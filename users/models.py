@@ -104,5 +104,43 @@ class ContractorProfile(models.Model):
     class Meta:
         verbose_name = "Perfil de Contratista"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_logo = self.logo.name if self.logo else None
+
+    def save(self, *args, **kwargs):
+        if self.logo and self.logo.name != self._original_logo:
+            self._sanitize_logo()
+        super().save(*args, **kwargs)
+
+    def _sanitize_logo(self):
+        """Re-encodea la imagen para eliminar EXIF y payloads. Redimensiona a máx 800px."""
+        from io import BytesIO
+
+        from django.core.files.base import ContentFile
+        from PIL import Image
+
+        max_dim = 800
+        try:
+            import contextlib
+
+            img = Image.open(self.logo)
+            has_alpha = img.mode in ("RGBA", "LA", "P")
+            img = img.convert("RGBA" if has_alpha else "RGB")
+            if max(img.size) > max_dim:
+                img.thumbnail((max_dim, max_dim), Image.LANCZOS)
+            buf = BytesIO()
+            fmt, ext = ("PNG", "png") if has_alpha else ("JPEG", "jpg")
+            img.save(buf, format=fmt, optimize=True)
+            buf.seek(0)
+            if self._original_logo:
+                from django.core.files.storage import default_storage
+
+                with contextlib.suppress(Exception):
+                    default_storage.delete(self._original_logo)
+            self.logo.save(f"logo_{self.user_id}.{ext}", ContentFile(buf.read()), save=False)
+        except Exception:
+            pass
+
     def __str__(self):
         return self.company_name
