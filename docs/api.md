@@ -19,6 +19,7 @@
 - [Clientes](#clientes)
 - [Productos (catalogo propio)](#productos-catalogo-propio)
 - [Sugerencias (autocomplete)](#sugerencias-autocomplete)
+- [Calculadora de materiales](#calculadora-de-materiales)
 - [Webhooks](#webhooks)
 - [Codigos de estado](#codigos-de-estado)
 - [Multi-tenancy](#multi-tenancy)
@@ -505,6 +506,59 @@ Si `q` tiene 2 caracteres o menos, retorna `[]` directamente sin consultar la BD
 > Los precios de ferreteria son de **referencia**. El maestro debe ajustar su margen antes de usarlos en el presupuesto.
 
 Los resultados de ferreteria provienen del caché semanal (`RetailerProduct`). Se actualizan cada domingo a las 3 AM via Celery Beat.
+
+---
+
+## Calculadora de materiales
+
+Retorna las recetas personalizadas del contratista autenticado para su uso en la calculadora de materiales (modal del formulario de presupuesto y pagina standalone).
+
+```
+GET /api/v1/calculadora/recetas/
+```
+
+**No requiere parametros.**
+
+**Respuesta 200:**
+```json
+[
+  {
+    "id": 3,
+    "name": "Pintura de cielo interior",
+    "rubro": "Pintura",
+    "icon": "🎨",
+    "input_label": "Superficie a pintar",
+    "input_unit": "m²",
+    "input_placeholder": "Ej: 30",
+    "items": [
+      { "name": "Pintura latex cielo", "unit": "lt", "factor": "0.2500" },
+      { "name": "Lija N°120", "unit": "un", "factor": "0.5000" }
+    ]
+  }
+]
+```
+
+| Campo | Tipo | Descripcion |
+|-------|------|-------------|
+| `id` | int | ID de la receta |
+| `name` | string | Nombre de la receta |
+| `rubro` | string | Categoria (Pintura, Ceramica, Pisos, etc.) |
+| `icon` | string | Emoji del icono |
+| `input_label` | string | Etiqueta de la medida de entrada |
+| `input_unit` | string | Unidad de la medida de entrada (m², ml, m³, etc.) |
+| `input_placeholder` | string | Placeholder sugerido para el input (puede estar vacio) |
+| `items[].factor` | string | Cantidad de material por cada unidad de medida ingresada |
+
+Retorna solo las recetas activas (`is_active=True`) del contratista autenticado. Si no tiene recetas personalizadas, retorna `[]`. Las recetas predefinidas (9 incorporadas) estan hardcodeadas en `calculadora.js` y no se sirven por esta API.
+
+**CRUD de recetas** (solo via interfaz web):
+
+| Metodo | URL | Descripcion |
+|--------|-----|-------------|
+| GET | `/presupuestos/calculadora/recetas/` | Listar recetas del contratista |
+| GET/POST | `/presupuestos/calculadora/recetas/crear/` | Crear nueva receta |
+| GET/POST | `/presupuestos/calculadora/recetas/<id>/editar/` | Editar receta existente |
+| POST | `/presupuestos/calculadora/recetas/<id>/eliminar/` | Eliminar receta |
 
 ---
 

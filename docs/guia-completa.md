@@ -18,6 +18,7 @@ Constructor Express es un SaaS para contratistas chilenos (gasfiteros, electrici
 5. [Comandos de gestion](#5-comandos-de-gestion)
 6. [Tests](#6-tests)
 7. [Uso de la aplicacion web](#7-uso-de-la-aplicacion-web)
+   - [7.10 Calculadora de materiales](#710-calculadora-de-materiales)
 8. [Planes Free vs Pro](#8-planes-free-vs-pro)
 9. [API REST](#9-api-rest)
 10. [Precios de ferreterias (scraping)](#10-precios-de-ferreterias-scraping)
@@ -279,14 +280,14 @@ pytest --cov --cov-fail-under=60
 
 Los tests usan SQLite en memoria y Celery en modo sincrono (`CELERY_TASK_ALWAYS_EAGER=True`). No requieren servicios externos.
 
-**Cobertura por app (aprox. 1.150 lineas de tests en total):**
+**Cobertura por app (aprox. 1.350 lineas de tests — 87 tests en total):**
 
 | App | Que cubre |
 |-----|-----------|
 | `users` | Auth, 2FA, planes, webhooks MercadoPago |
 | `clients` | CRUD clientes, validacion RUT |
 | `catalog` | CRUD productos, scrapers, endpoint de sugerencias |
-| `budgets` | Totales de presupuesto, versionado, firma digital, items |
+| `budgets` | Totales de presupuesto, versionado, firma digital, items, recetas de calculadora |
 
 ---
 
@@ -321,7 +322,7 @@ Completar antes de crear el primer presupuesto. Estos datos aparecen en todos lo
 | RUT | Formato `12.345.678-9` |
 | Rubro | Gasfiteria, electricidad, construccion, etc. |
 | Telefono / Direccion | Datos de contacto en el PDF |
-| Logo | Imagen de la empresa (JPG, PNG, WEBP) |
+| Logo | Imagen de la empresa (JPG, PNG, WEBP · max 500 KB · min 50×50 px) |
 | Color de marca | Hexadecimal (ej: `#1a73e8`) — usado en cabecera del PDF |
 | Dias de validez predeterminados | Default para presupuestos nuevos |
 | Terminos de pago predeterminados | Texto libre, ej: "50% anticipo, saldo a la entrega" |
@@ -461,6 +462,47 @@ Las plantillas son presupuestos sin cliente ni numero asignado, pensadas para tr
 
 ---
 
+### 7.10 Calculadora de materiales
+
+URL: `/presupuestos/calculadora/`
+
+Herramienta que estima automaticamente los materiales necesarios para un trabajo, a partir de una medida (superficie, metros lineales, volumen, etc.).
+
+#### Recetas predefinidas (9 incorporadas)
+
+| Receta | Categoria | Medida de entrada |
+|--------|-----------|------------------|
+| Pintura de cielo interior | Pintura | m² |
+| Pintura de muros interior | Pintura | m² |
+| Ceramica de piso | Ceramica | m² |
+| Ceramica de muro | Ceramica | m² |
+| Piso flotante | Pisos | m² |
+| Hormigon | Construccion | m³ |
+| Estuco | Terminaciones | m² |
+| Caneria agua fria | Gasfiteria | ml |
+| Cableado electrico | Electricidad | ml |
+
+#### Recetas personalizadas
+
+Los contratistas pueden crear sus propias recetas en `/presupuestos/calculadora/recetas/`.
+
+| URL | Descripcion |
+|-----|-------------|
+| `/presupuestos/calculadora/recetas/` | Listar recetas propias |
+| `/presupuestos/calculadora/recetas/crear/` | Crear nueva receta |
+| `/presupuestos/calculadora/recetas/<id>/editar/` | Editar receta |
+| `/presupuestos/calculadora/recetas/<id>/eliminar/` | Eliminar receta |
+
+#### Dos formas de usar la calculadora
+
+1. **Modal dentro del formulario de presupuesto** — boton "🧮 Calcular" en la seccion de materiales. Los resultados se insertan directamente como filas del presupuesto.
+
+2. **Pagina standalone** — `/presupuestos/calculadora/`. Los resultados se guardan en `sessionStorage` y al hacer clic en "Aplicar al presupuesto" se redirige a `/presupuestos/nuevo/` con las filas precargadas.
+
+Las recetas personalizadas del contratista aparecen automaticamente en ambos contextos, cargadas desde `GET /api/v1/calculadora/recetas/`.
+
+---
+
 ### 7.9 Dashboard y analytics
 
 URL: `/dashboard/`
@@ -492,6 +534,8 @@ Metricas disponibles (actualizado cada 5 minutos con cache):
 | Envio por email y WhatsApp | Si | Si |
 | Historial de cambios | Si | Si |
 | Precios de ferreterias | Si | Si |
+| Calculadora de materiales | Si | Si |
+| Recetas personalizadas | Si | Si |
 | Facturacion DTE/SII | No | Si |
 
 **Activar Pro:** `/usuarios/planes/checkout/`
@@ -607,8 +651,14 @@ El numero de presupuesto se auto-incrementa dentro de un bloque `select_for_upda
 | Rate limit registro | 3 req/hora |
 | Rate limit firma digital | 3 req/hora por IP |
 
-### Validacion de archivos adjuntos
+### Validacion y sanitizacion de imagenes
 
+**Logo del perfil:**
+- Limite de peso: **500 KB**
+- Dimensiones minimas: **50×50 px**
+- Al guardar, Pillow re-codifica la imagen (elimina EXIF y cualquier payload embebido) y redimensiona a maximo 800 px en el lado mayor
+
+**Archivos adjuntos de presupuesto:**
 - Validacion por **magic bytes** (no solo por extension de archivo)
 - Tipos aceptados: JPEG (`FF D8 FF`), PNG (`89 50 4E 47`), WEBP (`52 49 46 46`), PDF (`25 50 44 46`)
 - Limite: 5 archivos por presupuesto, 5 MB por archivo
@@ -679,9 +729,11 @@ constructor_express/
 │
 ├── budgets/                   # Dominio principal — presupuestos
 │   ├── models.py              # Budget, BudgetItemMaterial, BudgetItemLabor,
-│   │                          # BudgetSignature, BudgetAttachment, BudgetPublicToken
+│   │                          # BudgetSignature, BudgetAttachment, BudgetPublicToken,
+│   │                          # MaterialRecipe, MaterialRecipeItem
 │   ├── managers.py            # BudgetQuerySet (analytics: CLV, top products, conversion rate)
-│   ├── views.py               # CRUD, PDF, firma, versionado, plantillas, historial
+│   ├── views.py               # CRUD, PDF, firma, versionado, plantillas, historial,
+│   │                          # calculadora_view, recipe_list/create/edit/delete, api_custom_recipes
 │   ├── services/
 │   │   ├── versioning.py      # create_new_version(), should_create_version()
 │   │   ├── pdf.py             # Generacion de PDF (WeasyPrint)
@@ -691,6 +743,7 @@ constructor_express/
 │   │   └── budget_filters.py  # Filtro |clp: $1.234.567
 │   └── static/budgets/
 │       ├── js/product_autocomplete.js   # Autocomplete vanilla JS (MutationObserver, debounce 300ms)
+│       ├── js/calculadora.js            # Calculadora de materiales (recetas, modal, standalone)
 │       └── css/autocomplete.css
 │
 ├── billing/                   # Facturacion DTE/SII (scaffolding) + MercadoPago checkout
@@ -773,6 +826,34 @@ celery -A constructor_express worker --loglevel=info
 # En Docker
 docker-compose restart worker
 ```
+
+### El logo no aparece en produccion (imagen rota)
+
+Django sirve los archivos media directamente via la vista `serve`. Si el logo aparece como imagen rota en produccion:
+
+```bash
+# Verificar que el directorio media existe y tiene los permisos correctos
+ls -la /ruta/al/proyecto/media/logos/
+
+# Recolectar estaticos por si falta el manifest
+python manage.py collectstatic --noinput
+```
+
+> Los archivos media **no** son archivos estaticos — `collectstatic` no los mueve. Se sirven desde `MEDIA_ROOT` en tiempo de ejecucion.
+
+### El logo no se acepta al subir
+
+- Peso maximo: **500 KB**. Comprimir la imagen antes de subir.
+- Dimensiones minimas: **50×50 px**. Ampliar la imagen si es muy pequena.
+- Formatos aceptados: JPG, PNG, WEBP.
+
+### Las recetas personalizadas no aparecen en la calculadora
+
+La calculadora carga las recetas propias via `GET /api/v1/calculadora/recetas/`. Si no aparecen:
+
+1. Verificar que el usuario tiene recetas creadas en `/presupuestos/calculadora/recetas/`
+2. Verificar que las recetas estan activas (`is_active=True`)
+3. Revisar la consola del navegador en busca de errores de red
 
 ### Errores de permisos en archivos estaticos
 
