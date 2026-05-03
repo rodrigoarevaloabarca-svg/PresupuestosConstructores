@@ -441,7 +441,7 @@ def budget_send_email(request, pk):
 @login_required
 @ratelimit(key="user", rate="10/h", block=True, method="POST")
 def budget_send_whatsapp(request, pk):
-    budget = get_tenant_object_or_404(Budget, pk=pk, user=request.user)
+    budget = get_tenant_object_or_404(Budget, request, pk=pk)
     if request.method != "POST":
         return redirect("budget_detail", pk=pk)
 
@@ -464,6 +464,7 @@ def budget_send_whatsapp(request, pk):
 
 
 @ratelimit(key="ip", rate="3/h", block=True)
+@ratelimit(key="get:token", rate="5/h", block=True)
 def budget_public_sign(request, token):
     """Recibe la firma PNG en base64 del cliente y acepta el presupuesto."""
     import base64
@@ -535,7 +536,7 @@ def budget_history(request, pk):
 
 @login_required
 def budget_to_invoice_view(request, pk):
-    budget = get_tenant_object_or_404(Budget, pk=pk, user=request.user)
+    budget = get_tenant_object_or_404(Budget, request, pk=pk)
     if request.method != "POST":
         return redirect("budget_detail", pk=pk)
 

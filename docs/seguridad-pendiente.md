@@ -4,21 +4,21 @@ Auditoría realizada: 2026-05-02
 
 ---
 
-## 🔴 Alta — Corregir antes del próximo deploy
+## ✅ Alta — IMPLEMENTADO (2026-05-02)
 
 ### 1. IDOR — llamadas incorrectas a `get_tenant_object_or_404`
 
-**Archivos:** `budgets/views.py` (~línea 444 y ~línea 538)
+**Archivos:** `budgets/views.py` líneas 444 y 539
 **Funciones:** `budget_send_whatsapp()` y `budget_to_invoice_view()`
 
-**Problema:**
-Se llama como:
+**Problema (corregido):**
+Se llamaba como:
 ```python
 budget = get_tenant_object_or_404(Budget, pk=pk, user=request.user)
 ```
-La firma correcta es `(model, request, **kwargs)`. Al pasar `user=request.user` como kwarg en lugar de `request` como segundo argumento posicional, la protección multi-tenant no se aplica y la función lanza `TypeError` al ejecutarse.
+La firma correcta es `(model, request, **kwargs)`. Al pasar `user=request.user` como kwarg en lugar de `request` como segundo argumento posicional, la protección multi-tenant no se aplicaba y la función lanzaba `TypeError`.
 
-**Corrección:**
+**Corrección aplicada:**
 ```python
 budget = get_tenant_object_or_404(Budget, request, pk=pk)
 ```
@@ -27,13 +27,12 @@ budget = get_tenant_object_or_404(Budget, request, pk=pk)
 
 ### 2. Rate limiting en firma digital — bypasseable por IP compartida
 
-**Archivo:** `budgets/views.py` (~línea 466, `budget_public_sign()`)
+**Archivo:** `budgets/views.py` línea 466, `budget_public_sign()`
 
-**Problema:**
-El rate limit de `3/h` se aplica por IP. En redes corporativas o NAT, múltiples usuarios comparten la misma IP pública, lo que permite que un atacante agote el rate limit de todos los usuarios de esa red.
+**Problema (corregido):**
+El rate limit de `3/h` solo por IP era bypasseable desde redes con NAT compartido.
 
-**Mejora sugerida:**
-Complementar con rate limit por token además de por IP:
+**Corrección aplicada:** doble rate limit, por IP y por token:
 ```python
 @ratelimit(key="ip", rate="3/h", block=True)
 @ratelimit(key="get:token", rate="5/h", block=True)
@@ -170,7 +169,7 @@ Limpiar el kwarg `user=request.user` después de corregir la llamada a `get_tena
 
 | Severidad | Cantidad | Estado |
 |-----------|----------|--------|
-| 🔴 Alta   | 2        | Pendiente |
+| 🔴 Alta   | 2        | ✅ Implementado (2026-05-02) |
 | 🟡 Media  | 4        | Pendiente |
 | 🟢 Baja   | 3        | Pendiente |
 | ✅ OK     | 13 areas | Sin cambios |
